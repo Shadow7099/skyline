@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Comprar boleta · Skyline Halloween Fest</title>
 <meta name="description" content="Reserva tu boleta para Skyline Halloween Fest, 30 y 31 de octubre en PLOT Bogotá." />
-<script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 <style>
   :root{
     --bg:#0b0710; --panel:#160f1f; --accent:#ff6a00; --accent2:#8a2be2;
@@ -215,6 +214,16 @@
           })
         );
         slot.appendChild(script);
+
+        // The Bold library must load AFTER the configured [data-bold-button]
+        // script is already in the DOM, or it never detects it. Since we add
+        // the button dynamically, we (re)load the library fresh every time.
+        var prevLib = document.getElementById("bold-lib-script");
+        if (prevLib) prevLib.remove();
+        var lib = document.createElement("script");
+        lib.id = "bold-lib-script";
+        lib.src = "https://checkout.bold.co/library/boldPaymentButton.js";
+        document.body.appendChild(lib);
       })
       .catch(function () {
         if (myToken !== boldRequestToken) return;
