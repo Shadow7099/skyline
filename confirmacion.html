@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Confirmación de compra · Skyline Halloween Fest</title>
+<style>
+  :root{
+    --bg:#0b0710; --panel:#160f1f; --accent:#ff6a00;
+    --text:#f5eefb; --muted:#b8a9c9; --danger:#ff4d6d; --ok:#3ddc97;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(circle at 20% 0%, #2a1140 0%, var(--bg) 55%);
+    color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px 16px;
+  }
+  .wrap{max-width:480px; width:100%;}
+  .card{
+    background:var(--panel); border:1px solid rgba(255,255,255,.08);
+    border-radius:16px; padding:28px 24px; text-align:center;
+  }
+  .icon{font-size:44px; margin-bottom:8px;}
+  h1{font-size:22px; margin:0 0 6px;}
+  .status{font-size:14px; color:var(--muted); margin-bottom:20px;}
+  .status.ok{color:var(--ok);}
+  .status.pending{color:#f5c542;}
+  .status.error{color:var(--danger);}
+  .detail{
+    text-align:left; background:#0f0a17; border-radius:12px; padding:16px 18px; margin-top:8px;
+  }
+  .row{display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);}
+  .row:last-child{border-bottom:none;}
+  .row span:first-child{color:var(--muted);}
+  .btn{
+    display:inline-block; margin-top:22px; padding:12px 20px; border-radius:10px;
+    background:var(--accent); color:#170c00; text-decoration:none; font-weight:700; font-size:14px;
+  }
+  .loading{color:var(--muted); font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="loading">Verificando tu pago…</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
+  var params = new URLSearchParams(window.location.search);
+  var orderId = params.get("bold-order-id");
+  var txStatus = params.get("bold-tx-status"); // reference only — the real status always comes from our DB
+  var card = document.getElementById("card");
+
+  function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
+
+  function render(order) {
+    var statusMap = {
+      pagado: { icon: "🎟️", label: "¡Pago confirmado!", cls: "ok" },
+      pendiente_pago: { icon: "⏳", label: "Estamos confirmando tu pago…", cls: "pending" },
+      fallido: { icon: "✕", label: "El pago no se pudo completar", cls: "error" }
+    };
+    var s = statusMap[order.status] || statusMap.pendiente_pago;
+
+    var html = ''
+      + '<div class="icon">' + s.icon + '</div>'
+      + '<h1>' + s.label + '</h1>'
+      + '<div class="status ' + s.cls + '">Skyline Halloween Fest</div>'
+      + '<div class="detail">'
+      + '<div class="row"><span>Boleta</span><span>' + order.access_type + '</span></div>'
+      + '<div class="row"><span>Cantidad</span><span>' + order.quantity + '</span></div>'
+      + '<div class="row"><span>Total</span><span>' + money(order.total) + '</span></div>'
+      + '<div class="row"><span>Comprador</span><span>' + (order.full_name || '') + '</span></div>'
+      + '<div class="row"><span># de reserva</span><span style="font-size:12px">' + order.id + '</span></div>'
+      + '</div>';
+
+    if (order.status === "pendiente_pago") {
+      html += '<div class="loading" style="margin-top:14px">Esto puede tardar unos segundos. Actualiza la página si no cambia.</div>';
+    }
+    html += '<a class="btn" href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>';
+    card.innerHTML = html;
+  }
+
+  function renderError() {
+    card.innerHTML = ''
+      + '<div class="icon">⚠️</div>'
+      + '<h1>No encontramos tu reserva</h1>'
+      + '<div class="status error">Escríbenos por WhatsApp con tu número de reserva para verificarlo.</div>'
+      + '<a class="btn" href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>';
+  }
+
+  if (!orderId) {
+    renderError();
+    return;
+  }
+
+  fetch(FUNCTIONS_BASE + "/get-order-status?order_id=" + encodeURIComponent(orderId))
+    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    .then(function (res) {
+      if (!res.ok) { renderError(); return; }
+      render(res.data);
+    })
+    .catch(renderError);
+})();
+</script>
+</body>
+</html>

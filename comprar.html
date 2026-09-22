@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comprar boleta · Skyline Halloween Fest</title>
+<meta name="description" content="Reserva tu boleta para Skyline Halloween Fest, 30 y 31 de octubre en PLOT Bogotá." />
+<script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
+<style>
+  :root{
+    --bg:#0b0710; --panel:#160f1f; --accent:#ff6a00; --accent2:#8a2be2;
+    --text:#f5eefb; --muted:#b8a9c9; --danger:#ff4d6d; --ok:#3ddc97;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(circle at 20% 0%, #2a1140 0%, var(--bg) 55%);
+    color:var(--text); min-height:100vh; padding:24px 16px 64px;
+  }
+  a{color:var(--accent);}
+  .wrap{max-width:520px; margin:0 auto;}
+  .back{display:inline-block; margin-bottom:20px; color:var(--muted); text-decoration:none; font-size:14px;}
+  h1{font-size:28px; margin:0 0 4px;}
+  .sub{color:var(--muted); margin:0 0 24px; font-size:14px;}
+  .card{
+    background:var(--panel); border:1px solid rgba(255,255,255,.08);
+    border-radius:16px; padding:20px; margin-bottom:16px;
+  }
+  .card h2{font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 14px;}
+  label{display:block; font-size:13px; color:var(--muted); margin:14px 0 6px;}
+  select, input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.14);
+    background:#0f0a17; color:var(--text); font-size:15px; outline:none;
+  }
+  select:focus, input:focus{border-color:var(--accent);}
+  .qty-row{display:flex; align-items:center; gap:14px; margin-top:14px;}
+  .qty-btn{
+    width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.16);
+    background:#0f0a17; color:var(--text); font-size:20px; cursor:pointer;
+  }
+  .qty-val{font-size:18px; min-width:24px; text-align:center;}
+  .price-line{display:flex; justify-content:space-between; font-size:14px; color:var(--muted); margin-top:16px;}
+  .total-line{display:flex; justify-content:space-between; font-size:20px; font-weight:700; margin-top:6px;}
+  .total-line span:last-child{color:var(--accent);}
+  #bold-button-slot{margin-top:18px;}
+  .msg{
+    margin-top:14px; padding:12px 14px; border-radius:10px; font-size:14px; display:none;
+  }
+  .msg.error{background:rgba(255,77,109,.12); color:var(--danger); border:1px solid rgba(255,77,109,.3); display:block;}
+  .msg.loading{background:rgba(255,255,255,.06); color:var(--muted); display:block;}
+  .footnote{font-size:12px; color:var(--muted); margin-top:18px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/index.html#boletas">&larr; Volver a boletería</a>
+  <h1>Reserva tu boleta</h1>
+  <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · PLOT Bogotá</p>
+
+  <div class="card">
+    <h2>Tu boleta</h2>
+
+    <label for="access_type">Tipo de acceso</label>
+    <select id="access_type"></select>
+
+    <label>Cantidad de boletas</label>
+    <div class="qty-row">
+      <button type="button" class="qty-btn" id="qty-minus">−</button>
+      <span class="qty-val" id="qty-val">1</span>
+      <button type="button" class="qty-btn" id="qty-plus">+</button>
+    </div>
+
+    <div class="price-line"><span>Precio unitario</span><span id="unit-price">—</span></div>
+    <div class="total-line"><span>Total a pagar</span><span id="total-price">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Tus datos</h2>
+    <label for="full_name">Nombre completo</label>
+    <input id="full_name" type="text" autocomplete="name" />
+
+    <label for="document_id">Número de documento</label>
+    <input id="document_id" type="text" inputmode="numeric" autocomplete="off" />
+
+    <label for="email">Correo electrónico</label>
+    <input id="email" type="email" autocomplete="email" />
+
+    <label for="phone">Teléfono (WhatsApp)</label>
+    <input id="phone" type="tel" autocomplete="tel" />
+
+    <div id="bold-button-slot"></div>
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <p class="footnote">Tu boleta se confirma automáticamente en cuanto el pago con Bold sea aprobado.</p>
+</div>
+
+<script>
+(function () {
+  // ---- Config ----
+  var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
+
+  // ---- Pricing shown on screen (visual only — the real charge is always
+  // recalculated server-side by create-bold-order, this never controls the amount) ----
+  var PRICES = {
+    "2-dias": { label: "Acceso 2 días", price: 35000, stage: "Lanzamiento" },
+    "1-dia":  { label: "Acceso 1 día",  price: 25000, stage: "Lanzamiento" }
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var initialTipo = params.get("tipo") === "1-dia" ? "1-dia" : "2-dias";
+
+  var accessSelect = document.getElementById("access_type");
+  Object.keys(PRICES).forEach(function (key) {
+    var opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = PRICES[key].label + " — $" + PRICES[key].price.toLocaleString("es-CO") + " (" + PRICES[key].stage + ")";
+    accessSelect.appendChild(opt);
+  });
+  accessSelect.value = initialTipo;
+
+  var qty = 1;
+  var qtyVal = document.getElementById("qty-val");
+  var unitPriceEl = document.getElementById("unit-price");
+  var totalPriceEl = document.getElementById("total-price");
+
+  function money(n) { return "$" + n.toLocaleString("es-CO"); }
+
+  function renderTotals() {
+    var info = PRICES[accessSelect.value];
+    qtyVal.textContent = qty;
+    unitPriceEl.textContent = money(info.price);
+    totalPriceEl.textContent = money(info.price * qty);
+  }
+
+  document.getElementById("qty-minus").addEventListener("click", function () {
+    if (qty > 1) { qty--; renderTotals(); renderBoldButton(); }
+  });
+  document.getElementById("qty-plus").addEventListener("click", function () {
+    if (qty < 10) { qty++; renderTotals(); renderBoldButton(); }
+  });
+  accessSelect.addEventListener("change", function () { renderTotals(); renderBoldButton(); });
+
+  function showMsg(text, type) {
+    var msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = "msg " + (type || "error");
+  }
+  function clearMsg() {
+    var msg = document.getElementById("msg");
+    msg.className = "msg";
+    msg.textContent = "";
+  }
+
+  function currentBuyer() {
+    return {
+      access_type: accessSelect.value,
+      quantity: qty,
+      full_name: document.getElementById("full_name").value.trim(),
+      document_id: document.getElementById("document_id").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim()
+    };
+  }
+
+  // The Bold button needs a fresh order_id + integrity_signature every time
+  // the amount or buyer changes, so we ask create-bold-order right before showing it.
+  var boldRequestToken = 0;
+  function renderBoldButton() {
+    var slot = document.getElementById("bold-button-slot");
+    slot.innerHTML = "";
+    clearMsg();
+
+    var buyer = currentBuyer();
+    if (!buyer.full_name || !buyer.document_id || !buyer.email || !buyer.phone) {
+      // Not ready yet — wait for the person to fill the form before creating an order.
+      return;
+    }
+
+    var myToken = ++boldRequestToken;
+    showMsg("Preparando tu pago…", "loading");
+
+    fetch(FUNCTIONS_BASE + "/create-bold-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buyer)
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (res) {
+        if (myToken !== boldRequestToken) return; // stale response, ignore
+        if (!res.ok) {
+          showMsg(res.data.error || "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
+          return;
+        }
+        clearMsg();
+        var d = res.data;
+        var script = document.createElement("script");
+        script.setAttribute("data-bold-button", "dark-L");
+        script.setAttribute("data-order-id", d.order_id);
+        script.setAttribute("data-currency", d.currency);
+        script.setAttribute("data-amount", String(d.amount));
+        script.setAttribute("data-api-key", d.api_key);
+        script.setAttribute("data-integrity-signature", d.integrity_signature);
+        script.setAttribute("data-redirection-url", d.redirection_url);
+        script.setAttribute("data-description", d.description);
+        script.setAttribute(
+          "data-customer-data",
+          JSON.stringify({
+            email: buyer.email,
+            fullName: buyer.full_name,
+            phone: buyer.phone,
+            dialCode: "+57",
+            documentNumber: buyer.document_id,
+            documentType: "CC"
+          })
+        );
+        slot.appendChild(script);
+      })
+      .catch(function () {
+        if (myToken !== boldRequestToken) return;
+        showMsg("No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
+      });
+  }
+
+  // Re-generate the Bold button whenever buyer data changes (debounced a bit).
+  var debounceTimer;
+  ["full_name", "document_id", "email", "phone"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderBoldButton, 500);
+    });
+  });
+
+  renderTotals();
+})();
+</script>
+</body>
+</html>
