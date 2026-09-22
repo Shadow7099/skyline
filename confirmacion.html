@@ -5,45 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Confirmación de compra · Skyline Halloween Fest</title>
 <style>
-  :root{
-    --bg:#0b0710; --panel:#160f1f; --accent:#ff6a00;
-    --text:#f5eefb; --muted:#b8a9c9; --danger:#ff4d6d; --ok:#3ddc97;
+  @font-face{
+    font-family:'Eurostile Extended';
+    src: url('./fonts/EurostileExtendedBlack.woff2') format('woff2'),
+         url('./fonts/EurostileExtendedBlack.ttf') format('truetype');
+    font-weight: 400 900;
+    font-style: normal;
+    font-display: swap;
   }
-  *{box-sizing:border-box;}
+
+  :root{
+    --ink:#160b23;
+    --purple-deepest:#1d0e33;
+    --purple-deep:#2a1348;
+    --purple:#3d1c66;
+    --purple-light:#5a3593;
+    --gold:#f0a93b;
+    --gold-pale:#f7cf8c;
+    --bone:#f4ecdb;
+    --smoke:#efe6f6;
+    --line:#0e0518;
+    --ok:#5fbf8f;
+    --danger:#e0556a;
+    --radius-panel:22px;
+    --shadow-hard: 6px 6px 0 var(--line);
+    --shadow-hard-sm: 4px 4px 0 var(--line);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+
   body{
-    margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    background:radial-gradient(circle at 20% 0%, #2a1140 0%, var(--bg) 55%);
-    color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    margin:0;
+    background-color:var(--purple-deepest);
+    background-image:radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px);
+    background-size:16px 16px;
+    color:var(--smoke);
+    font-family:'Eurostile Extended', 'Michroma', -apple-system, 'Segoe UI', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
     padding:24px 16px;
   }
+
+  h1{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--bone);
+    margin:0 0 6px;
+    font-size:1.6rem;
+  }
+
   .wrap{max-width:480px; width:100%;}
   .card{
-    background:var(--panel); border:1px solid rgba(255,255,255,.08);
-    border-radius:16px; padding:28px 24px; text-align:center;
+    background:var(--purple-deepest);
+    border:3px solid var(--line);
+    border-radius:var(--radius-panel);
+    box-shadow:var(--shadow-hard);
+    overflow:hidden;
   }
-  .icon{font-size:44px; margin-bottom:8px;}
-  h1{font-size:22px; margin:0 0 6px;}
-  .status{font-size:14px; color:var(--muted); margin-bottom:20px;}
-  .status.ok{color:var(--ok);}
-  .status.pending{color:#f5c542;}
-  .status.error{color:var(--danger);}
+  .card-body{ padding:30px 26px; text-align:center; }
+  .icon{ font-size:44px; margin-bottom:6px; }
+  .status{ font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; margin-bottom:20px; }
+  .status.ok{ color:var(--ok); }
+  .status.pending{ color:var(--gold); }
+  .status.error{ color:var(--danger); }
+
   .detail{
-    text-align:left; background:#0f0a17; border-radius:12px; padding:16px 18px; margin-top:8px;
+    text-align:left;
+    background:var(--purple-deep);
+    border:2px dashed rgba(244,236,219,0.25);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-top:8px;
   }
-  .row{display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);}
-  .row:last-child{border-bottom:none;}
-  .row span:first-child{color:var(--muted);}
+  .row{
+    display:flex; justify-content:space-between;
+    font-size:0.9rem; padding:7px 0;
+    border-bottom:1px dashed rgba(244,236,219,0.15);
+  }
+  .row:last-child{ border-bottom:none; }
+  .row span:first-child{ color:var(--gold-pale); text-transform:uppercase; font-size:0.75rem; letter-spacing:0.4px; }
+  .row span:last-child{ color:var(--bone); font-weight:600; }
+
   .btn{
-    display:inline-block; margin-top:22px; padding:12px 20px; border-radius:10px;
-    background:var(--accent); color:#170c00; text-decoration:none; font-weight:700; font-size:14px;
+    display:inline-flex; align-items:center; justify-content:center;
+    margin-top:22px;
+    padding:13px 26px;
+    border-radius:8px;
+    border:3px solid var(--line);
+    background:var(--gold);
+    color:var(--ink);
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:700;
+    font-size:0.9rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    text-decoration:none;
+    box-shadow:var(--shadow-hard-sm);
   }
-  .loading{color:var(--muted); font-size:14px;}
+  .btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--line); }
+
+  .loading{ color:var(--gold-pale); font-size:0.9rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card" id="card">
-    <div class="loading">Verificando tu pago…</div>
+  <div class="card">
+    <div class="card-body" id="card">
+      <div class="loading">Verificando tu pago…</div>
+    </div>
   </div>
 </div>
 
@@ -52,7 +125,6 @@
   var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
   var params = new URLSearchParams(window.location.search);
   var orderId = params.get("bold-order-id");
-  var txStatus = params.get("bold-tx-status"); // reference only — the real status always comes from our DB
   var card = document.getElementById("card");
 
   function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
@@ -74,11 +146,11 @@
       + '<div class="row"><span>Cantidad</span><span>' + order.quantity + '</span></div>'
       + '<div class="row"><span>Total</span><span>' + money(order.total) + '</span></div>'
       + '<div class="row"><span>Comprador</span><span>' + (order.full_name || '') + '</span></div>'
-      + '<div class="row"><span># de reserva</span><span style="font-size:12px">' + order.id + '</span></div>'
+      + '<div class="row"><span># de reserva</span><span style="font-size:11px">' + order.id + '</span></div>'
       + '</div>';
 
     if (order.status === "pendiente_pago") {
-      html += '<div class="loading" style="margin-top:14px">Esto puede tardar unos segundos. Actualiza la página si no cambia.</div>';
+      html += '<p class="loading" style="margin-top:14px">Esto puede tardar unos segundos. Actualiza la página si no cambia.</p>';
     }
     html += '<a class="btn" href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>';
     card.innerHTML = html;
@@ -92,10 +164,7 @@
       + '<a class="btn" href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>';
   }
 
-  if (!orderId) {
-    renderError();
-    return;
-  }
+  if (!orderId) { renderError(); return; }
 
   fetch(FUNCTIONS_BASE + "/get-order-status?order_id=" + encodeURIComponent(orderId))
     .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
