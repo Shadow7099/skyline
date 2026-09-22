@@ -37,8 +37,14 @@
   body{
     margin:0;
     background-color:var(--purple-deepest);
-    background-image:radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px);
-    background-size:16px 16px;
+    background-image:
+      radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px),
+      linear-gradient(180deg, rgba(29,14,51,0.94) 0%, rgba(29,14,51,0.97) 60%, rgba(29,14,51,1) 100%),
+      url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/FONDO%202.webp');
+    background-size:16px 16px, auto, 50% auto;
+    background-position:0 0, center, center bottom;
+    background-repeat:repeat, no-repeat, no-repeat;
+    background-attachment:scroll, fixed, fixed;
     color:var(--smoke);
     font-family:'Eurostile Extended', 'Michroma', -apple-system, 'Segoe UI', sans-serif;
     line-height:1.55;
