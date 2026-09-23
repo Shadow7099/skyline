@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Derecho de Admisión y Permanencia · Skyline Halloween Fest</title>
+<meta name="description" content="Política de boletería, cambios, devoluciones y derecho de admisión y permanencia de Skyline Halloween Fest.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+  @font-face{
+    font-family:'Eurostile Extended';
+    src: url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/Eurostile%20Extended%20Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root{
+    --ink:#160b23;
+    --purple-deepest:#1d0e33;
+    --purple-deep:#2a1348;
+    --purple:#3d1c66;
+    --purple-light:#5a3593;
+    --gold:#f0a93b;
+    --gold-deep:#c97e1e;
+    --gold-pale:#f7cf8c;
+    --bone:#f4ecdb;
+    --smoke:#efe6f6;
+    --line:#0e0518;
+    --radius-panel:22px;
+    --shadow-hard: 6px 6px 0 var(--line);
+    --shadow-hard-sm: 4px 4px 0 var(--line);
+    --maxw: 840px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background-color:var(--purple-deepest);
+    background-image:
+      radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px),
+      linear-gradient(135deg, rgba(29,14,51,0.95) 0%, rgba(42,19,72,0.93) 50%, rgba(29,14,51,0.96) 100%),
+      url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/FONDO%202.webp');
+    background-size:16px 16px, auto, cover;
+    background-position:0 0, center, center;
+    background-repeat:repeat, no-repeat, no-repeat;
+    background-attachment:scroll, fixed, fixed;
+    color:var(--smoke);
+    font-family:'Eurostile Extended', 'Michroma', -apple-system, 'Segoe UI', sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:var(--gold); text-decoration:none; }
+  a:hover{ color:var(--gold-pale); }
+
+  .topbar{
+    background:rgba(29,14,51,0.92);
+    border-bottom:3px solid var(--line);
+    padding:14px 0;
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(6px);
+  }
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    text-decoration:none;
+    color:var(--gold-pale);
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    font-weight:600;
+  }
+  .back-link:hover{ color:var(--gold); }
+
+  .container{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  h1{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-size:clamp(1.6rem, 5vw, 2.1rem);
+    color:var(--bone);
+    margin:0 0 8px;
+    line-height:1.25;
+  }
+  .subtitle{
+    color:var(--gold-pale);
+    font-size:0.95rem;
+    margin:0 0 32px;
+    font-weight:500;
+  }
+
+  .page-head{
+    padding:36px 0 0;
+  }
+
+  .doc-panel{
+    background:var(--purple-deep);
+    border:3px solid var(--line);
+    border-radius:var(--radius-panel);
+    padding:32px 28px;
+    box-shadow:var(--shadow-hard);
+    margin-bottom:44px;
+  }
+
+  h2{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    font-size:1.1rem;
+    color:var(--gold);
+    margin:34px 0 14px;
+    line-height:1.3;
+    padding-bottom:8px;
+    border-bottom:2px solid rgba(240,169,59,0.25);
+  }
+  h2:first-child{ margin-top:0; border-bottom:none; padding-bottom:0; }
+
+  p{
+    margin:0 0 14px;
+    font-size:0.97rem;
+    color:var(--smoke);
+    line-height:1.7;
+  }
+  p:last-child{ margin-bottom:0; }
+
+  ol, ul{
+    margin:0 0 16px;
+    padding-left:24px;
+  }
+  ol li, ul li{
+    margin-bottom:10px;
+    font-size:0.97rem;
+    color:var(--smoke);
+    line-height:1.65;
+  }
+  li:last-child{ margin-bottom:0; }
+
+  strong{
+    color:var(--gold-pale);
+    font-weight:600;
+  }
+
+  .section-intro{
+    background:rgba(240,169,59,0.08);
+    border-left:3px solid var(--gold);
+    padding:14px 16px;
+    border-radius:8px;
+    margin:16px 0 20px;
+    font-size:0.96rem;
+    color:var(--smoke);
+  }
+
+  .contact-block{
+    background:var(--purple-deepest);
+    border:2px solid var(--purple-light);
+    border-radius:14px;
+    padding:18px 20px;
+    margin:14px 0 20px;
+  }
+  .contact-block p{ margin:0 0 8px; }
+  .contact-block p:last-child{ margin-bottom:0; }
+  .contact-block a{ color:var(--gold); font-weight:600; }
+
+  .toc{
+    background:var(--purple-deepest);
+    border:2px dashed var(--purple-light);
+    border-radius:12px;
+    padding:20px 22px;
+    margin-bottom:28px;
+  }
+  .toc-title{
+    font-size:0.9rem;
+    color:var(--gold);
+    text-transform:uppercase;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin:0 0 12px;
+  }
+  .toc-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .toc-list li{
+    margin:8px 0;
+  }
+  .toc-list a{
+    font-size:0.93rem;
+    color:var(--gold-pale);
+  }
+  .toc-list a:hover{
+    color:var(--gold);
+  }
+
+  footer{
+    background:var(--ink);
+    padding:32px 0 24px;
+    border-top:4px solid var(--gold);
+    margin-top:60px;
+  }
+  .footer-brand{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    font-size:1.1rem;
+    color:var(--bone);
+    margin-bottom:8px;
+  }
+  .footer-brand span{ color:var(--gold); }
+  .footer-text{
+    color:rgba(244,236,219,0.65);
+    font-size:0.9rem;
+    max-width:300px;
+    margin:0 0 16px;
+  }
+  .footer-fine{
+    border-top:1px solid rgba(244,236,219,0.15);
+    padding-top:14px;
+    font-size:0.78rem;
+    color:rgba(244,236,219,0.5);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <a class="back-link" href="./index.html#terminos">&larr; Volver a inicio</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>Derecho de Admisión y Permanencia</h1>
+    <p class="subtitle">Skyline Halloween Fest · Política de boletería, cambios y devoluciones</p>
+  </div>
+
+  <div class="doc-panel">
+    <nav class="toc">
+      <div class="toc-title">Contenido de esta página</div>
+      <ul class="toc-list">
+        <li><a href="#boleteria">1. Boletería</a></li>
+        <li><a href="#derecho">2. Derecho de Admisión</a></li>
+        <li><a href="#qr">3. Código QR</a></li>
+        <li><a href="#devoluciones">4. Retracto y Devoluciones</a></li>
+        <li><a href="#cancelacion">5. Cancelación del evento</a></li>
+        <li><a href="#terceros">6. Compras a terceros</a></li>
+        <li><a href="#operativas">7. Modificaciones operativas</a></li>
+        <li><a href="#responsabilidad">8. Responsabilidad</a></li>
+        <li><a href="#contacto">9. Contacto</a></li>
+      </ul>
+    </nav>
+
+    <p>SKYLINE HALLOWEEN FEST establece las siguientes condiciones aplicables a la adquisición y utilización de sus boletas. La adquisición de una boleta implica la aceptación de estas condiciones, sin perjuicio de los derechos que la legislación colombiana reconozca al consumidor.</p>
+
+    <h2 id="boleteria">1. Boletería</h2>
+    <div class="section-intro">
+      Las boletas adquiridas a través de canales oficiales constituyen el único medio válido de acceso al evento.
+    </div>
+    
+    <p>Las boletas adquiridas a través de los canales oficiales de SKYLINE HALLOWEEN FEST y/o sus operadores autorizados constituyen el medio válido para solicitar el ingreso al evento.</p>
+    
+    <p>El comprador deberá verificar, antes de finalizar su compra, la fecha, condiciones, tipo de acceso, cantidad de boletas y demás información correspondiente a su compra.</p>
+    
+    <p>Una vez realizada la compra, <strong>no se realizarán cambios de titularidad, fecha, tipo de acceso o etapa de boletería por decisión unilateral del comprador</strong>, salvo cuando legalmente corresponda.</p>
+    
+    <p>Las condiciones particulares de cada etapa de boletería, incluyendo precio, disponibilidad y vigencia, serán las informadas al momento de la compra.</p>
+
+    <h2 id="derecho">2. Derecho de Admisión y Permanencia</h2>
+    <div class="section-intro">
+      Nos reservamos el derecho de admisión y permanencia en el evento.
+    </div>
+    
+    <p>La organización se reserva el derecho de admisión y permanencia dentro del evento, de conformidad con las condiciones previamente informadas, las normas de seguridad, el reglamento del recinto y la legislación aplicable.</p>
+    
+    <p><strong>Podrá negarse el ingreso o solicitarse el retiro del evento, entre otras circunstancias objetivas, cuando:</strong></p>
+    
+    <ol>
+      <li>La persona se encuentre en evidente estado de embriaguez o bajo efectos aparentes de sustancias psicoactivas.</li>
+      <li>Se presenten conductas violentas, agresivas, amenazantes o que alteren el normal desarrollo del evento.</li>
+      <li>Se incumplan las instrucciones razonables del personal de seguridad u organización.</li>
+      <li>Se porten elementos que representen un riesgo para la seguridad de los asistentes o del personal.</li>
+      <li>Se presente una boleta inválida, falsificada, alterada o previamente utilizada.</li>
+      <li>Se incumplan las disposiciones legales, las normas del recinto o las condiciones de seguridad del evento.</li>
+    </ol>
+    
+    <p>Estas condiciones serán aplicadas de manera <strong>objetiva y sin discriminación</strong>.</p>
+
+    <h2 id="qr">3. Código QR y validación de boletas</h2>
+    <div class="section-intro">
+      Cada boleta cuenta con un código QR único e insustituible.
+    </div>
+    
+    <p>Cada boleta cuenta con un código QR único asociado a su respectivo registro.</p>
+    
+    <p><strong>La duplicación, falsificación, alteración, reproducción o uso indebido de una boleta podrá ocasionar su invalidación y el rechazo del ingreso al evento.</strong></p>
+    
+    <p>En caso de que un mismo código QR sea presentado más de una vez, el acceso podrá ser permitido únicamente al primer registro válido efectuado por el sistema.</p>
+    
+    <p>La organización <strong>no garantiza la validez</strong> de boletas adquiridas mediante canales no autorizados, revendedores o terceros.</p>
+    
+    <p>El comprador es <strong>responsable de conservar y proteger</strong> su código QR hasta el momento del ingreso.</p>
+
+    <h2 id="devoluciones">4. Retracto, cambios y devoluciones</h2>
+    <div class="section-intro">
+      Las compras son definitivas. No hay cambios por decisión personal del comprador.
+    </div>
+    
+    <p>La compra de una boleta representa la adquisición de un derecho de acceso al evento bajo las condiciones informadas al momento de la compra.</p>
+    
+    <p><strong>Una vez realizada la compra, no se realizarán cambios ni devoluciones por decisión unilateral del comprador.</strong> Esto incluye, entre otros casos:</p>
+    
+    <ul>
+      <li>Arrepentimiento de compra</li>
+      <li>Cambio de planes</li>
+      <li>Imposibilidad personal de asistir</li>
+      <li>Falta de autorización</li>
+      <li>Compromisos personales o viajes</li>
+      <li>Inconvenientes de transporte</li>
+      <li>Cualquier otra circunstancia particular ajena a la organización</li>
+    </ul>
+    
+    <p><strong>No se realizarán cambios de fecha, tipo de acceso, etapa de boletería, titularidad o modificaciones equivalentes</strong> por decisión unilateral del comprador, salvo cuando exista un derecho legal aplicable.</p>
+    
+    <p>Las solicitudes relacionadas con retracto, reversión del pago, devolución, garantía o cualquier otro mecanismo de protección al consumidor serán atendidas de acuerdo con las disposiciones legales que resulten aplicables.</p>
+    
+    <p>En las ventas realizadas por medios electrónicos o a distancia, se informarán y atenderán los derechos de retracto y demás mecanismos de protección al consumidor que resulten aplicables, de conformidad con la legislación colombiana vigente.</p>
+
+    <h2 id="cancelacion">5. Cancelación, aplazamiento o modificación del evento</h2>
+    
+    <p>En caso de <strong>cancelación, aplazamiento, reprogramación o modificación sustancial</strong> de las condiciones inicialmente anunciadas, la organización comunicará oportunamente a los compradores las medidas correspondientes.</p>
+    
+    <p>Cuando resulte procedente, se informará el mecanismo aplicable para la devolución, abono o recambio de las boletas, de conformidad con la legislación vigente.</p>
+    
+    <p>La ocurrencia de situaciones de <strong>fuerza mayor o caso fortuito</strong> será evaluada de acuerdo con las circunstancias particulares y las disposiciones legales aplicables.</p>
+
+    <h2 id="terceros">6. Compras a terceros</h2>
+    <div class="section-intro">
+      Solo compra en canales oficiales. No garantizamos boletas de revendedores.
+    </div>
+    
+    <p>SKYLINE HALLOWEEN FEST <strong>recomienda adquirir las boletas exclusivamente mediante los canales oficiales</strong> publicados por la organización y/o los promotores autorizados.</p>
+    
+    <p>La organización <strong>no garantiza la autenticidad, validez o disponibilidad</strong> de boletas adquiridas mediante terceros, revendedores o canales no autorizados.</p>
+    
+    <p>Una boleta falsificada, duplicada, alterada o previamente utilizada podrá ser <strong>rechazada en el punto de acceso</strong>.</p>
+
+    <h2 id="operativas">7. Modificaciones operativas</h2>
+    
+    <p>Por razones de <strong>seguridad, logística, capacidad, operación</strong> o circunstancias propias del evento, la organización podrá realizar ajustes operativos que no impliquen una modificación sustancial de las condiciones ofrecidas.</p>
+    
+    <p>Se procurará mantener la experiencia anunciada, comunicando cualquier <strong>modificación sustancial a través de los canales oficiales.</strong></p>
+
+    <h2 id="responsabilidad">8. Responsabilidad del asistente</h2>
+    
+    <p>Cada asistente deberá comportarse de manera <strong>responsable y respetar</strong> las normas de seguridad, convivencia y funcionamiento del evento.</p>
+    
+    <p>La organización podrá adoptar las medidas necesarias para preservar la seguridad de los asistentes, trabajadores, artistas y demás personas presentes en el recinto.</p>
+    
+    <p>El incumplimiento de estas condiciones podrá dar lugar a la <strong>negación del ingreso o al retiro del evento</strong>, según corresponda.</p>
+
+    <h2 id="contacto">9. Canales oficiales de atención</h2>
+    <div class="section-intro">
+      ¿Preguntas o reclamos? Comunícate con nosotros.
+    </div>
+    
+    <p>Para consultas, solicitudes, peticiones, quejas o reclamos relacionados con la boletería y el evento, los asistentes podrán comunicarse a través de:</p>
+    
+    <div class="contact-block">
+      <p><strong>WhatsApp:</strong> <a href="https://wa.me/573133308294" target="_blank" rel="noopener">313 330 8294</a></p>
+      <p><strong>Instagram:</strong> <a href="https://www.instagram.com/skylinepresenta" target="_blank" rel="noopener">@skylinepresenta</a></p>
+    </div>
+    
+    <p>Las solicitudes serán atendidas a través de los canales oficiales y dentro de los términos legalmente aplicables.</p>
+
+    <h2 style="border-bottom:none; padding-bottom:0;">10. Aceptación</h2>
+    
+    <p>Al adquirir una boleta, el comprador declara haber tenido acceso a las condiciones de compra, ingreso y permanencia del evento y aceptar las mismas.</p>
+    
+    <p>Dicha aceptación <strong>no implica renuncia a los derechos que tengan carácter irrenunciable</strong> conforme a la legislación colombiana.</p>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-brand">SKYLINE <span>Halloween Fest</span></div>
+    <p class="footer-text">30 y 31 de octubre · PLOT Bogotá, Km 4.5 vía La Calera.</p>
+    <div class="footer-fine">
+      © 2026 Skyline Halloween Fest. Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
