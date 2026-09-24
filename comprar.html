@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comprar boleta · Skyline Halloween Fest</title>
+<meta name="description" content="Reserva tu boleta para Skyline Halloween Fest, 30 y 31 de octubre en PLOT Bogotá." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+  @font-face{
+    font-family:'Eurostile Extended';
+    src: url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/Eurostile%20Extended%20Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root{
+    --ink:#160b23;
+    --purple-deepest:#1d0e33;
+    --purple-deep:#2a1348;
+    --purple:#3d1c66;
+    --purple-light:#5a3593;
+    --purple-glow:#7c4fc4;
+    --gold:#f0a93b;
+    --gold-deep:#c97e1e;
+    --gold-pale:#f7cf8c;
+    --bone:#f4ecdb;
+    --smoke:#efe6f6;
+    --line:#0e0518;
+    --danger:#e0556a;
+    --ok:#5fbf8f;
+    --radius-tag:18px;
+    --radius-panel:22px;
+    --shadow-hard: 6px 6px 0 var(--line);
+    --shadow-hard-sm: 4px 4px 0 var(--line);
+    --maxw: 640px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background-color:var(--purple-deepest);
+    background-image:
+      radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px),
+      linear-gradient(135deg, rgba(29,14,51,0.95) 0%, rgba(42,19,72,0.93) 50%, rgba(29,14,51,0.96) 100%),
+      url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/FONDO%202.webp');
+    background-size:16px 16px, auto, cover;
+    background-position:0 0, center, center;
+    background-repeat:repeat, no-repeat, no-repeat;
+    background-attachment:scroll, fixed, fixed;
+    color:var(--smoke);
+    font-family:'Eurostile Extended', 'Michroma', -apple-system, 'Segoe UI', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+
+  h1,h2,.display{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    line-height:0.98;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    margin:0;
+    color:var(--bone);
+  }
+
+  a{color:inherit;}
+
+  .container{max-width:var(--maxw); margin:0 auto; padding:0 20px;}
+
+  .topbar{
+    background:rgba(29,14,51,0.92);
+    border-bottom:3px solid var(--line);
+    padding:16px 0;
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(6px);
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    text-decoration:none;
+    color:var(--gold-pale);
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-weight:600;
+  }
+  .back-link:hover{ color:var(--gold); }
+
+  .page-head{ padding:36px 0 8px; text-align:left; }
+  .page-head h1{ font-size:clamp(2rem, 8vw, 2.6rem); }
+  .page-head .sub{ margin-top:8px; color:var(--gold-pale); font-size:0.95rem; }
+
+  .panel{
+    background:var(--purple-deepest);
+    border:3px solid var(--line);
+    border-radius:var(--radius-panel);
+    overflow:hidden;
+    box-shadow:var(--shadow-hard);
+    margin-top:22px;
+  }
+  .panel-head{
+    background:var(--gold);
+    color:var(--ink);
+    padding:14px 20px;
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-size:1.05rem;
+    border-bottom:3px solid var(--line);
+  }
+  .panel-body{ padding:20px; }
+
+  label{
+    display:block;
+    font-size:0.82rem;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--gold-pale);
+    margin:16px 0 6px;
+    font-weight:600;
+  }
+  label:first-child{ margin-top:0; }
+  label .required{
+    color:var(--danger);
+    margin-left:2px;
+  }
+
+  select, input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:10px;
+    border:2px solid var(--purple-light);
+    background:var(--purple-deep);
+    color:var(--bone);
+    font-size:15px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color 0.2s ease;
+  }
+  select:focus, input:focus{ 
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(240,169,59,0.1);
+  }
+  select{ appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4' stroke='%23f0a93b' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:38px;
+  }
+
+  .qty-row{ display:flex; align-items:center; gap:12px; }
+  .qty-btn{
+    width:44px; height:44px; flex-shrink:0;
+    border-radius:10px;
+    border:2px solid var(--line);
+    background:var(--gold);
+    color:var(--ink);
+    font-size:20px; font-weight:700;
+    cursor:pointer;
+    box-shadow:var(--shadow-hard-sm);
+    transition:all 0.15s ease;
+  }
+  .qty-btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--line); }
+  .qty-btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--line); }
+  .qty-val{
+    flex:1; text-align:center;
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-size:1.3rem;
+    color:var(--bone);
+  }
+
+  .summary{
+    margin-top:18px;
+    border:2px dashed rgba(244,236,219,0.3);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .summary-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0;
+    border-bottom:1px dashed rgba(244,236,219,0.2);
+    font-size:0.92rem;
+  }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row.total{ padding-top:12px; }
+  .summary-row.total .label{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    text-transform:uppercase;
+    font-size:0.95rem;
+    color:var(--bone);
+  }
+  .summary-row.total .amount{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:700;
+    font-size:1.4rem;
+    color:var(--gold);
+  }
+  .summary-row .amount-sm{ color:var(--gold-pale); }
+
+  .pay-btn{
+    display:block; width:100%; margin-top:20px;
+    padding:16px 20px;
+    border-radius:10px;
+    border:3px solid var(--line);
+    background:var(--gold);
+    color:var(--ink);
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:700; font-size:1rem;
+    text-transform:uppercase; letter-spacing:0.5px;
+    cursor:pointer;
+    box-shadow:var(--shadow-hard-sm);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .pay-btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--line); }
+  .pay-btn:active{ transform:translate(0,0); box-shadow:2px 2px 0 var(--line); }
+  .pay-btn:disabled{ opacity:0.6; cursor:wait; transform:none; box-shadow:var(--shadow-hard-sm); }
+
+  .msg{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:0.88rem;
+    display:none;
+    border:2px solid var(--line);
+  }
+  .msg.error{ 
+    background:rgba(224,85,106,0.15); 
+    color:var(--danger); 
+    border-color:var(--danger); 
+    display:block; 
+  }
+  .msg.loading{ 
+    background:rgba(244,236,219,0.08); 
+    color:var(--gold-pale); 
+    display:block; 
+  }
+  .msg.ok{
+    background:rgba(95,191,143,0.1);
+    color:var(--ok);
+    border-color:var(--ok);
+    display:block;
+  }
+
+  .terms-checkbox{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:16px;
+    padding:12px 14px;
+    background:var(--purple-deep);
+    border-radius:10px;
+    border:1px solid var(--purple-light);
+  }
+  .terms-checkbox input[type="checkbox"]{
+    width:auto;
+    margin-top:2px;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  .terms-checkbox label{
+    margin:0;
+    color:var(--smoke);
+    font-size:0.9rem;
+    text-transform:none;
+    letter-spacing:normal;
+    cursor:pointer;
+    flex:1;
+  }
+  .terms-checkbox a{
+    color:var(--gold);
+    text-decoration:none;
+  }
+  .terms-checkbox a:hover{
+    text-decoration:underline;
+  }
+
+  .footnote{
+    font-size:0.78rem;
+    color:rgba(244,236,219,0.6);
+    text-align:center;
+    margin-top:22px;
+  }
+
+  .info-box{
+    background:rgba(124,79,196,0.1);
+    border-left:3px solid var(--purple-glow);
+    padding:12px 14px;
+    border-radius:8px;
+    font-size:0.9rem;
+    color:var(--smoke);
+    margin-top:14px;
+  }
+</style>
+<script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <a class="back-link" href="/index.html#boletas">&larr; Volver a boletería</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>Reserva tu boleta</h1>
+    <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · PLOT Bogotá</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">Tu boleta</div>
+    <div class="panel-body">
+      <label for="access_type">Tipo de acceso <span class="required">*</span></label>
+      <select id="access_type"></select>
+
+      <label>Cantidad de boletas <span class="required">*</span></label>
+      <div class="qty-row">
+        <button type="button" class="qty-btn" id="qty-minus" aria-label="Restar">&minus;</button>
+        <span class="qty-val" id="qty-val">1</span>
+        <button type="button" class="qty-btn" id="qty-plus" aria-label="Sumar">+</button>
+      </div>
+
+      <div class="summary">
+        <div class="summary-row"><span>Precio unitario</span><span class="amount-sm" id="unit-price">—</span></div>
+        <div class="summary-row"><span>Boletas</span><span class="amount-sm" id="qty-echo">1</span></div>
+        <div class="summary-row total"><span class="label">Total a pagar</span><span class="amount" id="total-price">—</span></div>
+      </div>
+
+      <div class="info-box">
+        ✓ Pago seguro con Bold · ✓ Boletas enviadas por WhatsApp
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">Tus datos</div>
+    <div class="panel-body">
+      <label for="full_name">Nombre completo <span class="required">*</span></label>
+      <input id="full_name" type="text" autocomplete="name" placeholder="Tu nombre y apellido" />
+
+      <label for="document_id">Número de documento <span class="required">*</span></label>
+      <input id="document_id" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 1234567890" />
+
+      <label for="email">Correo electrónico <span class="required">*</span></label>
+      <input id="email" type="email" autocomplete="email" placeholder="tu@correo.com" />
+
+      <label for="phone">Teléfono (WhatsApp) <span class="required">*</span></label>
+      <input id="phone" type="tel" autocomplete="tel" placeholder="3001234567" />
+
+      <div class="terms-checkbox">
+        <input type="checkbox" id="terms_accept" />
+        <label for="terms_accept">
+          Acepto los <a href="./terminos.html" target="_blank" rel="noopener">términos y condiciones</a> 
+          y el derecho de admisión y permanencia.
+        </label>
+      </div>
+
+      <button type="button" id="pay-btn" class="pay-btn">Pagar con Bold</button>
+      <div id="msg" class="msg"></div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    Tu compra se confirma automáticamente en cuanto Bold apruebe el pago.
+    <br>Al finalizar, escríbenos por WhatsApp y te enviamos tu boleta.
+  </p>
+</div>
+
+<script>
+(function () {
+  var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
+
+  var PRICES = {
+    "2-dias": { label: "Acceso 2 días", price: 35000, stage: "Lanzamiento" },
+    "1-dia":  { label: "Acceso 1 día",  price: 25000, stage: "Lanzamiento" }
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var initialTipo = params.get("tipo") === "1-dia" ? "1-dia" : "2-dias";
+
+  var accessSelect = document.getElementById("access_type");
+  Object.keys(PRICES).forEach(function (key) {
+    var opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = PRICES[key].label + " — $" + PRICES[key].price.toLocaleString("es-CO") + " (" + PRICES[key].stage + ")";
+    accessSelect.appendChild(opt);
+  });
+  accessSelect.value = initialTipo;
+
+  var qty = 1;
+  var qtyVal = document.getElementById("qty-val");
+  var qtyEcho = document.getElementById("qty-echo");
+  var unitPriceEl = document.getElementById("unit-price");
+  var totalPriceEl = document.getElementById("total-price");
+
+  function money(n) { return "$" + n.toLocaleString("es-CO"); }
+
+  function renderTotals() {
+    var info = PRICES[accessSelect.value];
+    qtyVal.textContent = qty;
+    qtyEcho.textContent = qty;
+    unitPriceEl.textContent = money(info.price);
+    totalPriceEl.textContent = money(info.price * qty);
+  }
+
+  document.getElementById("qty-minus").addEventListener("click", function () {
+    if (qty > 1) { qty--; renderTotals(); }
+  });
+  document.getElementById("qty-plus").addEventListener("click", function () {
+    if (qty < 10) { qty++; renderTotals(); }
+  });
+  accessSelect.addEventListener("change", function () { renderTotals(); });
+
+  function showMsg(text, type) {
+    var msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = "msg " + (type || "error");
+  }
+  function clearMsg() {
+    var msg = document.getElementById("msg");
+    msg.className = "msg";
+    msg.textContent = "";
+  }
+
+  function currentBuyer() {
+    return {
+      access_type: accessSelect.value,
+      quantity: qty,
+      full_name: document.getElementById("full_name").value.trim(),
+      document_id: document.getElementById("document_id").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim()
+    };
+  }
+
+  function validateForm() {
+    var buyer = currentBuyer();
+    if (!buyer.full_name) { showMsg("Por favor ingresa tu nombre completo."); return false; }
+    if (!buyer.document_id) { showMsg("Por favor ingresa tu número de documento."); return false; }
+    if (!buyer.email) { showMsg("Por favor ingresa tu correo electrónico."); return false; }
+    if (!buyer.phone) { showMsg("Por favor ingresa tu teléfono de WhatsApp."); return false; }
+    
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(buyer.email)) { showMsg("El correo no parece válido."); return false; }
+    
+    if (!document.getElementById("terms_accept").checked) { 
+      showMsg("Debes aceptar los términos y condiciones para continuar."); 
+      return false; 
+    }
+    return true;
+  }
+
+  // ---------- Pago con Bold (integración personalizada oficial) ----------
+  // La orden se crea SOLO cuando el comprador hace clic en pagar:
+  // una orden por intento, sin órdenes duplicadas mientras escribe.
+  var payBtn = document.getElementById("pay-btn");
+  var paying = false;
+
+  function setPaying(state) {
+    paying = state;
+    payBtn.disabled = state;
+    payBtn.textContent = state ? "Preparando tu pago…" : "Pagar con Bold";
+  }
+
+  function boldReady() {
+    return new Promise(function (resolve, reject) {
+      if (window.BoldCheckout) { resolve(); return; }
+      var tries = 0;
+      var t = setInterval(function () {
+        tries++;
+        if (window.BoldCheckout) { clearInterval(t); resolve(); }
+        else if (tries > 50) { clearInterval(t); reject(new Error("bold_not_loaded")); }
+      }, 100);
+    });
+  }
+
+  payBtn.addEventListener("click", function () {
+    if (paying) return;
+    clearMsg();
+    if (!validateForm()) return;
+
+    var buyer = currentBuyer();
+    setPaying(true);
+
+    fetch(FUNCTIONS_BASE + "/create-bold-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buyer)
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
+        }
+        return boldReady().then(function () { return res.data; }, function () {
+          throw new Error("No se pudo cargar la pasarela de Bold. Revisa tu conexión o desactiva el bloqueador de anuncios e intenta de nuevo.");
+        });
+      })
+      .then(function (d) {
+        var checkout = new window.BoldCheckout({
+          orderId: d.order_id,
+          currency: d.currency,
+          amount: String(d.amount),
+          apiKey: d.api_key,
+          integritySignature: d.integrity_signature,
+          description: d.description,
+          redirectionUrl: d.redirection_url,
+          customerData: JSON.stringify({
+            email: buyer.email,
+            fullName: buyer.full_name,
+            phone: buyer.phone.replace(/\D/g, ""),
+            dialCode: "+57",
+            documentNumber: buyer.document_id.replace(/\D/g, ""),
+            documentType: "CC"
+          })
+        });
+        showMsg("Abriendo la pasarela de Bold…", "loading");
+        checkout.open();
+        setTimeout(function () { setPaying(false); clearMsg(); }, 4000);
+      })
+      .catch(function (err) {
+        setPaying(false);
+        showMsg(err && err.message && err.message !== "Failed to fetch"
+          ? err.message
+          : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
+      });
+  });
+
+
+  renderTotals();
+})();
+</script>
+</body>
+</html>
