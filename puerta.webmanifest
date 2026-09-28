@@ -1,0 +1,13 @@
+{
+  "name": "Puerta Skyline",
+  "short_name": "Puerta",
+  "start_url": "/puerta.html",
+  "scope": "/puerta",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1d0e33",
+  "theme_color": "#1d0e33",
+  "icons": [
+    { "src": "https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
