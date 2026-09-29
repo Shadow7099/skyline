@@ -113,6 +113,17 @@
   .help a{ color:var(--gold-pale); }
   .loading{ color:var(--gold-pale); font-size:0.9rem; }
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document, 'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1065410066277516');
+fbq('track', 'PageView');
+</script>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 <div class="wrap">
@@ -137,6 +148,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   var startedAt = Date.now();
 
   function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
+
+
+  function trackPurchase(o) {
+    if (!o || o.status !== "pagado" || !window.fbq || !o.id) return;
+    var storageKey = "skyline_pixel_purchase_" + o.id;
+    try { if (window.localStorage.getItem(storageKey)) return; } catch (e) {}
+    var amount = Number(o.total);
+    if (!isFinite(amount)) return;
+    window.fbq("track", "Purchase", {
+      value: amount,
+      currency: "COP",
+      content_ids: [o.access_type || "skyline-halloween-fest"],
+      content_type: "product",
+      num_items: Number(o.quantity) || 1
+    }, { eventID: "bold_" + o.id });
+    try { window.localStorage.setItem(storageKey, "1"); } catch (e) {}
+  }
+
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
   function accessLabel(a) { return a === "1-dia" ? "Acceso 1 día" : "Acceso 2 días"; }
 
@@ -184,6 +213,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     card.appendChild(a);
   }
   function renderPaid(o) {
+    trackPurchase(o);
     header("🎟️", "¡Pago confirmado!", "Skyline Halloween Fest", "ok");
     details(o);
     var many = o.tickets.length > 1;
