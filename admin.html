@@ -278,10 +278,6 @@
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head">Lo que paga el promotor hoy</div>
-        <div class="panel-body" id="p-prices"><div class="empty">Cargando…</div></div>
-      </div>
 
       <div class="panel">
         <div class="panel-head">Promotores</div>
@@ -397,11 +393,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
 
   function loadPromoters() {
-    return api("promoters_list").then(function (d) { renderPrices(d.stages || []); renderPromoters(d.promoters || [], d.goals || []); })
+    return api("promoters_list").then(function (d) { renderPromoters(d.promoters || [], d.goals || []); })
       .catch(function (e) { $("p-rows").innerHTML = ""; $("p-rows").appendChild(el("div", "empty", e.message)); });
   }
   function renderPrices(stages) {
-    var box = $("p-prices"); box.innerHTML = "";
+    var box = $("p-prices"); if (!box) return; box.innerHTML = "";
     if (!stages.length) { box.appendChild(el("div", "empty", "No hay etapa activa.")); return; }
     var tbl = el("table", "ptable"), head = el("tr");
     ["Boleta", "Etapa", "Precio", "Comisión", "Paga el promotor"].forEach(function (h) { head.appendChild(el("th", "", h)); });
@@ -419,8 +415,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function promoMessage(p) {
     return "Hola " + p.name.split(/\s+/)[0] + ", este es tu código de promotor de Skyline Halloween Fest: " + p.code +
-      "\n\nCuando vendas una boleta, entra a www.skylinepresenta.com, toca Comprar, escribe tu código y paga el precio de promotor. " +
-      "Pon los datos de tu cliente para que las boletas queden a su nombre. La diferencia con el precio normal es tu comisión.";
+      "\n\nCompártelo con tus clientes. Cuando compren en www.skylinepresenta.com deben escribirlo en \"¿Te invitó un promotor? Ingresa su código\". " +
+      "Así cada boleta que vendas queda registrada a tu nombre.";
   }
   function renderPromoters(list, goals) {
     var box = $("p-rows"); box.innerHTML = "";
@@ -432,7 +428,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       top.appendChild(el("span", "code", p.code));
       row.appendChild(top);
       var stats = el("div", "prow-stats");
-      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.commission), "comisión ganada"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
+      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.paid_total), "recaudado con su código"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
         var d = el("div"); d.appendChild(el("b", "", String(x[0]))); d.appendChild(el("span", "", x[1])); stats.appendChild(d);
       });
       row.appendChild(stats);
@@ -465,7 +461,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       }
       var tg = el("button", "btn sm ghost", p.active ? "Desactivar código" : "Activar código");
       tg.onclick = function () {
-        if (p.active && !confirm("¿Desactivar el código " + p.code + "? Ya no podrá comprar con descuento.")) return;
+        if (p.active && !confirm("¿Desactivar el código " + p.code + "? Las compras nuevas con ese código ya no se le contarán.")) return;
         tg.disabled = true;
         api("promoter_toggle", { id: p.id, active: !p.active }).then(loadPromoters).catch(function (e) { alert(e.message); tg.disabled = false; });
       };
