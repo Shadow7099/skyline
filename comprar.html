@@ -317,17 +317,6 @@
   }
 </style>
 <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document, 'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1065410066277516');
-fbq('track', 'PageView');
-</script>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -357,9 +346,9 @@ fbq('track', 'PageView');
       </div>
 
       <div class="promo">
-        <button type="button" class="promo-toggle" id="promo-toggle" aria-expanded="false">¿Eres promotor? Ingresa tu código</button>
+        <button type="button" class="promo-toggle" id="promo-toggle" aria-expanded="false">¿Tienes código de descuento?</button>
         <div class="promo-box hidden" id="promo-box">
-          <label for="promo_code">Código de promotor</label>
+          <label for="promo_code">Código de descuento</label>
           <div class="promo-row">
             <input id="promo_code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Ej: CAMILA-7KP">
             <button type="button" class="promo-apply" id="promo-apply">Aplicar</button>
@@ -440,7 +429,8 @@ fbq('track', 'PageView');
       var opt = document.createElement("option");
       opt.value = key;
       var pay = PRICES[key].price - (promo ? (promo.discounts[key] || 0) : 0);
-      opt.textContent = PRICES[key].label + " — $" + pay.toLocaleString("es-CO") + (promo ? " (precio promotor)" : " (" + PRICES[key].stage + ")");
+      var hasDisc = promo && (promo.discounts[key] || 0) > 0;
+      opt.textContent = PRICES[key].label + " — $" + pay.toLocaleString("es-CO") + (hasDisc ? " (precio promotor)" : " (" + PRICES[key].stage + ")");
       accessSelect.appendChild(opt);
     });
     accessSelect.value = current;
@@ -461,8 +451,8 @@ fbq('track', 'PageView');
     var unit = info.price - disc;
     qtyVal.textContent = qty;
     qtyEcho.textContent = qty;
-    document.getElementById("row-list").classList.toggle("hidden", !promo);
-    document.getElementById("row-disc").classList.toggle("hidden", !promo);
+    document.getElementById("row-list").classList.toggle("hidden", !(promo && disc > 0));
+    document.getElementById("row-disc").classList.toggle("hidden", !(promo && disc > 0));
     document.getElementById("list-price").textContent = money(info.price);
     document.getElementById("disc-price").textContent = "−" + money(disc);
     unitPriceEl.textContent = money(unit);
@@ -518,7 +508,8 @@ fbq('track', 'PageView');
     loadPrices(code).then(function (res) {
       if (!res.ok || !res.d.promoter) {
         promo = null; maxQty = 10; renderOptions(); renderTotals();
-        setPromoMsg((res.d && res.d.error) || "El código no es válido.", "err");
+        var err = (res.d && res.d.error) || "";
+        setPromoMsg(/demasiados/i.test(err) ? err : "El código no es válido.", "err");
         return;
       }
       applyServerPrices(res.d);
@@ -527,7 +518,10 @@ fbq('track', 'PageView');
       maxQty = res.d.max_quantity || 10;
       input.value = promo.code;
       renderOptions(); renderTotals();
-      setPromoMsg("Código de " + promo.name + " aplicado. Pon abajo los datos de tu cliente para que las boletas queden a su nombre.", "ok", true);
+      var anyDisc = Object.keys(promo.discounts).some(function (k) { return promo.discounts[k] > 0; });
+      setPromoMsg(anyDisc
+        ? "Código de " + promo.name + " aplicado. Pon abajo los datos de tu cliente para que las boletas queden a su nombre."
+        : "Código aplicado.", "ok", true);
     }).catch(function () {
       setPromoMsg("No pudimos verificar el código. Revisa tu conexión.", "err");
     }).finally(function () { btn.disabled = false; });
@@ -649,7 +643,6 @@ fbq('track', 'PageView');
         });
         showMsg("Abriendo la pasarela de Bold…", "loading");
         checkout.open();
-        if (window.fbq) window.fbq("track", "InitiateCheckout", {value: Number(d.amount), currency: d.currency || "COP", num_items: Number(buyer.quantity) || 1}, {eventID: "checkout_" + d.order_id});
         setTimeout(function () { setPaying(false); clearMsg(); }, 4000);
       })
       .catch(function (err) {
