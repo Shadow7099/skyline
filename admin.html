@@ -146,6 +146,18 @@
   .bar i{ display:block; height:100%; background:var(--gold); border-radius:99px; }
   .prow-actions{ display:flex; flex-wrap:wrap; gap:8px; }
   .off{ opacity:0.55; }
+  .pinfo{ font-size:0.85rem; color:var(--gold-pale); margin:6px 0 10px; line-height:1.5; }
+  .pinfo a{ color:var(--gold); font-weight:700; }
+  .check{ display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-size:0.95rem; color:var(--bone); margin-top:16px; cursor:pointer; }
+  .check input{ width:22px; height:22px; accent-color:var(--gold); }
+  .disc-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--night); border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+  .disc-row span{ font-size:0.9rem; }
+  .disc-row span b{ color:var(--gold); }
+  .switch{ position:relative; width:54px; height:30px; flex-shrink:0; border-radius:99px; border:2px solid var(--line); background:var(--plum-3); cursor:pointer; padding:0; }
+  .switch::after{ content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--bone); transition:transform 0.15s ease; }
+  .switch[aria-checked="true"]{ background:var(--go); }
+  .switch[aria-checked="true"]::after{ transform:translateX(24px); }
+  .switch:disabled{ opacity:0.5; cursor:wait; }
 
   /* Modal */
   #modal{ position:fixed; inset:0; z-index:30; background:rgba(8,3,16,0.85); display:flex; align-items:center; justify-content:center; padding:18px; }
@@ -273,11 +285,17 @@
           </div>
           <label for="p-code">Código (opcional)</label>
           <input class="field" id="p-code" autocomplete="off" maxlength="24" placeholder="Si lo dejas vacío se crea uno como CAMILA-7KP" style="text-transform:uppercase">
+          <label class="check"><input type="checkbox" id="p-disc"> Darle descuento de promotor</label>
           <button class="btn block" id="p-create">Crear promotor</button>
           <div class="msg" id="p-msg" role="alert"></div>
         </div>
       </div>
 
+
+      <div class="panel">
+        <div class="panel-head">Descuento de promotor (solo para los que lo tengan activo)</div>
+        <div class="panel-body" id="p-prices"><div class="empty">Cargando…</div></div>
+      </div>
 
       <div class="panel">
         <div class="panel-head">Promotores</div>
@@ -393,14 +411,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
 
   function loadPromoters() {
-    return api("promoters_list").then(function (d) { renderPromoters(d.promoters || [], d.goals || []); })
+    return api("promoters_list").then(function (d) { renderPrices(d.stages || []); renderPromoters(d.promoters || [], d.goals || []); })
       .catch(function (e) { $("p-rows").innerHTML = ""; $("p-rows").appendChild(el("div", "empty", e.message)); });
   }
   function renderPrices(stages) {
     var box = $("p-prices"); if (!box) return; box.innerHTML = "";
     if (!stages.length) { box.appendChild(el("div", "empty", "No hay etapa activa.")); return; }
     var tbl = el("table", "ptable"), head = el("tr");
-    ["Boleta", "Etapa", "Precio", "Comisión", "Paga el promotor"].forEach(function (h) { head.appendChild(el("th", "", h)); });
+    ["Boleta", "Etapa", "Precio", "Descuento", "Paga el promotor"].forEach(function (h) { head.appendChild(el("th", "", h)); });
     tbl.appendChild(head);
     stages.sort(function (a, b) { return a.access_type < b.access_type ? -1 : 1; }).forEach(function (s) {
       var tr = el("tr");
@@ -414,8 +432,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     box.appendChild(tbl);
   }
   function promoMessage(p) {
+    if (p.discount_enabled) {
+      return "Hola " + p.name.split(/\s+/)[0] + ", este es tu código de promotor de Skyline Halloween Fest: " + p.code +
+        "\n\nCuando vendas una boleta, entra a www.skylinepresenta.com, toca Comprar, abre \"¿Tienes código de descuento?\", escribe tu código y paga el precio de promotor. " +
+        "Pon los datos de tu cliente para que las boletas queden a su nombre. La diferencia con el precio normal es tu comisión.";
+    }
     return "Hola " + p.name.split(/\s+/)[0] + ", este es tu código de promotor de Skyline Halloween Fest: " + p.code +
-      "\n\nCompártelo con tus clientes. Cuando compren en www.skylinepresenta.com deben escribirlo en \"¿Te invitó un promotor? Ingresa su código\". " +
+      "\n\nCompártelo con tus clientes. Cuando compren en www.skylinepresenta.com deben escribirlo en \"¿Tienes código de descuento?\". " +
       "Así cada boleta que vendas queda registrada a tu nombre.";
   }
   function renderPromoters(list, goals) {
@@ -427,6 +450,40 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       top.appendChild(el("span", "prow-name", p.name + (p.active ? "" : " (desactivado)")));
       top.appendChild(el("span", "code", p.code));
       row.appendChild(top);
+      if (p.source === "registro" || p.instagram || p.age) {
+        var info = el("div", "pinfo");
+        if (p.source === "registro") info.appendChild(el("span", "pill", "Se registró en la web"));
+        var bits = [];
+        if (p.age) bits.push(p.age + " años");
+        if (p.school) bits.push("Estudia: " + p.school);
+        if (p.zone) bits.push("Vive: " + p.zone);
+        if (p.phone) bits.push("WhatsApp: " + p.phone);
+        info.appendChild(document.createTextNode(bits.join(" · ")));
+        if (p.instagram) {
+          info.appendChild(document.createTextNode(bits.length ? " · " : ""));
+          var ig = el("a", "", "@" + p.instagram);
+          ig.href = "https://instagram.com/" + encodeURIComponent(p.instagram); ig.target = "_blank"; ig.rel = "noopener";
+          info.appendChild(ig);
+        }
+        row.appendChild(info);
+      }
+      var dr = el("div", "disc-row");
+      var dl = el("span");
+      dl.appendChild(document.createTextNode("Descuento de promotor: "));
+      dl.appendChild(el("b", "", p.discount_enabled ? "Activado" : "Desactivado"));
+      if (p.commission) dl.appendChild(document.createTextNode(" · entregado " + money(p.commission)));
+      var sw = el("button", "switch"); sw.type = "button"; sw.setAttribute("role", "switch");
+      sw.setAttribute("aria-checked", p.discount_enabled ? "true" : "false");
+      sw.setAttribute("aria-label", "Descuento de promotor para " + p.name);
+      sw.onclick = function () {
+        var turnOn = !p.discount_enabled;
+        if (turnOn && !/-[A-Z0-9]{3}$/.test(p.code) && !confirm("El código " + p.code + " es fácil de adivinar. Si activas el descuento, cualquiera que lo adivine pagará el precio de promotor. ¿Activarlo igual?")) return;
+        if (!turnOn && !confirm("¿Quitarle el descuento a " + p.name + "? Desde ahora pagará el precio completo.")) return;
+        sw.disabled = true;
+        api("promoter_discount", { id: p.id, enabled: turnOn }).then(loadPromoters).catch(function (e) { alert(e.message); sw.disabled = false; });
+      };
+      dr.appendChild(dl); dr.appendChild(sw);
+      row.appendChild(dr);
       var stats = el("div", "prow-stats");
       [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.paid_total), "recaudado con su código"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
         var d = el("div"); d.appendChild(el("b", "", String(x[0]))); d.appendChild(el("span", "", x[1])); stats.appendChild(d);
@@ -475,10 +532,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     $("p-msg").className = "msg"; $("p-msg").textContent = "";
     if (name.length < 2) { $("p-msg").textContent = "Escribe el nombre del promotor."; $("p-name").focus(); return; }
     $("p-create").disabled = true;
-    api("promoter_create", { name: name, phone: $("p-phone").value.trim(), code: $("p-code").value.trim() })
+    api("promoter_create", { name: name, phone: $("p-phone").value.trim(), code: $("p-code").value.trim(), discount_enabled: $("p-disc").checked })
       .then(function (d) {
         $("p-msg").className = "msg ok"; $("p-msg").textContent = "Promotor creado. Su código es " + d.promoter.code + ".";
         ["p-name", "p-phone", "p-code"].forEach(function (id) { $(id).value = ""; });
+        $("p-disc").checked = false;
         loadPromoters();
       }).catch(function (e) { $("p-msg").textContent = e.message; })
       .finally(function () { $("p-create").disabled = false; });
