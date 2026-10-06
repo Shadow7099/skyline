@@ -619,6 +619,29 @@
   .success-steps a{ color:var(--gold-pale); }
   .success .btn-block{ margin-top:12px; }
 
+  /* ---------- Top Seller y reglas ---------- */
+  .top-seller{ display:flex; align-items:center; gap:20px; margin-top:28px; padding:22px 24px; background:var(--purple-deepest); border:3px solid var(--gold); border-radius:var(--radius-panel); box-shadow:var(--shadow-hard); }
+  .ts-icon{ flex-shrink:0; width:84px; height:84px; display:flex; align-items:center; justify-content:center; background:var(--gold); color:var(--ink); border:3px solid var(--line); border-radius:18px; }
+  .ts-icon svg{ width:52px; height:52px; }
+  .top-seller h3{ font-family:'Eurostile Extended','Michroma',sans-serif; text-transform:uppercase; color:var(--gold); font-size:clamp(1.4rem, 4.5vw, 2.2rem); margin:0 0 6px; line-height:1.05; }
+  .top-seller p{ margin:0; color:var(--smoke); font-size:1rem; line-height:1.5; }
+  .top-seller strong{ color:var(--gold); }
+  @media (max-width:560px){ .top-seller{ flex-direction:column; text-align:center; } .ts-icon{ width:70px; height:70px; } }
+
+  .rules-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; align-items:stretch; }
+  @media (max-width:1000px){ .rules-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:600px){ .rules-grid{ grid-template-columns:1fr; } }
+  .rules-grid .feature-card{ transform:none !important; }
+  .rule-icon{ display:inline-flex; align-items:center; justify-content:center; width:50px; height:50px; margin-bottom:14px; border-radius:12px; background:var(--gold); color:var(--ink); border:3px solid var(--line); }
+  .rule h3{ font-size:1.02rem; line-height:1.2; }
+  .rule p{ font-size:0.92rem; margin:0 0 10px; }
+  .rule p:last-child{ margin-bottom:0; }
+  .rule strong{ color:var(--gold); }
+  .count-list{ list-style:none; margin:10px 0 0; padding:0; }
+  .count-list li{ display:flex; flex-direction:column; padding:12px 0 12px 16px; border-left:3px solid var(--gold); margin-bottom:10px; }
+  .count-list strong{ color:var(--bone); font-size:1.05rem; }
+  .count-list span{ color:var(--gold); font-weight:700; font-size:1.05rem; }
+
   /* ---------- Versión negra (solo Skyline Crew) ---------- */
   :root{
     --ink:#000000;
@@ -651,10 +674,6 @@
 
 <header class="hero" id="top">
   <div class="hero-deco" aria-hidden="true">
-    <img class="cloud cloud-4" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/4.webp" alt="" loading="eager" decoding="async">
-    <img class="cloud cloud-5" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/5.webp" alt="" loading="eager" decoding="async">
-    <img class="cloud cloud-6" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/6.webp" alt="" decoding="async">
-    <img class="cloud cloud-7" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/7.webp" alt="" decoding="async">
     <svg class="bat-a" viewBox="0 0 60 34" fill="none"><path d="M30 14c-4-8-14-12-22-8 4 2 7 5 8 9-6-1-12 1-16 6 6 0 11 2 14 6 4-3 10-4 16-2 6-2 12-1 16 2 3-4 8-6 14-6-4-5-10-7-16-6 1-4 4-7 8-9-8-4-18 0-22 8Z" fill="#160b23"/></svg>
     <svg class="bat-b" viewBox="0 0 60 34" fill="none"><path d="M30 14c-4-8-14-12-22-8 4 2 7 5 8 9-6-1-12 1-16 6 6 0 11 2 14 6 4-3 10-4 16-2 6-2 12-1 16 2 3-4 8-6 14-6-4-5-10-7-16-6 1-4 4-7 8-9-8-4-18 0-22 8Z" fill="#160b23"/></svg>
   </div>
@@ -664,6 +683,11 @@
     <p class="crew-money">y gana hasta <strong>$3.000.000</strong></p>
     <p class="crew-sub">Comisiones por cada venta + Bonos por metas de hasta $1.5M</p>
     <p class="tagline">Sé parte del equipo de <strong>SKYLINE HALLOWEEN FEST</strong>. ¡La fiesta de Halloween a las alturas de Bogotá más exclusiva!</p>
+    <div class="meta-strip">
+      <span class="meta-pill"><span class="dot">◆</span> 30–31 de octubre</span>
+      <span class="meta-pill"><span class="dot">◆</span> PLOT Bogotá</span>
+      <span class="meta-pill"><span class="dot">◆</span> Km 4.5 vía La Calera</span>
+    </div>
     <div class="hero-ctas">
       <a href="#registro" class="btn btn-primary">Quiero ser promotor</a>
       <a href="#ganancias" class="btn btn-outline">Ver cuánto gano</a>
@@ -716,6 +740,16 @@
         <p class="bonus-note">Bonos por meta alcanzada. <strong>No son acumulativos.</strong></p>
       </div>
     </div>
+
+    <div class="top-seller">
+      <div class="ts-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="48" height="48" fill="none"><path d="M14 6h20v10a10 10 0 0 1-20 0V6Z" fill="currentColor"/><path d="M14 10H7v3a7 7 0 0 0 7 7M34 10h7v3a7 7 0 0 1-7 7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M24 26v8M16 42h16l-2-8H18l-2 8Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <h3>Top Seller Skyline</h3>
+        <p>El promotor con más ventas válidas al cierre del periodo recibirá un premio equivalente al <strong>5% de la utilidad neta final del evento</strong>.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -723,23 +757,36 @@
   <div class="container">
     <div class="section-head">
       <h2>Así funciona ↓</h2>
-      <p>En tres pasos empiezas a vender.</p>
+      <p>Lo que debes saber antes de empezar a vender.</p>
     </div>
-    <div class="feature-grid crew-steps">
-      <div class="feature-card">
-        <span class="step-num">1</span>
-        <h3>Regístrate</h3>
-        <p>Llena el formulario de abajo y recibes tu código de promotor al instante.</p>
+    <div class="rules-grid">
+      <div class="feature-card rule">
+        <span class="rule-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><rect x="3" y="13" width="4" height="8" rx="1" fill="currentColor"/><rect x="10" y="8" width="4" height="13" rx="1" fill="currentColor"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span>
+        <h3>¿Cómo se cuentan las ventas?</h3>
+        <ul class="count-list">
+          <li><strong>Acceso 1 día</strong><span>= 1 venta</span></li>
+          <li><strong>Acceso 2 días</strong><span>= 2 ventas</span></li>
+        </ul>
       </div>
-      <div class="feature-card">
-        <span class="step-num">2</span>
-        <h3>Comparte tu código</h3>
-        <p>Tus clientes lo escriben al comprar en skylinepresenta.com y cada boleta queda registrada a tu nombre.</p>
+      <div class="feature-card rule">
+        <span class="rule-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2V8Z" stroke="currentColor" stroke-width="2"/><path d="M15 6v12" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2"/></svg></span>
+        <h3>¿Cómo funciona tu código?</h3>
+        <p>Cada promotor recibe un código único y personal para registrar sus ventas.</p>
+        <p>Las <strong>primeras 20 ventas</strong> se registran con el código en <strong>0% de descuento</strong>.</p>
+        <p>Desde la <strong>venta #21</strong>, el código comienza a aplicar automáticamente el descuento correspondiente a la comisión del promotor.</p>
       </div>
-      <div class="feature-card">
-        <span class="step-num">3</span>
-        <h3>Gana</h3>
-        <p>Comisión por cada boleta vendida y bonos cuando alcances las metas.</p>
+      <div class="feature-card rule">
+        <span class="rule-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M14.5 9.2c-.4-.9-1.4-1.4-2.5-1.4-1.5 0-2.6.8-2.6 2 0 2.8 5.3 1.5 5.3 4.3 0 1.2-1.2 2.1-2.7 2.1-1.2 0-2.3-.6-2.7-1.6M12 6v1.8M12 16.2V18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <h3>¿Qué pasa con las primeras 20 ventas?</h3>
+        <p>La comisión correspondiente a las <strong>primeras 20 ventas</strong> será pagada manualmente al finalizar el periodo de ventas, junto con los bonos por metas alcanzadas.</p>
+        <p>Las ventas deberán ser válidas y verificadas para realizar la liquidación.</p>
+      </div>
+      <div class="feature-card rule">
+        <span class="rule-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none"><rect x="3" y="9" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M2 9h20M12 9v12M12 9c-1-3-5-5-6.5-3S8 9 12 9Zm0 0c1-3 5-5 6.5-3S16 9 12 9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+        <h3>Importante</h3>
+        <p>El código es <strong>personal e intransferible</strong>.</p>
+        <p>No debe compartirse, publicarse ni utilizarse como código promocional para terceros.</p>
+        <p>Su uso está destinado exclusivamente al registro de las ventas realizadas por el promotor.</p>
       </div>
     </div>
   </div>
@@ -797,9 +844,10 @@
         <div class="code-box" id="s-code">—</div>
         <button class="btn btn-primary btn-block" id="s-copy" type="button">Copiar código</button>
         <ol class="success-steps">
-          <li><strong>Guárdalo</strong>: tómale captura a esta pantalla.</li>
-          <li><strong>Compártelo</strong> con tus clientes. Al comprar en <a href="/">skylinepresenta.com</a> deben escribirlo en <em>“¿Tienes código de descuento?”</em>.</li>
-          <li>Cada boleta pagada con tu código <strong>queda registrada a tu nombre</strong>.</li>
+          <li><strong>Guárdalo</strong>: tómale captura a esta pantalla. Es personal e intransferible, no lo publiques.</li>
+          <li>Cuando vendas una boleta, cómprala en <a href="/">skylinepresenta.com</a> con <strong>los datos de tu cliente</strong> y escribe tu código en <em>“¿Tienes código de descuento?”</em>.</li>
+          <li>Cada venta queda <strong>registrada a tu nombre</strong>: acceso 1 día = 1 venta, acceso 2 días = 2 ventas.</li>
+          <li>Tus primeras 20 ventas van sin descuento y su comisión se paga al final. Desde la venta #21, tu código aplica tu comisión como descuento.</li>
         </ol>
         <a class="btn btn-outline btn-block" id="s-wa" target="_blank" rel="noopener">Avisar a Skyline por WhatsApp</a>
       </div>
