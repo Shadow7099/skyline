@@ -152,6 +152,17 @@
     .nav-logo{ font-size:1.05rem; }
   }
   .nav-toggle{ display:none; }
+  .nav-logo, .nav-cta, .nav-links a{ white-space:nowrap; }
+  .nav-logo .nav-logo-rest{ color:inherit; }
+  .nav-logo .nav-logo-rest span{ color:var(--gold); }
+  /* Pantallas medianas: menú compacto para que todo quepa en una línea */
+  @media (min-width:820px) and (max-width:1399px){
+    .nav-row{ gap:16px; }
+    .nav-logo-rest{ display:none; }
+    .nav-links{ gap:14px !important; }
+    .nav-links a{ font-size:0.8rem !important; }
+    .nav-cta{ padding:10px 14px; font-size:0.8rem; }
+  }
   .nav-cta{ display:none; }
   @media (min-width:820px){ .nav-cta{ display:inline-flex; } }
 
@@ -582,7 +593,7 @@ fbq('track', 'PageView');
 
 <nav class="site-nav">
   <div class="container nav-row">
-    <a href="#top" class="nav-logo">SKYLINE <span>·</span> HALLOWEEN FEST</a>
+    <a href="#top" class="nav-logo">SKYLINE<span class="nav-logo-rest"> <span>·</span> HALLOWEEN FEST</span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
       <svg width="22" height="16" viewBox="0 0 22 16" fill="none"><rect width="22" height="2.4" fill="currentColor"/><rect y="6.8" width="22" height="2.4" fill="currentColor"/><rect y="13.6" width="22" height="2.4" fill="currentColor"/></svg>
     </button>
@@ -591,6 +602,7 @@ fbq('track', 'PageView');
       <li><a href="#boletas">Boletas</a></li>
       <li><a href="#mapa">El lugar</a></li>
       <li><a href="#info">Info</a></li>
+      <li><a href="/crew.html">Skyline Crew</a></li>
       <li><a href="/terminos.html">Términos y condiciones</a></li>
     </ul>
     <a href="#boletas" class="btn btn-primary nav-cta">Comprar boletas</a>
