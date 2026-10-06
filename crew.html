@@ -613,6 +613,9 @@
   .success-body{ text-align:center; }
   .success-hi{ font-family:'Eurostile Extended','Michroma',sans-serif; text-transform:uppercase; font-size:1.3rem; color:var(--bone); margin:0 0 10px; }
   .success-body > p{ color:var(--gold-pale); margin:0; }
+  .success-text{ color:var(--smoke) !important; font-size:1rem; line-height:1.55; margin:6px 0 4px !important; }
+  .success-text strong{ color:var(--gold); }
+  .success-small{ font-size:0.82rem; margin-top:12px !important; color:rgba(244,236,219,0.6) !important; }
   .code-box{ margin:14px 0 4px; padding:18px 12px; border-radius:14px; border:3px dashed var(--gold); background:var(--purple-deep); font-family:ui-monospace, Menlo, Consolas, monospace; font-weight:800; font-size:2.4rem; letter-spacing:1px; color:var(--gold); white-space:nowrap; overflow:hidden; user-select:all; -webkit-user-select:all; }
   .success-steps{ text-align:left; margin:20px 0 4px; padding-left:20px; font-size:0.92rem; color:var(--smoke); line-height:1.55; }
   .success-steps li{ margin-bottom:8px; }
@@ -837,19 +840,12 @@
     </div>
 
     <div class="form-panel success hidden" id="success" tabindex="-1">
-      <div class="price-panel-head">¡Bienvenido al crew!</div>
+      <div class="price-panel-head">¡Ya casi!</div>
       <div class="success-body">
-        <p class="success-hi" id="s-hi">¡Listo!</p>
-        <p>Este es tu código de promotor:</p>
-        <div class="code-box" id="s-code">—</div>
-        <button class="btn btn-outline btn-block" id="s-copy" type="button">Copiar código</button>
-        <ol class="success-steps">
-          <li><strong>Guárdalo</strong>: tómale captura a esta pantalla. Es personal e intransferible, no lo publiques.</li>
-          <li>Cuando vendas una boleta, cómprala en <a href="/">skylinepresenta.com</a> con <strong>los datos de tu cliente</strong> y escribe tu código en <em>“¿Tienes código de descuento?”</em>.</li>
-          <li>Cada venta queda <strong>registrada a tu nombre</strong>: acceso 1 día = 1 venta, acceso 2 días = 2 ventas.</li>
-          <li>Tus primeras 20 ventas van sin descuento y su comisión se paga al final. Desde la venta #21, tu código aplica tu comisión como descuento.</li>
-        </ol>
-        <a class="btn btn-primary btn-block" id="s-wa" target="_blank" rel="noopener">Enviar mis datos a Skyline por WhatsApp</a>
+        <p class="success-hi" id="s-hi">¡Gracias!</p>
+        <p class="success-text">Te estamos llevando a WhatsApp con tus datos ya escritos. <strong>Solo dale enviar</strong> y el equipo de Skyline te contactará.</p>
+        <a class="btn btn-primary btn-block" id="s-wa" target="_blank" rel="noopener">Enviar mis datos por WhatsApp</a>
+        <p class="success-small">¿No se abrió WhatsApp? Toca el botón de arriba.</p>
       </div>
     </div>
   </div>
@@ -888,49 +884,25 @@
   var $ = function (id) { return document.getElementById(id); };
   var form = $("crew-form"), msg = $("f-msg"), btn = $("f-submit");
 
-  function waMessage(d, code) {
+  function waMessage(d) {
     return "Hola quiero ser promotor de SKYLINE \uD83C\uDF83 mis datos son:\n" +
       "\u2022 Nombre completo: " + (d.name || "") + "\n" +
       "\u2022 Edad: " + (d.age || "") + "\n" +
       "\u2022 @ user instagram: @" + (d.instagram || "") + "\n" +
       "\u2022 \u00bfEn d\u00f3nde estudias actualmente?: " + (d.school || "") + "\n" +
-      "\u2022 \u00bfPor d\u00f3nde vives? (Barrio/Zona): " + (d.zone || "") + "\n\n" +
-      "Mi c\u00f3digo de promotor es: " + code;
+      "\u2022 \u00bfPor d\u00f3nde vives? (Barrio/Zona): " + (d.zone || "");
   }
+  function waLink(d) { return "https://wa.me/" + SKYLINE_WA + "?text=" + encodeURIComponent(waMessage(d)); }
 
-  function showSuccess(code, firstName, data) {
+  function showSuccess(firstName, data) {
     $("form-panel").classList.add("hidden");
     var box = $("success");
     box.classList.remove("hidden");
-    $("s-code").textContent = code;
-    fitCode();
-    $("s-hi").textContent = firstName ? "¡Listo, " + firstName + "!" : "¡Listo!";
-    $("s-wa").href = "https://wa.me/" + SKYLINE_WA + "?text=" + encodeURIComponent(
-      data ? waMessage(data, code) : "Hola quiero ser promotor de SKYLINE \uD83C\uDF83 Mi c\u00f3digo de promotor es: " + code);
+    $("s-hi").textContent = firstName ? "¡Gracias, " + firstName + "!" : "¡Gracias!";
+    $("s-wa").href = waLink(data);
     box.focus({ preventScroll: true });
     box.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-
-  // El código siempre en una sola línea: se achica la letra si no cabe.
-  function fitCode() {
-    var b = $("s-code"), size = 38;
-    b.style.fontSize = size + "px";
-    while (b.scrollWidth > b.clientWidth && size > 14) { size -= 1; b.style.fontSize = size + "px"; }
-  }
-  window.addEventListener("resize", function () { if (!$("success").classList.contains("hidden")) fitCode(); });
-
-  // Si ya se registró en este teléfono, mostrarle su código de nuevo.
-  try {
-    var saved = JSON.parse(localStorage.getItem("sky_crew") || "null");
-    if (saved && saved.code) showSuccess(saved.code, saved.first_name, saved.data);
-  } catch (e) {}
-
-  $("s-copy").addEventListener("click", function () {
-    var code = $("s-code").textContent, b = this;
-    var done = function () { b.textContent = "¡Copiado!"; setTimeout(function () { b.textContent = "Copiar código"; }, 1600); };
-    if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, function () { prompt("Copia tu código:", code); });
-    else prompt("Copia tu código:", code);
-  });
 
   function field(id) { return $(id).value.trim(); }
   function invalid(id, text) {
@@ -966,12 +938,11 @@
     fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
-        if (!res.ok || !res.d.code) { msg.textContent = res.d.error || "No pudimos completar tu registro. Intenta de nuevo."; return; }
+        if (!res.ok || !res.d.ok) { msg.textContent = res.d.error || "No pudimos completar tu registro. Intenta de nuevo."; return; }
         var sent = { name: data.name, age: data.age, instagram: data.instagram, school: data.school, zone: data.zone };
-        try { localStorage.setItem("sky_crew", JSON.stringify({ code: res.d.code, first_name: res.d.first_name, data: sent })); } catch (e2) {}
-        showSuccess(res.d.code, res.d.first_name, sent);
-        // Abrir WhatsApp de Skyline con los datos ya escritos.
-        setTimeout(function () { window.location.href = $("s-wa").href; }, 900);
+        showSuccess(res.d.first_name, sent);
+        // Pasar directo a WhatsApp de Skyline con los datos ya escritos.
+        setTimeout(function () { window.location.href = waLink(sent); }, 700);
       })
       .catch(function () { msg.textContent = "Sin conexión. Revisa tu internet e intenta de nuevo."; })
       .finally(function () { btn.disabled = false; btn.textContent = "Quiero ser promotor"; });
