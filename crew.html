@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Skyline Crew · Gana hasta $3.000.000 como promotor</title>
-<meta name="description" content="Únete a Skyline Crew: comisiones por cada venta y bonos por metas de hasta $1.5M. Sé parte del equipo de Skyline Halloween Fest.">
+<meta name="description" content="Únete a Skyline Crew: comisiones por cada venta y bonos por metas de hasta $1.500.000. Sé parte del equipo de Skyline Halloween Fest.">
 <meta property="og:title" content="Únete a Skyline Crew · Gana hasta $3.000.000">
-<meta property="og:description" content="Comisiones por cada venta + bonos por metas de hasta $1.5M. Regístrate y recibe tu código de promotor al instante.">
+<meta property="og:description" content="Comisiones por cada venta + bonos por metas de hasta $1.500.000. Regístrate y recibe tu código de promotor al instante.">
 <meta property="og:image" content="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
@@ -681,12 +681,12 @@
     <p class="presenta"><strong>SKYLINE HALLOWEEN FEST</strong> BUSCA PROMOTORES</p>
     <h1 class="crew-title">Únete a<br><span class="marker-word">Skyline Crew</span></h1>
     <p class="crew-money">y gana hasta <strong>$3.000.000</strong></p>
-    <p class="crew-sub">Comisiones por cada venta + Bonos por metas de hasta $1.5M</p>
+    <p class="crew-sub">Comisiones por cada venta + Bonos por metas de hasta $1.500.000</p>
     <p class="tagline">Sé parte del equipo de <strong>SKYLINE HALLOWEEN FEST</strong>. ¡La fiesta de Halloween a las alturas de Bogotá más exclusiva!</p>
     <div class="meta-strip">
       <span class="meta-pill"><span class="dot">◆</span> 30–31 de octubre</span>
       <span class="meta-pill"><span class="dot">◆</span> PLOT Bogotá</span>
-      <span class="meta-pill"><span class="dot">◆</span> Km 4.5 vía La Calera</span>
+      <span class="meta-pill"><span class="dot">◆</span> Open doors 6PM</span>
     </div>
     <div class="hero-ctas">
       <a href="#registro" class="btn btn-primary">Quiero ser promotor</a>
@@ -832,7 +832,7 @@
 
         <button class="btn btn-primary btn-block" id="f-submit" type="submit">Quiero ser promotor</button>
         <p class="form-msg" id="f-msg" role="alert"></p>
-        <p class="form-fine">Debes ser mayor de edad. Tus datos solo se usan para gestionar tu participación como promotor.</p>
+        <p class="form-fine">Tus datos solo se usan para gestionar tu participación como promotor.</p>
       </form>
     </div>
 
@@ -842,14 +842,14 @@
         <p class="success-hi" id="s-hi">¡Listo!</p>
         <p>Este es tu código de promotor:</p>
         <div class="code-box" id="s-code">—</div>
-        <button class="btn btn-primary btn-block" id="s-copy" type="button">Copiar código</button>
+        <button class="btn btn-outline btn-block" id="s-copy" type="button">Copiar código</button>
         <ol class="success-steps">
           <li><strong>Guárdalo</strong>: tómale captura a esta pantalla. Es personal e intransferible, no lo publiques.</li>
           <li>Cuando vendas una boleta, cómprala en <a href="/">skylinepresenta.com</a> con <strong>los datos de tu cliente</strong> y escribe tu código en <em>“¿Tienes código de descuento?”</em>.</li>
           <li>Cada venta queda <strong>registrada a tu nombre</strong>: acceso 1 día = 1 venta, acceso 2 días = 2 ventas.</li>
           <li>Tus primeras 20 ventas van sin descuento y su comisión se paga al final. Desde la venta #21, tu código aplica tu comisión como descuento.</li>
         </ol>
-        <a class="btn btn-outline btn-block" id="s-wa" target="_blank" rel="noopener">Avisar a Skyline por WhatsApp</a>
+        <a class="btn btn-primary btn-block" id="s-wa" target="_blank" rel="noopener">Enviar mis datos a Skyline por WhatsApp</a>
       </div>
     </div>
   </div>
@@ -888,7 +888,17 @@
   var $ = function (id) { return document.getElementById(id); };
   var form = $("crew-form"), msg = $("f-msg"), btn = $("f-submit");
 
-  function showSuccess(code, firstName) {
+  function waMessage(d, code) {
+    return "Hola quiero ser promotor de SKYLINE \uD83C\uDF83 mis datos son:\n" +
+      "\u2022 Nombre completo: " + (d.name || "") + "\n" +
+      "\u2022 Edad: " + (d.age || "") + "\n" +
+      "\u2022 @ user instagram: @" + (d.instagram || "") + "\n" +
+      "\u2022 \u00bfEn d\u00f3nde estudias actualmente?: " + (d.school || "") + "\n" +
+      "\u2022 \u00bfPor d\u00f3nde vives? (Barrio/Zona): " + (d.zone || "") + "\n\n" +
+      "Mi c\u00f3digo de promotor es: " + code;
+  }
+
+  function showSuccess(code, firstName, data) {
     $("form-panel").classList.add("hidden");
     var box = $("success");
     box.classList.remove("hidden");
@@ -896,7 +906,7 @@
     fitCode();
     $("s-hi").textContent = firstName ? "¡Listo, " + firstName + "!" : "¡Listo!";
     $("s-wa").href = "https://wa.me/" + SKYLINE_WA + "?text=" + encodeURIComponent(
-      "Hola, me registré en Skyline Crew" + (firstName ? ". Soy " + firstName : "") + " y mi código de promotor es " + code + ".");
+      data ? waMessage(data, code) : "Hola quiero ser promotor de SKYLINE \uD83C\uDF83 Mi c\u00f3digo de promotor es: " + code);
     box.focus({ preventScroll: true });
     box.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -912,7 +922,7 @@
   // Si ya se registró en este teléfono, mostrarle su código de nuevo.
   try {
     var saved = JSON.parse(localStorage.getItem("sky_crew") || "null");
-    if (saved && saved.code) showSuccess(saved.code, saved.first_name);
+    if (saved && saved.code) showSuccess(saved.code, saved.first_name, saved.data);
   } catch (e) {}
 
   $("s-copy").addEventListener("click", function () {
@@ -957,8 +967,11 @@
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (!res.ok || !res.d.code) { msg.textContent = res.d.error || "No pudimos completar tu registro. Intenta de nuevo."; return; }
-        try { localStorage.setItem("sky_crew", JSON.stringify({ code: res.d.code, first_name: res.d.first_name })); } catch (e2) {}
-        showSuccess(res.d.code, res.d.first_name);
+        var sent = { name: data.name, age: data.age, instagram: data.instagram, school: data.school, zone: data.zone };
+        try { localStorage.setItem("sky_crew", JSON.stringify({ code: res.d.code, first_name: res.d.first_name, data: sent })); } catch (e2) {}
+        showSuccess(res.d.code, res.d.first_name, sent);
+        // Abrir WhatsApp de Skyline con los datos ya escritos.
+        setTimeout(function () { window.location.href = $("s-wa").href; }, 900);
       })
       .catch(function () { msg.textContent = "Sin conexión. Revisa tu internet e intenta de nuevo."; })
       .finally(function () { btn.disabled = false; btn.textContent = "Quiero ser promotor"; });
