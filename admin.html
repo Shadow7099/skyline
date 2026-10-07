@@ -146,8 +146,24 @@
   .bar i{ display:block; height:100%; background:var(--gold); border-radius:99px; }
   .prow-actions{ display:flex; flex-wrap:wrap; gap:8px; }
   .off{ opacity:0.55; }
+  .sales-cards{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:18px; }
+  @media (max-width:760px){ .sales-cards{ grid-template-columns:1fr 1fr; } }
+  .scard{ background:var(--plum); border:2px solid var(--line); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; gap:2px; }
+  .scard.total{ background:var(--gold); color:var(--ink); }
+  .scard-title{ font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; font-weight:800; color:var(--gold-pale); }
+  .scard.total .scard-title, .scard.total .scard-small{ color:var(--ink); }
+  .scard b{ font-family:var(--display); font-size:1.3rem; line-height:1.15; font-variant-numeric:tabular-nums; }
+  .scard-small{ font-size:0.82rem; color:var(--gold-pale); }
+  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .sales-table{ min-width:520px; }
+  .sales-table td.num, .sales-table th:not(:first-child){ text-align:right; }
+  .sales-table tr.muted td{ opacity:0.5; }
+  .sales-table tr.total-row td{ font-weight:800; border-top:2px solid var(--gold); border-bottom:none; }
+  .stage-pill{ margin-left:8px; font-size:0.65rem; }
+  .sales-foot{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; font-size:0.85rem; color:var(--gold-pale); }
   .pinfo{ font-size:0.85rem; color:var(--gold-pale); margin:6px 0 10px; line-height:1.5; }
   .pinfo a{ color:var(--gold); font-weight:700; }
+  .pill.pend{ background:var(--gold); color:var(--ink); }
   .check{ display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-size:0.95rem; color:var(--bone); margin-top:16px; cursor:pointer; }
   .check input{ width:22px; height:22px; accent-color:var(--gold); }
   .disc-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--night); border-radius:10px; padding:10px 12px; margin-bottom:10px; }
@@ -189,7 +205,8 @@
         <button class="logout" id="logout">Salir</button>
       </div>
       <div class="tabs" role="tablist">
-        <button class="tab" role="tab" id="tab-create" aria-selected="true">Crear cortesías</button>
+        <button class="tab" role="tab" id="tab-sales" aria-selected="true">Ventas</button>
+        <button class="tab" role="tab" id="tab-create" aria-selected="false">Crear cortesías</button>
         <button class="tab" role="tab" id="tab-list" aria-selected="false">Todas las boletas</button>
         <button class="tab" role="tab" id="tab-promo" aria-selected="false">Promotores</button>
       </div>
@@ -204,8 +221,23 @@
       <div class="stat"><b id="st-rev">–</b><span>anuladas</span></div>
     </div>
 
+    <!-- Ventas -->
+    <div id="view-sales">
+      <div class="sales-cards" id="sales-cards"></div>
+      <div class="panel">
+        <div class="panel-head">Ventas por etapa</div>
+        <div class="panel-body">
+          <div class="table-wrap"><table class="ptable sales-table" id="sales-table"></table></div>
+          <div class="sales-foot">
+            <span id="sales-updated"></span>
+            <button class="btn sm ghost" id="sales-refresh" type="button">Actualizar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Crear -->
-    <div id="view-create">
+    <div id="view-create" class="hidden">
       <div class="panel">
         <div class="panel-head">Nueva cortesía</div>
         <div class="panel-body">
@@ -390,20 +422,72 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function enter() {
     $("login").classList.add("hidden"); $("app").classList.remove("hidden");
     refresh();
+    tab("sales");
   }
 
   // ---------- Pestañas ----------
   function tab(which) {
-    ["create", "list", "promo"].forEach(function (k) {
+    ["sales", "create", "list", "promo"].forEach(function (k) {
       $("tab-" + k).setAttribute("aria-selected", k === which);
       $("view-" + k).classList.toggle("hidden", k !== which);
     });
     if (which === "list") refresh();
+    if (which === "sales") loadSales();
     if (which === "promo") loadPromoters();
   }
+  $("tab-sales").addEventListener("click", function () { tab("sales"); });
   $("tab-create").addEventListener("click", function () { tab("create"); });
   $("tab-list").addEventListener("click", function () { tab("list"); });
   $("tab-promo").addEventListener("click", function () { tab("promo"); });
+
+  // ---------- Ventas ----------
+  var STAGE_NAME = { "Lanzamiento": "Creyentes (Lanzamiento)" };
+  function card(title, big, small, cls) {
+    var c = el("div", "scard" + (cls ? " " + cls : ""));
+    c.appendChild(el("span", "scard-title", title));
+    c.appendChild(el("b", "", big));
+    if (small) c.appendChild(el("span", "scard-small", small));
+    return c;
+  }
+  function loadSales() {
+    $("sales-updated").textContent = "Cargando…";
+    return api("sales_summary").then(function (d) {
+      var cards = $("sales-cards"); cards.innerHTML = "";
+      var t1 = d.by_type["1-dia"], t2 = d.by_type["2-dias"];
+      cards.appendChild(card("Acceso 1 día", t1.boletas + " boletas", money(t1.recaudo) + " · " + t1.compras + " compras"));
+      cards.appendChild(card("Acceso 2 días", t2.boletas + " boletas", money(t2.recaudo) + " · " + t2.compras + " compras"));
+      cards.appendChild(card("Total vendido", d.total.boletas + " boletas", money(d.total.recaudo) + " recaudado", "total"));
+      cards.appendChild(card("Otros", d.courtesies + " cortesías", d.pending_tickets ? d.pending_tickets + " boletas con pago pendiente" : "sin pagos pendientes"));
+
+      var tbl = $("sales-table"); tbl.innerHTML = "";
+      var head = el("tr");
+      ["Etapa", "1 día", "2 días", "Total boletas", "Recaudo"].forEach(function (h) { head.appendChild(el("th", "", h)); });
+      tbl.appendChild(head);
+      d.stages.forEach(function (st) {
+        var tr = el("tr");
+        var name = el("td", "");
+        name.appendChild(document.createTextNode(STAGE_NAME[st.name] || st.name));
+        if (st.active_for && st.active_for.length) name.appendChild(el("span", "pill venta stage-pill", "Activa"));
+        tr.appendChild(name);
+        tr.appendChild(el("td", "num", st["1-dia"].boletas + (st["1-dia"].boletas ? " · " + money(st["1-dia"].recaudo) : "")));
+        tr.appendChild(el("td", "num", st["2-dias"].boletas + (st["2-dias"].boletas ? " · " + money(st["2-dias"].recaudo) : "")));
+        tr.appendChild(el("td", "num", String(st.total.boletas)));
+        tr.appendChild(el("td", "num pay", money(st.total.recaudo)));
+        if (!st.total.boletas) tr.className = "muted";
+        tbl.appendChild(tr);
+      });
+      var tt = el("tr", "total-row");
+      tt.appendChild(el("td", "", "Total"));
+      tt.appendChild(el("td", "num", String(t1.boletas)));
+      tt.appendChild(el("td", "num", String(t2.boletas)));
+      tt.appendChild(el("td", "num", String(d.total.boletas)));
+      tt.appendChild(el("td", "num pay", money(d.total.recaudo)));
+      tbl.appendChild(tt);
+      var now = new Date();
+      $("sales-updated").textContent = "Actualizado a las " + now.toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
+    }).catch(function (e) { $("sales-updated").textContent = e.message; });
+  }
+  $("sales-refresh").addEventListener("click", loadSales);
 
   // ---------- Promotores ----------
   function money(n) { return "$" + Number(n || 0).toLocaleString("es-CO"); }
@@ -444,15 +528,18 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function renderPromoters(list, goals) {
     var box = $("p-rows"); box.innerHTML = "";
     if (!list.length) { box.appendChild(el("div", "empty", "Todavía no hay promotores.")); return; }
-    list.sort(function (a, b) { return b.sold - a.sold; }).forEach(function (p) {
+    var isPend = function (p) { return p.source === "registro" && !p.active && !p.sold && !p.pending ? 1 : 0; };
+    list.sort(function (a, b) { return (isPend(b) - isPend(a)) || (b.sold - a.sold); }).forEach(function (p) {
       var row = el("div", "prow" + (p.active ? "" : " off"));
       var top = el("div", "prow-top");
-      top.appendChild(el("span", "prow-name", p.name + (p.active ? "" : " (desactivado)")));
+      var pending = p.source === "registro" && !p.active && !p.sold && !p.pending;
+      top.appendChild(el("span", "prow-name", p.name + (p.active ? "" : pending ? "" : " (desactivado)")));
       top.appendChild(el("span", "code", p.code));
       row.appendChild(top);
       if (p.source === "registro" || p.instagram || p.age) {
         var info = el("div", "pinfo");
-        if (p.source === "registro") info.appendChild(el("span", "pill", "Se registró en la web"));
+        if (pending) info.appendChild(el("span", "pill pend", "Pendiente de aprobar"));
+        else if (p.source === "registro") info.appendChild(el("span", "pill", "Se registró en la web"));
         var bits = [];
         if (p.age) bits.push(p.age + " años");
         if (p.school) bits.push("Estudia: " + p.school);
@@ -516,9 +603,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         wa.href = "https://wa.me/" + ph + "?text=" + encodeURIComponent(promoMessage(p)); wa.target = "_blank"; wa.rel = "noopener";
         acts.appendChild(wa);
       }
-      var tg = el("button", "btn sm ghost", p.active ? "Desactivar código" : "Activar código");
+      var tg = el("button", pending ? "btn sm" : "btn sm ghost", p.active ? "Desactivar código" : pending ? "Aprobar y activar código" : "Activar código");
       tg.onclick = function () {
         if (p.active && !confirm("¿Desactivar el código " + p.code + "? Las compras nuevas con ese código ya no se le contarán.")) return;
+        if (pending && !confirm("¿Aprobar a " + p.name + "? Su código " + p.code + " quedará activo. Luego envíaselo con \"Enviar por WhatsApp\".")) return;
         tg.disabled = true;
         api("promoter_toggle", { id: p.id, active: !p.active }).then(loadPromoters).catch(function (e) { alert(e.message); tg.disabled = false; });
       };
