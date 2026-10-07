@@ -112,6 +112,9 @@
   .help{ margin-top:22px; text-align:center; font-size:0.85rem; color:rgba(244,236,219,0.75); }
   .help a{ color:var(--gold-pale); }
   .loading{ color:var(--gold-pale); font-size:0.9rem; }
+  .other-orders{ margin-top:26px; }
+  .other-title{ font-family:'Eurostile Extended', 'Michroma', sans-serif; text-transform:uppercase; color:var(--bone); font-size:0.95rem; margin:0 0 4px; }
+  .other-orders .btn{ font-size:0.72rem; }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -143,6 +146,47 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   var params = new URLSearchParams(window.location.search);
   var orderId = params.get("bold-order-id") || params.get("o");
+
+  // ---------- Memoria de compras en este teléfono (sobrevive a recargar) ----------
+  var ORDERS_KEY = "sky_orders";
+  function lsGet(k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var savedOrders = lsGet(ORDERS_KEY, []);
+  if (!orderId && savedOrders.length) {
+    // Llegó sin el número de reserva (p. ej. abrió la página directo): usar su última compra.
+    orderId = savedOrders[0].id;
+  }
+  if (orderId && !params.get("bold-order-id")) {
+    // Dejar el número en la dirección para que recargar siempre muestre esta compra.
+    try { history.replaceState(null, "", "?bold-order-id=" + encodeURIComponent(orderId)); } catch (e) {}
+  }
+  function rememberOrder(o) {
+    var list = lsGet(ORDERS_KEY, []);
+    var prev = list.filter(function (x) { return x.id === o.id; })[0] || {};
+    list = list.filter(function (x) { return x.id !== o.id; });
+    list.unshift({
+      id: o.id, at: prev.at || Date.now(), name: o.full_name,
+      label: (o.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " x" + o.quantity,
+      status: o.status
+    });
+    lsSet(ORDERS_KEY, list.slice(0, 10));
+    if (o.status === "pagado") { try { localStorage.removeItem("sky_buy_draft"); } catch (e) {} }
+  }
+  function renderOtherOrders() {
+    var others = lsGet(ORDERS_KEY, []).filter(function (x) { return x.id !== orderId && x.status === "pagado"; });
+    var old = document.getElementById("other-orders"); if (old) old.remove();
+    if (!others.length) return;
+    var box = document.createElement("div"); box.id = "other-orders"; box.className = "other-orders";
+    var h = document.createElement("p"); h.className = "other-title"; h.textContent = "Otras compras en este teléfono";
+    box.appendChild(h);
+    others.slice(0, 5).forEach(function (x) {
+      var a = document.createElement("a"); a.className = "btn ghost block";
+      a.href = "?bold-order-id=" + encodeURIComponent(x.id);
+      a.textContent = "Ver boletas · " + (x.label || "") + (x.name ? " · " + x.name : "");
+      box.appendChild(a);
+    });
+    area.parentNode.insertBefore(box, area.nextSibling);
+  }
   var card = document.getElementById("card");
   var area = document.getElementById("tickets-area");
   var startedAt = Date.now();
@@ -269,6 +313,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         if (res.status === 404) { renderNotFound(); return; }
         if (!res.ok) throw new Error("server");
         var o = res.d;
+        rememberOrder(o);
+        renderOtherOrders();
         if (o.status === "pagado") { if (lastStatus !== "pagado" || !area.querySelector(".ticket")) renderPaid(o); lastStatus = "pagado"; return; }
         if (o.status === "fallido") { renderFailed(o); lastStatus = "fallido"; return; }
         var timedOut = Date.now() - startedAt > POLL_MAX_MS;
