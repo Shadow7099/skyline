@@ -221,6 +221,23 @@
   .pay-btn:disabled{ opacity:0.6; cursor:wait; transform:none; box-shadow:var(--shadow-hard-sm); }
 
   .hidden{ display:none !important; }
+  .resume{
+    margin-top:22px; padding:16px 18px;
+    border:3px solid var(--line); border-radius:16px;
+    background:var(--purple-deep); box-shadow:var(--shadow-hard-sm);
+    font-size:0.92rem; line-height:1.5;
+  }
+  .resume.paid{ border-color:#5fbf8f; }
+  .resume.pending{ border-color:var(--gold); }
+  .resume-title{ font-weight:700; color:var(--bone); margin:0 0 4px; }
+  .resume-text{ color:var(--gold-pale); margin:0 0 12px; }
+  .resume-links{ display:flex; flex-direction:column; gap:8px; }
+  .resume-link{
+    display:block; text-align:center; text-decoration:none;
+    padding:12px 14px; border-radius:10px; border:2px solid var(--line);
+    background:var(--gold); color:var(--ink); font-weight:700;
+    box-shadow:var(--shadow-hard-sm);
+  }
   .promo{ margin-top:18px; }
   .promo-toggle{
     background:none; border:none; padding:0; cursor:pointer;
@@ -331,6 +348,8 @@
     <h1>Reserva tu boleta</h1>
     <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · PLOT Bogotá</p>
   </div>
+
+  <div class="resume hidden" id="resume" role="status"></div>
 
   <div class="panel">
     <div class="panel-head">Tu boleta</div>
@@ -624,6 +643,7 @@
         });
       })
       .then(function (d) {
+        rememberOrder(d.order_id, buyer);
         var checkout = new window.BoldCheckout({
           orderId: d.order_id,
           currency: d.currency,
@@ -654,7 +674,107 @@
   });
 
 
+  // ---------- Memoria del proceso de compra (sobrevive a recargar la página) ----------
+  var DRAFT_KEY = "sky_buy_draft", ORDERS_KEY = "sky_orders";
+  function lsGet(k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  function saveDraft() {
+    lsSet(DRAFT_KEY, {
+      access_type: accessSelect.value, quantity: qty,
+      full_name: document.getElementById("full_name").value,
+      document_id: document.getElementById("document_id").value,
+      email: document.getElementById("email").value,
+      phone: document.getElementById("phone").value,
+      terms: document.getElementById("terms_accept").checked,
+      promo_code: promo ? promo.code : "",
+      saved_at: Date.now()
+    });
+  }
+  document.addEventListener("input", saveDraft);
+  document.addEventListener("change", saveDraft);
+  ["qty-minus", "qty-plus"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { setTimeout(saveDraft, 0); }); });
+
+  function rememberOrder(orderId, buyer) {
+    var list = lsGet(ORDERS_KEY, []).filter(function (o) { return o.id !== orderId; });
+    var label = (buyer.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " x" + buyer.quantity;
+    list.unshift({ id: orderId, at: Date.now(), label: label, name: buyer.full_name });
+    lsSet(ORDERS_KEY, list.slice(0, 10));
+    saveDraft();
+  }
+
+  function restoreDraft() {
+    var d = lsGet(DRAFT_KEY, null);
+    if (!d || Date.now() - (d.saved_at || 0) > 7 * 86400000) return;   // borradores de más de 7 días se ignoran
+    if (!params.get("tipo") && PRICES[d.access_type]) accessSelect.value = d.access_type;
+    ["full_name", "document_id", "email", "phone"].forEach(function (id) { if (d[id]) document.getElementById(id).value = d[id]; });
+    document.getElementById("terms_accept").checked = !!d.terms;
+    var wantQty = Math.max(1, Math.min(50, parseInt(d.quantity, 10) || 1));
+    qty = Math.min(wantQty, maxQty);
+    renderTotals();
+    if (d.promo_code) {
+      document.getElementById("promo-box").classList.remove("hidden");
+      document.getElementById("promo-toggle").setAttribute("aria-expanded", "true");
+      document.getElementById("promo_code").value = d.promo_code;
+      applyPromo();
+      // Si el código permite más boletas, recuperar la cantidad completa cuando se confirme.
+      var tries = 0, t = setInterval(function () {
+        tries++;
+        if (promo || tries > 40) { clearInterval(t); qty = Math.min(wantQty, maxQty); renderTotals(); }
+      }, 150);
+    }
+  }
+
+  // Si ya hay compras hechas en este teléfono, mostrar su estado y el acceso a las boletas.
+  function showResume() {
+    var list = lsGet(ORDERS_KEY, []);
+    if (!list.length) return;
+    var box = document.getElementById("resume");
+    Promise.all(list.slice(0, 5).map(function (o) {
+      return fetch(FUNCTIONS_BASE + "/get-tickets", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: o.id })
+      }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+        .then(function (d) { return { meta: o, d: d }; });
+    })).then(function (rows) {
+      var paid = rows.filter(function (x) { return x.d && x.d.status === "pagado"; });
+      var pending = rows.filter(function (x) { return x.d && x.d.status === "pendiente_pago" && Date.now() - x.meta.at < 6 * 3600000; });
+      if (!paid.length && !pending.length) return;
+      box.innerHTML = "";
+      var title = document.createElement("p"); title.className = "resume-title";
+      var text = document.createElement("p"); text.className = "resume-text";
+      var links = document.createElement("div"); links.className = "resume-links";
+      if (paid.length) {
+        box.className = "resume paid";
+        title.textContent = paid.length === 1 ? "🎟️ Ya tienes una compra pagada" : "🎟️ Ya tienes " + paid.length + " compras pagadas";
+        text.textContent = "Tus boletas con código QR te esperan aquí. Si quieres comprar más, sigue con el formulario de abajo.";
+        paid.forEach(function (x) {
+          var a = document.createElement("a"); a.className = "resume-link";
+          a.href = "/confirmacion.html?bold-order-id=" + encodeURIComponent(x.meta.id);
+          a.textContent = "Ver mis boletas · " + (x.meta.label || "");
+          links.appendChild(a);
+        });
+      }
+      if (pending.length) {
+        if (!paid.length) {
+          box.className = "resume pending";
+          title.textContent = "⏳ Tienes un pago en proceso";
+          text.textContent = "Si ya pagaste, revisa aquí el estado; tus boletas aparecerán apenas Bold lo confirme. Si no alcanzaste a pagar, puedes intentarlo de nuevo abajo.";
+        }
+        pending.slice(0, 1).forEach(function (x) {
+          var a = document.createElement("a"); a.className = "resume-link";
+          a.href = "/confirmacion.html?bold-order-id=" + encodeURIComponent(x.meta.id);
+          a.textContent = "Ver estado de mi pago · " + (x.meta.label || "");
+          links.appendChild(a);
+        });
+      }
+      box.appendChild(title); box.appendChild(text); box.appendChild(links);
+    });
+  }
+
+  restoreDraft();
   renderTotals();
+  showResume();
 })();
 </script>
 </body>
