@@ -436,6 +436,9 @@
     padding:12px 10px;
   }
   .price-row.active .stage-tag{ color:var(--gold); font-weight:600; }
+  .price-row.sold-out .amount{ text-decoration:line-through; opacity:0.5; }
+  .price-row.sold-out .stage-name{ opacity:0.6; }
+  .price-row.sold-out .stage-tag{ color:#e0556a; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
 
   .price-panel-foot{ padding:18px 22px 22px; }
 
@@ -713,16 +716,16 @@ fbq('track', 'PageView');
       <div class="price-panel two-day">
         <div class="price-panel-head">Acceso 2 días</div>
         <div class="price-rows">
-          <div class="price-row active">
-            <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Etapa activa ahora</span></div>
+          <div class="price-row sold-out">
+            <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$35.000</div>
           </div>
-          <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Próxima etapa</span></div>
+          <div class="price-row active">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Etapa activa ahora</span></div>
             <div class="amount">$45.000</div>
           </div>
           <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 2</span></div>
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Próxima etapa</span></div>
             <div class="amount">$55.000</div>
           </div>
           <div class="price-row">
@@ -738,16 +741,16 @@ fbq('track', 'PageView');
       <div class="price-panel one-day">
         <div class="price-panel-head">Acceso 1 día</div>
         <div class="price-rows">
-          <div class="price-row active">
-            <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Etapa activa ahora</span></div>
+          <div class="price-row sold-out">
+            <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$25.000</div>
           </div>
-          <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Próxima etapa</span></div>
+          <div class="price-row active">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Etapa activa ahora</span></div>
             <div class="amount">$30.000</div>
           </div>
           <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 2</span></div>
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Próxima etapa</span></div>
             <div class="amount">$35.000</div>
           </div>
           <div class="price-row">
