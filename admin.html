@@ -181,6 +181,36 @@
   .modal-box img{ width:100%; border-radius:14px; border:3px solid var(--line); display:block; }
   .modal-actions{ display:flex; gap:8px; margin-top:12px; }
   .modal-actions .btn{ flex:1; }
+
+  /* Promotores: filtros, orden y etiquetas */
+  .pgrid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:10px; }
+  .pgrid.top{ grid-template-columns:1fr minmax(170px, auto); }
+  .tagbar{ display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 10px; }
+  .chip{ border:2px solid var(--plum-3); background:var(--night); color:var(--bone); border-radius:999px; padding:5px 11px; font-size:0.82rem; font-weight:700; cursor:pointer; }
+  .chip[aria-pressed="true"]{ background:var(--gold-pale); color:var(--ink); border-color:var(--line); }
+  .chip small{ opacity:0.7; font-weight:600; margin-left:4px; }
+  .pcount{ display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:0.85rem; color:var(--gold-pale); margin:4px 0 10px; }
+  .linkbtn{ background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-weight:700; padding:2px 0; }
+  .bulkbar{ background:var(--night); border:2px dashed var(--plum-3); border-radius:12px; padding:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  .bulkbar .field{ flex:1; min-width:150px; padding:9px 11px; }
+  .bulkbar .info{ font-size:0.85rem; color:var(--gold-pale); width:100%; }
+  .tagrow{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 10px; }
+  .tag{ display:inline-flex; align-items:center; gap:6px; background:var(--plum-3); color:var(--bone); border-radius:999px; padding:3px 6px 3px 10px; font-size:0.78rem; font-weight:800; }
+  .tag button{ background:rgba(0,0,0,0.3); border:none; color:var(--bone); width:20px; height:20px; border-radius:50%; cursor:pointer; line-height:1; font-size:0.85rem; padding:0; }
+  .tagadd{ display:inline-flex; gap:4px; align-items:center; }
+  .tagadd input{ width:140px; padding:5px 10px; font-size:16px; border-radius:999px; border:2px dashed var(--plum-3); background:var(--night); outline:none; }
+  .tagadd input:focus{ border-color:var(--gold); }
+  .tagadd button{ background:var(--plum-3); border:none; color:var(--bone); width:26px; height:26px; border-radius:50%; cursor:pointer; font-weight:800; }
+  .psel{ display:inline-flex; align-items:center; gap:8px; margin:0 8px 0 0; text-transform:none; letter-spacing:0; font-size:1rem; font-weight:800; color:inherit; vertical-align:middle; }
+  .psel input{ width:20px; height:20px; accent-color:var(--gold); }
+  .prow.sel{ background:rgba(240,169,59,0.08); }
+  .tadmin{ margin-bottom:12px; }
+  .tadmin summary{ cursor:pointer; font-weight:800; color:var(--gold-pale); padding:4px 0; }
+  .tadmin-row{ display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px dashed rgba(244,236,219,0.2); }
+  .tadmin-row span{ flex:1; }
+  .total-earned{ font-size:0.9rem; color:var(--gold-pale); margin:-2px 0 12px; }
+  .total-earned b{ color:var(--gold); font-variant-numeric:tabular-nums; }
+  .tnote{ font-size:0.82rem; color:var(--gold-pale); margin:0 0 10px; }
 </style>
 </head>
 <body>
@@ -331,7 +361,61 @@
 
       <div class="panel">
         <div class="panel-head">Promotores</div>
-        <div class="panel-body"><div class="rows" id="p-rows"></div></div>
+        <div class="panel-body">
+          <div class="pgrid top">
+            <input class="field" id="pf-q" type="search" placeholder="Buscar por nombre, código, colegio, zona o etiqueta" autocomplete="off" aria-label="Buscar promotor">
+            <select class="field" id="pf-sort" aria-label="Ordenar promotores">
+              <option value="default">Pendientes primero, luego más ventas</option>
+              <option value="sold_desc">Más ventas</option>
+              <option value="sold_asc">Menos ventas</option>
+              <option value="name_asc">Nombre (A → Z)</option>
+              <option value="name_desc">Nombre (Z → A)</option>
+              <option value="disc_desc">Mayor % de descuento</option>
+              <option value="disc_asc">Menor % de descuento</option>
+              <option value="earned_desc">Más ganado</option>
+              <option value="recent">Más recientes</option>
+              <option value="oldest">Más antiguos</option>
+            </select>
+          </div>
+          <div class="pgrid">
+            <select class="field" id="pf-status" aria-label="Filtrar por estado">
+              <option value="">Todos los estados</option>
+              <option value="active">Activos</option>
+              <option value="off">Desactivados</option>
+              <option value="pending">Pendientes de aprobar</option>
+            </select>
+            <select class="field" id="pf-disc" aria-label="Filtrar por descuento">
+              <option value="">Con o sin descuento</option>
+              <option value="on">Con descuento</option>
+              <option value="off">Sin descuento</option>
+            </select>
+            <select class="field" id="pf-zone" aria-label="Filtrar por zona"></select>
+            <select class="field" id="pf-school" aria-label="Filtrar por colegio"></select>
+          </div>
+          <div id="pf-tagwrap" class="hidden">
+            <label>Etiquetas (elige una o varias)</label>
+            <div class="tagbar" id="pf-tags"></div>
+          </div>
+          <div class="pcount"><span id="pf-count"></span><button class="linkbtn hidden" id="pf-clear" type="button">Limpiar filtros</button></div>
+
+          <div class="bulkbar hidden" id="p-bulk">
+            <div class="info" id="bulk-info">0 seleccionados</div>
+            <input class="field" id="bulk-tag" list="tag-suggestions" placeholder="Etiqueta (ej. Zona Norte)" autocomplete="off" aria-label="Etiqueta para los seleccionados">
+            <button class="btn sm" id="bulk-add" type="button">Agregar a seleccionados</button>
+            <button class="btn sm ghost" id="bulk-remove" type="button">Quitar de seleccionados</button>
+            <button class="btn sm ghost" id="bulk-all" type="button">Seleccionar los visibles</button>
+            <button class="btn sm ghost" id="bulk-none" type="button">Ninguno</button>
+          </div>
+          <datalist id="tag-suggestions"></datalist>
+          <div class="msg" id="p-toolmsg" role="status"></div>
+
+          <details class="tadmin hidden" id="p-tadmin">
+            <summary>Administrar etiquetas</summary>
+            <div id="p-tadmin-list"></div>
+          </details>
+
+          <div class="rows" id="p-rows"></div>
+        </div>
       </div>
     </div>
 
@@ -494,10 +578,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   var STAGE_LABEL = { "Lanzamiento": "Creyentes" };
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
 
-  function loadPromoters() {
-    return api("promoters_list").then(function (d) { renderPrices(d.stages || []); renderPromoters(d.promoters || [], d.goals || []); })
-      .catch(function (e) { $("p-rows").innerHTML = ""; $("p-rows").appendChild(el("div", "empty", e.message)); });
-  }
   function renderPrices(stages) {
     var box = $("p-prices"); if (!box) return; box.innerHTML = "";
     if (!stages.length) { box.appendChild(el("div", "empty", "No hay etapa activa.")); return; }
@@ -515,6 +595,225 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
     box.appendChild(tbl);
   }
+  // ---------- Promotores: filtros, orden y etiquetas ----------
+  var PROMO = { list: [], stages: [], limits: null, sel: {}, f: { q: "", sort: "default", status: "", disc: "", zone: "", school: "", tags: [] } };
+  function normKey(v) { return String(v == null ? "" : v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+  function isPending(p) { return p.source === "registro" && !p.active && !p.sold && !p.pending; }
+  function tagsOf(p) { return Array.isArray(p.tags) ? p.tags : []; }
+  function pctByType(p) {
+    if (p.discount_percent_by_type) return p.discount_percent_by_type;
+    var out = {};
+    (PROMO.stages || []).forEach(function (s) { var pr = Number(s.price), d = Number(s.promoter_discount || 0); out[s.access_type] = p.discount_enabled && pr > 0 ? Math.round(d * 100 / pr) : 0; });
+    return out;
+  }
+  function pctMax(p) {
+    if (p.discount_percent != null) return Number(p.discount_percent);
+    var m = 0, t = pctByType(p); Object.keys(t).forEach(function (k) { if (t[k] > m) m = t[k]; }); return m;
+  }
+  function pctText(p) {
+    var t = pctByType(p), parts = [];
+    if (t["1-dia"] != null) parts.push(t["1-dia"] + "% en 1 día");
+    if (t["2-dias"] != null) parts.push(t["2-dias"] + "% en 2 días");
+    return parts.join(" · ");
+  }
+  function earnedOf(p) { return Number(p.commission || 0) + Number(p.bonus && p.bonus.reached ? p.bonus.reached.bonus : 0); }
+
+  // Cuenta valores iguales sin importar mayúsculas, tildes ni signos; muestra la grafía más usada.
+  function facetOf(list, getValue, getKey) {
+    var map = {};
+    list.forEach(function (p) {
+      var label = String(getValue(p) || "").trim(), key = getKey(p);
+      if (!key) return;
+      var e = map[key] = map[key] || { key: key, count: 0, spell: {} };
+      e.count++; e.spell[label] = (e.spell[label] || 0) + 1;
+    });
+    return Object.keys(map).map(function (k) {
+      var e = map[k], best = Object.keys(e.spell).sort(function (a, b) { return e.spell[b] - e.spell[a] || a.localeCompare(b, "es"); })[0];
+      return { key: k, label: best, count: e.count };
+    }).sort(function (a, b) { return b.count - a.count || a.label.localeCompare(b.label, "es"); });
+  }
+  function tagFacets() {
+    var map = {};
+    PROMO.list.forEach(function (p) { tagsOf(p).forEach(function (t) { var k = normKey(t); if (!k) return; map[k] = map[k] || { key: k, label: t, count: 0 }; map[k].count++; }); });
+    return Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return b.count - a.count || a.label.localeCompare(b.label, "es"); });
+  }
+
+  function applyFilters() {
+    var f = PROMO.f, terms = normKey(f.q).split(" ").filter(Boolean);
+    var out = PROMO.list.filter(function (p) {
+      if (f.status === "active" && !p.active) return false;
+      if (f.status === "off" && (p.active || isPending(p))) return false;
+      if (f.status === "pending" && !isPending(p)) return false;
+      if (f.disc === "on" && !p.discount_enabled) return false;
+      if (f.disc === "off" && p.discount_enabled) return false;
+      if (f.zone && p.zone_key !== f.zone) return false;
+      if (f.school && p.school_key !== f.school) return false;
+      if (f.tags.length) {
+        var mine = tagsOf(p).map(normKey);
+        for (var i = 0; i < f.tags.length; i++) if (mine.indexOf(f.tags[i]) < 0) return false;
+      }
+      if (terms.length) {
+        var hay = normKey([p.name, p.code, p.school, p.zone, p.instagram, p.phone, tagsOf(p).join(" ")].join(" "));
+        for (var j = 0; j < terms.length; j++) if (hay.indexOf(terms[j]) < 0) return false;
+      }
+      return true;
+    });
+    var byName = function (a, b) { return String(a.name).localeCompare(String(b.name), "es", { sensitivity: "base" }); };
+    var by = {
+      default: function (a, b) { return ((isPending(b) ? 1 : 0) - (isPending(a) ? 1 : 0)) || (b.sold - a.sold); },
+      sold_desc: function (a, b) { return (b.sold - a.sold) || byName(a, b); },
+      sold_asc: function (a, b) { return (a.sold - b.sold) || byName(a, b); },
+      name_asc: byName,
+      name_desc: function (a, b) { return byName(b, a); },
+      disc_desc: function (a, b) { return (pctMax(b) - pctMax(a)) || (b.sold - a.sold) || byName(a, b); },
+      disc_asc: function (a, b) { return (pctMax(a) - pctMax(b)) || (b.sold - a.sold) || byName(a, b); },
+      earned_desc: function (a, b) { return (earnedOf(b) - earnedOf(a)) || (b.sold - a.sold) || byName(a, b); },
+      recent: function (a, b) { return String(b.created_at).localeCompare(String(a.created_at)); },
+      oldest: function (a, b) { return String(a.created_at).localeCompare(String(b.created_at)); }
+    };
+    return out.sort(by[f.sort] || by.default);
+  }
+
+  function filtersActive() { var f = PROMO.f; return !!(f.q || f.status || f.disc || f.zone || f.school || f.tags.length); }
+  function updateCount(shown) {
+    $("pf-count").textContent = "Mostrando " + shown + " de " + PROMO.list.length + " promotores";
+    $("pf-clear").classList.toggle("hidden", !filtersActive());
+  }
+  function toolMsg(text, ok) { var m = $("p-toolmsg"); m.textContent = text || ""; m.className = "msg" + (text ? (ok ? " ok" : "") : ""); }
+
+  function fillSelect(sel, items, current, allLabel, key) {
+    sel.innerHTML = "";
+    var o0 = el("option", "", allLabel); o0.value = ""; sel.appendChild(o0);
+    items.forEach(function (it) { var o = el("option", "", it.label + " (" + it.count + ")"); o.value = it.key; sel.appendChild(o); });
+    var exists = items.some(function (it) { return it.key === current; });
+    sel.value = exists ? current : "";
+    if (!exists) PROMO.f[key] = "";
+  }
+
+  function renderPromoterTools() {
+    var f = PROMO.f, tagsOk = !!PROMO.limits;
+    $("pf-q").value = f.q; $("pf-sort").value = f.sort; $("pf-status").value = f.status; $("pf-disc").value = f.disc;
+    fillSelect($("pf-zone"), facetOf(PROMO.list, function (p) { return p.zone; }, function (p) { return p.zone_key; }), f.zone, "Todas las zonas", "zone");
+    fillSelect($("pf-school"), facetOf(PROMO.list, function (p) { return p.school; }, function (p) { return p.school_key; }), f.school, "Todos los colegios", "school");
+    $("pf-tagwrap").classList.toggle("hidden", !tagsOk);
+    $("p-bulk").classList.toggle("hidden", !tagsOk);
+    $("p-tadmin").classList.toggle("hidden", !tagsOk);
+    if (!tagsOk) { updateBulk(); return; }
+    var facets = tagFacets();
+    f.tags = f.tags.filter(function (k) { return facets.some(function (t) { return t.key === k; }); });
+    var bar = $("pf-tags"); bar.innerHTML = "";
+    if (!facets.length) bar.appendChild(el("span", "tnote", "Todavía no hay etiquetas. Agrégalas en cada promotor o a varios a la vez."));
+    facets.forEach(function (t) {
+      var b = el("button", "chip"); b.type = "button";
+      b.setAttribute("aria-pressed", f.tags.indexOf(t.key) >= 0 ? "true" : "false");
+      b.appendChild(document.createTextNode(t.label)); b.appendChild(el("small", "", String(t.count)));
+      b.onclick = function () {
+        var i = f.tags.indexOf(t.key); if (i >= 0) f.tags.splice(i, 1); else f.tags.push(t.key);
+        renderPromoterTools(); renderPromoters();
+      };
+      bar.appendChild(b);
+    });
+    var dl = $("tag-suggestions"); dl.innerHTML = "";
+    facets.forEach(function (t) { var o = document.createElement("option"); o.value = t.label; dl.appendChild(o); });
+    var adm = $("p-tadmin-list"); adm.innerHTML = "";
+    if (!facets.length) adm.appendChild(el("div", "tnote", "No hay etiquetas para administrar."));
+    facets.forEach(function (t) {
+      var r = el("div", "tadmin-row"); r.appendChild(el("span", "", t.label + " (" + t.count + ")"));
+      var rn = el("button", "btn sm ghost", "Renombrar"); rn.type = "button";
+      rn.onclick = function () {
+        var to = prompt("Nuevo nombre para la etiqueta \"" + t.label + "\":", t.label);
+        if (to == null || !to.trim() || normKey(to) === normKey(t.label) && to.trim() === t.label) return;
+        api("tag_rename", { from: t.label, to: to.trim() }).then(function (d) { toolMsg("Etiqueta renombrada en " + d.updated + " promotores.", true); return loadPromoters(); }).catch(function (e) { alert(e.message); });
+      };
+      var dlb = el("button", "btn sm ghost", "Borrar"); dlb.type = "button";
+      dlb.onclick = function () {
+        if (!confirm("¿Borrar la etiqueta \"" + t.label + "\" de los " + t.count + " promotores que la tienen?")) return;
+        api("tag_delete", { tag: t.label }).then(function (d) { toolMsg("Etiqueta borrada de " + d.updated + " promotores.", true); return loadPromoters(); }).catch(function (e) { alert(e.message); });
+      };
+      r.appendChild(rn); r.appendChild(dlb); adm.appendChild(r);
+    });
+    updateBulk();
+  }
+
+  function selectedIds() { return Object.keys(PROMO.sel).filter(function (id) { return PROMO.list.some(function (p) { return p.id === id; }); }); }
+  function updateBulk() {
+    var n = selectedIds().length;
+    $("bulk-info").textContent = n ? n + " seleccionado" + (n === 1 ? "" : "s") : "Marca promotores en la lista para etiquetarlos todos a la vez";
+    ["bulk-add", "bulk-remove", "bulk-none"].forEach(function (id) { $(id).disabled = !n; });
+  }
+  function runBulk(kind) {
+    var ids = selectedIds(), tag = $("bulk-tag").value.trim();
+    if (!ids.length) return;
+    if (!tag) { toolMsg("Escribe la etiqueta que quieres " + (kind === "add" ? "agregar." : "quitar.")); $("bulk-tag").focus(); return; }
+    var body = { ids: ids }; body[kind] = [tag];
+    ["bulk-add", "bulk-remove"].forEach(function (id) { $(id).disabled = true; });
+    api("promoter_tags_bulk", body).then(function (d) {
+      (d.results || []).forEach(function (r) { var p = PROMO.list.filter(function (x) { return x.id === r.id; })[0]; if (p) p.tags = r.tags; });
+      var msg = "Listo: " + (kind === "add" ? "etiqueta agregada" : "etiqueta quitada") + " en " + d.updated + " promotores.";
+      if (d.skipped_full) msg += " " + d.skipped_full + " ya tenían el máximo de etiquetas y no se les pudo agregar.";
+      toolMsg(msg, !d.skipped_full); $("bulk-tag").value = "";
+      renderPromoterTools(); renderPromoters();
+    }).catch(function (e) { toolMsg(e.message); }).finally(updateBulk);
+  }
+
+  function saveTags(p, tags, inp) {
+    return api("promoter_tags_set", { id: p.id, tags: tags }).then(function (d) { p.tags = d.tags || []; toolMsg(""); renderPromoterTools(); renderPromoters(); })
+      .catch(function (e) { alert(e.message); if (inp) inp.disabled = false; });
+  }
+  function tagRow(p) {
+    var wrap = el("div", "tagrow"), mine = tagsOf(p);
+    mine.forEach(function (t) {
+      var chip = el("span", "tag"); chip.appendChild(document.createTextNode(t));
+      var x = el("button", "", "×"); x.type = "button"; x.setAttribute("aria-label", "Quitar la etiqueta " + t + " de " + p.name);
+      x.onclick = function () { x.disabled = true; saveTags(p, mine.filter(function (y) { return normKey(y) !== normKey(t); })); };
+      chip.appendChild(x); wrap.appendChild(chip);
+    });
+    if (mine.length < PROMO.limits.max_tags) {
+      var add = el("span", "tagadd"), inp = el("input"); inp.type = "text"; inp.setAttribute("list", "tag-suggestions");
+      inp.maxLength = PROMO.limits.max_tag_length; inp.placeholder = "+ etiqueta"; inp.autocomplete = "off"; inp.setAttribute("aria-label", "Agregar etiqueta a " + p.name);
+      var go = function () { var v = inp.value.trim(); if (!v) return; inp.disabled = true; saveTags(p, mine.concat([v]), inp); };
+      inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
+      var plus = el("button", "", "+"); plus.type = "button"; plus.setAttribute("aria-label", "Agregar etiqueta"); plus.onclick = go;
+      add.appendChild(inp); add.appendChild(plus); wrap.appendChild(add);
+    }
+    return wrap;
+  }
+  function selBox(p) {
+    var lb = el("label", "psel"), cb = el("input"); cb.type = "checkbox"; cb.checked = !!PROMO.sel[p.id]; cb.setAttribute("aria-label", "Seleccionar a " + p.name);
+    cb.onchange = function () {
+      if (cb.checked) PROMO.sel[p.id] = true; else delete PROMO.sel[p.id];
+      var row = lb.closest ? lb.closest(".prow") : null; if (row) row.classList.toggle("sel", cb.checked);
+      updateBulk();
+    };
+    lb.appendChild(cb); return lb;
+  }
+
+  function loadPromoters() {
+    return api("promoters_list").then(function (d) {
+      PROMO.list = d.promoters || []; PROMO.stages = d.stages || []; PROMO.limits = d.limits || null;
+      PROMO.list.forEach(function (p) {
+        p.tags = tagsOf(p);
+        if (p.zone_key == null) p.zone_key = normKey(p.zone);
+        if (p.school_key == null) p.school_key = normKey(p.school);
+      });
+      renderPrices(PROMO.stages); renderPromoterTools(); renderPromoters();
+    }).catch(function (e) { $("p-rows").innerHTML = ""; $("p-rows").appendChild(el("div", "empty", e.message)); });
+  }
+
+  $("pf-q").addEventListener("input", function () { PROMO.f.q = this.value; renderPromoters(); });
+  ["sort", "status", "disc", "zone", "school"].forEach(function (k) {
+    $("pf-" + k).addEventListener("change", function () { PROMO.f[k] = this.value; renderPromoters(); });
+  });
+  $("pf-clear").addEventListener("click", function () {
+    PROMO.f = { q: "", sort: PROMO.f.sort, status: "", disc: "", zone: "", school: "", tags: [] };
+    renderPromoterTools(); renderPromoters();
+  });
+  $("bulk-add").addEventListener("click", function () { runBulk("add"); });
+  $("bulk-remove").addEventListener("click", function () { runBulk("remove"); });
+  $("bulk-none").addEventListener("click", function () { PROMO.sel = {}; renderPromoters(); updateBulk(); });
+  $("bulk-all").addEventListener("click", function () { applyFilters().forEach(function (p) { PROMO.sel[p.id] = true; }); renderPromoters(); updateBulk(); });
+  $("bulk-tag").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); runBulk("add"); } });
+
   function promoMessage(p) {
     if (p.discount_enabled) {
       return "Hola " + p.name.split(/\s+/)[0] + ", este es tu código de promotor de Skyline Halloween Fest: " + p.code +
@@ -525,15 +824,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       "\n\nCompártelo con tus clientes. Cuando compren en www.skylinepresenta.com deben escribirlo en \"¿Tienes código de descuento?\". " +
       "Así cada boleta que vendas queda registrada a tu nombre.";
   }
-  function renderPromoters(list, goals) {
+  function renderPromoters() {
     var box = $("p-rows"); box.innerHTML = "";
-    if (!list.length) { box.appendChild(el("div", "empty", "Todavía no hay promotores.")); return; }
-    var isPend = function (p) { return p.source === "registro" && !p.active && !p.sold && !p.pending ? 1 : 0; };
-    list.sort(function (a, b) { return (isPend(b) - isPend(a)) || (b.sold - a.sold); }).forEach(function (p) {
-      var row = el("div", "prow" + (p.active ? "" : " off"));
+    if (!PROMO.list.length) { box.appendChild(el("div", "empty", "Todavía no hay promotores.")); updateCount(0); return; }
+    var list = applyFilters(); updateCount(list.length);
+    if (!list.length) { box.appendChild(el("div", "empty", "Ningún promotor coincide con los filtros.")); return; }
+    list.forEach(function (p) {
+      var row = el("div", "prow" + (p.active ? "" : " off") + (PROMO.sel[p.id] ? " sel" : ""));
       var top = el("div", "prow-top");
       var pending = p.source === "registro" && !p.active && !p.sold && !p.pending;
-      top.appendChild(el("span", "prow-name", p.name + (p.active ? "" : pending ? "" : " (desactivado)")));
+      var nm = el("span", "prow-name");
+      if (PROMO.limits) nm.appendChild(selBox(p));
+      nm.appendChild(document.createTextNode(p.name + (p.active ? "" : pending ? "" : " (desactivado)")));
+      top.appendChild(nm);
       top.appendChild(el("span", "code", p.code));
       row.appendChild(top);
       if (p.source === "registro" || p.instagram || p.age) {
@@ -554,10 +857,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         }
         row.appendChild(info);
       }
+      if (PROMO.limits) row.appendChild(tagRow(p));
       var dr = el("div", "disc-row");
       var dl = el("span");
       dl.appendChild(document.createTextNode("Descuento de promotor: "));
       dl.appendChild(el("b", "", p.discount_enabled ? "Activado" : "Desactivado"));
+      if (p.discount_enabled) dl.appendChild(document.createTextNode(" · " + pctText(p)));
       if (p.commission) dl.appendChild(document.createTextNode(" · entregado " + money(p.commission)));
       var sw = el("button", "switch"); sw.type = "button"; sw.setAttribute("role", "switch");
       sw.setAttribute("aria-checked", p.discount_enabled ? "true" : "false");
@@ -572,10 +877,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       dr.appendChild(dl); dr.appendChild(sw);
       row.appendChild(dr);
       var stats = el("div", "prow-stats");
-      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.paid_total), "recaudado con su código"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
+      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.commission), "ganado por sus boletas vendidas"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
         var d = el("div"); d.appendChild(el("b", "", String(x[0]))); d.appendChild(el("span", "", x[1])); stats.appendChild(d);
       });
       row.appendChild(stats);
+      var tot = el("div", "total-earned");
+      tot.appendChild(document.createTextNode("Total ganado (boletas + bono): ")); tot.appendChild(el("b", "", money(earnedOf(p))));
+      row.appendChild(tot);
       var goal = el("div", "goal");
       if (p.bonus.next) {
         goal.textContent = "Le faltan " + p.bonus.missing + " boletas para la meta +" + p.bonus.next.at + " (" + money(p.bonus.next.bonus) + ")";
