@@ -211,6 +211,11 @@
   .total-earned{ font-size:0.9rem; color:var(--gold-pale); margin:-2px 0 12px; }
   .total-earned b{ color:var(--gold); font-variant-numeric:tabular-nums; }
   .tnote{ font-size:0.82rem; color:var(--gold-pale); margin:0 0 10px; }
+
+  /* Boletas: tipo de acceso y filtros */
+  .pill.d1{ background:var(--plum-3); color:var(--bone); }
+  .pill.d2{ background:var(--go); color:#08130c; }
+  #l-more{ margin-top:14px; }
 </style>
 </head>
 <body>
@@ -424,8 +429,17 @@
       <div class="panel">
         <div class="panel-head">Todas las boletas</div>
         <div class="panel-body">
-          <div class="filters">
-            <input class="field" id="l-q" type="search" placeholder="Buscar nombre o documento" autocomplete="off">
+          <div class="pgrid top">
+            <input class="field" id="l-q" type="search" placeholder="Buscar por nombre, cédula, teléfono o nota" autocomplete="off" aria-label="Buscar boleta">
+            <select class="field" id="l-sort" aria-label="Ordenar boletas">
+              <option value="recent">Más recientes</option>
+              <option value="oldest">Menos recientes</option>
+              <option value="name_asc">Nombre (A → Z)</option>
+              <option value="name_desc">Nombre (Z → A)</option>
+              <option value="last_entry">Última entrada</option>
+            </select>
+          </div>
+          <div class="pgrid">
             <select class="field" id="l-cat" aria-label="Filtrar categoría">
               <option value="">Todas</option>
               <option value="venta">Vendidas</option>
@@ -437,8 +451,16 @@
               <option value="__rev">Anuladas</option>
               <option value="__dup">Dobles usos</option>
             </select>
+            <select class="field" id="l-type" aria-label="Filtrar por tipo de acceso">
+              <option value="">Todos los accesos</option>
+              <option value="1-dia">Acceso 1 día</option>
+              <option value="2-dias">Acceso 2 días</option>
+            </select>
+            <select class="field" id="l-state" aria-label="Filtrar por entrada"></select>
           </div>
+          <div class="pcount"><span id="l-count"></span><button class="linkbtn hidden" id="l-clear" type="button">Limpiar filtros</button></div>
           <div class="rows" id="rows"></div>
+          <button class="btn ghost block hidden" id="l-more" type="button">Mostrar más</button>
         </div>
       </div>
     </div>
@@ -940,7 +962,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // ---------- Datos ----------
   function refresh() {
-    return api("list").then(function (d) { all = d.tickets || []; renderStats(); renderList(); })
+    return api("list").then(function (d) { all = d.tickets || []; renderStats(); buildListFilters(); renderList(); })
       .catch(function (e) { $("rows").innerHTML = ""; var p = document.createElement("div"); p.className = "empty"; p.textContent = e.message; $("rows").appendChild(p); });
   }
   function renderStats() {
@@ -1143,24 +1165,85 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // ---------- Lista ----------
   function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
   function fmtNight(n) { var p = n.split("-"); return Number(p[2]) + " oct"; }
-  function renderList() {
-    var q = norm($("l-q").value.trim()), cat = $("l-cat").value, qd = q.replace(/\D/g, "");
-    var box = $("rows"); box.innerHTML = "";
-    var list = all.filter(function (t) {
+  var LV = { page: 100, shown: 100 };
+  function fmtWhen(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleString("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; }
+  }
+  function lastEntry(t) { var m = ""; (t.checkins || []).forEach(function (c) { if (String(c.scanned_at || "") > m) m = String(c.scanned_at || ""); }); return m; }
+  function matchesSearch(t, tokens) {
+    var hay = norm([t.name, t.doc, t.phone, t.note].join(" ")), digits = String(t.doc || "").replace(/\D/g, "") + " " + String(t.phone || "").replace(/\D/g, "");
+    for (var i = 0; i < tokens.length; i++) {
+      var tk = tokens[i], d = tk.replace(/\D/g, "");
+      if (/^[\d.\-]+$/.test(tk) && d.length >= 3) { if (digits.indexOf(d) < 0) return false; }   // cédula o teléfono, con o sin puntos
+      else if (hay.indexOf(tk) < 0) return false;
+    }
+    return true;
+  }
+  function listFiltered() {
+    var tokens = norm($("l-q").value.trim()).split(/\s+/).filter(Boolean);
+    var cat = $("l-cat").value, type = $("l-type").value, state = $("l-state").value, sort = $("l-sort").value;
+    var out = all.filter(function (t) {
       if (cat === "__rev" && !t.revoked) return false;
       if (cat === "__dup" && !(t.conflicts && t.conflicts.length)) return false;
       if (cat && cat.charAt(0) !== "_" && t.category !== cat) return false;
-      if (!q) return true;
-      return norm(t.name).indexOf(q) >= 0 || (qd && String(t.doc || "").replace(/\D/g, "").indexOf(qd) >= 0);
+      if (type && t.access_type !== type) return false;
+      if (state === "in" && !(t.checkins || []).length) return false;
+      if (state === "none" && ((t.checkins || []).length || t.revoked)) return false;
+      if (state.indexOf("n:") === 0 && !(t.checkins || []).some(function (c) { return c.night === state.slice(2); })) return false;
+      return !tokens.length || matchesSearch(t, tokens);
     });
+    var byName = function (a, b) { return String(a.name || "").localeCompare(String(b.name || ""), "es", { sensitivity: "base" }) || ((a.n || 0) - (b.n || 0)); };
+    var byDate = function (a, b) { return String(b.created_at || "").localeCompare(String(a.created_at || "")) || byName(a, b); };
+    var cmp = {
+      recent: byDate,
+      oldest: function (a, b) { return byDate(b, a); },
+      name_asc: function (a, b) { return byName(a, b) || byDate(a, b); },
+      name_desc: function (a, b) { return byName(b, a) || byDate(a, b); },
+      last_entry: function (a, b) { var x = lastEntry(a), y = lastEntry(b); if (!x && !y) return byDate(a, b); if (!x) return 1; if (!y) return -1; return y.localeCompare(x); }
+    };
+    return out.sort(cmp[sort] || byDate);
+  }
+  function listFiltersActive() { return !!($("l-q").value.trim() || $("l-cat").value || $("l-type").value || $("l-state").value); }
+  // Las opciones muestran cuántas boletas hay en cada una.
+  function buildListFilters() {
+    var base = { "l-cat": null, "l-type": null };
+    var count = function (fn) { return all.filter(fn).length; };
+    Array.prototype.forEach.call($("l-cat").options, function (o) {
+      if (o.getAttribute("data-base") == null) o.setAttribute("data-base", o.textContent);
+      var v = o.value, n = !v ? all.length : v === "__rev" ? count(function (t) { return t.revoked; }) : v === "__dup" ? count(function (t) { return t.conflicts && t.conflicts.length; }) : count(function (t) { return t.category === v; });
+      o.textContent = o.getAttribute("data-base") + " (" + n + ")";
+    });
+    Array.prototype.forEach.call($("l-type").options, function (o) {
+      if (o.getAttribute("data-base") == null) o.setAttribute("data-base", o.textContent);
+      o.textContent = o.getAttribute("data-base") + " (" + (o.value ? count(function (t) { return t.access_type === o.value; }) : all.length) + ")";
+    });
+    var st = $("l-state"), cur = st.value, nights = {};
+    all.forEach(function (t) { (t.checkins || []).forEach(function (c) { if (c.night) nights[c.night] = (nights[c.night] || 0) + 1; }); });
+    st.innerHTML = "";
+    var add = function (v, label) { var o = document.createElement("option"); o.value = v; o.textContent = label; st.appendChild(o); };
+    add("", "Con o sin entrada");
+    add("in", "Ya entraron (" + count(function (t) { return (t.checkins || []).length; }) + ")");
+    add("none", "Sin entrar todavía (" + count(function (t) { return !(t.checkins || []).length && !t.revoked; }) + ")");
+    Object.keys(nights).sort().forEach(function (n) { add("n:" + n, "Entraron el " + fmtNight(n) + " (" + count(function (t) { return (t.checkins || []).some(function (c) { return c.night === n; }); }) + ")"); });
+    st.value = Array.prototype.some.call(st.options, function (o) { return o.value === cur; }) ? cur : "";
+  }
+  function renderList() {
+    var box = $("rows"); box.innerHTML = "";
+    var list = listFiltered(), shown = Math.min(list.length, LV.shown);
+    $("l-count").textContent = "Mostrando " + shown + " de " + list.length + " boletas" + (listFiltersActive() ? " (" + all.length + " en total)" : "");
+    $("l-clear").classList.toggle("hidden", !listFiltersActive());
+    $("l-more").classList.add("hidden");
     if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = all.length ? "No hay boletas con ese filtro." : "Todavía no hay boletas."; box.appendChild(e); return; }
-    list.slice(0, 300).forEach(function (t) {
+    if (list.length > shown) { $("l-more").textContent = "Mostrar más (" + (list.length - shown) + " restantes)"; $("l-more").classList.remove("hidden"); }
+    list.slice(0, LV.shown).forEach(function (t) {
       var row = document.createElement("div"); row.className = "row";
       var name = document.createElement("div"); name.className = "row-name";
       var pill = document.createElement("span"); pill.className = "pill " + t.category; pill.textContent = CAT[t.category] || t.category;
-      name.appendChild(pill); name.appendChild(document.createTextNode(t.name || "—"));
+      var tpill = document.createElement("span"); tpill.className = "pill " + (t.access_type === "1-dia" ? "d1" : "d2"); tpill.textContent = t.access_type === "1-dia" ? "1 día" : "2 días";
+      name.appendChild(pill); name.appendChild(tpill); name.appendChild(document.createTextNode(t.name || "—"));
       var meta = document.createElement("div"); meta.className = "row-meta";
-      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.note ? " · " + t.note : "");
+      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.phone ? " · Tel. " + t.phone : "") + (t.note ? " · " + t.note : "") + (t.created_at ? " · " + fmtWhen(t.created_at) : "");
       var st = document.createElement("div"); st.className = "row-state";
       if (t.revoked) { st.className += " rev"; st.textContent = "Anulada" + (t.revoked_reason ? ": " + t.revoked_reason : ""); }
       else if (t.checkins.length) { st.className += " used"; st.textContent = "Entró: " + t.checkins.map(function (c) { return fmtNight(c.night) + (c.device ? " (" + c.device + ")" : ""); }).join(", "); }
@@ -1180,8 +1263,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       box.appendChild(row);
     });
   }
-  $("l-q").addEventListener("input", renderList);
-  $("l-cat").addEventListener("change", renderList);
+  var resetAndRender = function () { LV.shown = LV.page; renderList(); };
+  $("l-q").addEventListener("input", resetAndRender);
+  ["l-cat", "l-type", "l-state", "l-sort"].forEach(function (id) { $(id).addEventListener("change", resetAndRender); });
+  $("l-more").addEventListener("click", function () { LV.shown += LV.page; renderList(); });
+  $("l-clear").addEventListener("click", function () { $("l-q").value = ""; $("l-cat").value = ""; $("l-type").value = ""; $("l-state").value = ""; resetAndRender(); });
 
   function toggleRevoke(t, btn) {
     var action = t.revoked ? "restore" : "revoke", reason = "";
