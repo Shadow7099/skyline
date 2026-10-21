@@ -216,6 +216,10 @@
   .pill.d1{ background:var(--plum-3); color:var(--bone); }
   .pill.d2{ background:var(--go); color:#08130c; }
   #l-more{ margin-top:14px; }
+
+  /* VIP y Vice Experience */
+  .pill.vip{ background:var(--gold-pale); color:var(--ink); }
+  .pill.vice{ background:var(--plum-3); color:var(--bone); border:1px solid var(--gold); }
 </style>
 </head>
 <body>
@@ -267,6 +271,13 @@
             <span id="sales-updated"></span>
             <button class="btn sm ghost" id="sales-refresh" type="button">Actualizar</button>
           </div>
+        </div>
+      </div>
+      <div class="panel hidden" id="vip-panel">
+        <div class="panel-head">VIP y Vice Experience</div>
+        <div class="panel-body">
+          <div class="table-wrap"><table class="ptable sales-table" id="vip-table"></table></div>
+          <p class="tnote" style="margin-top:12px">Los VIP y Vice se venden aparte de las etapas generales y no suman a las metas de los promotores.</p>
         </div>
       </div>
     </div>
@@ -456,6 +467,12 @@
               <option value="1-dia">Acceso 1 día</option>
               <option value="2-dias">Acceso 2 días</option>
             </select>
+            <select class="field" id="l-tier" aria-label="Filtrar por nivel">
+              <option value="">Todos los niveles</option>
+              <option value="general">General</option>
+              <option value="vip">VIP</option>
+              <option value="vice">Vice Experience</option>
+            </select>
             <select class="field" id="l-state" aria-label="Filtrar por entrada"></select>
           </div>
           <div class="pcount"><span id="l-count"></span><button class="linkbtn hidden" id="l-clear" type="button">Limpiar filtros</button></div>
@@ -589,9 +606,27 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       tt.appendChild(el("td", "num", String(d.total.boletas)));
       tt.appendChild(el("td", "num pay", money(d.total.recaudo)));
       tbl.appendChild(tt);
+      renderVipSales(d.vip_summary);
       var now = new Date();
       $("sales-updated").textContent = "Actualizado a las " + now.toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
     }).catch(function (e) { $("sales-updated").textContent = e.message; });
+  }
+  function renderVipSales(vs) {
+    var panel = $("vip-panel"); if (!vs) { panel.classList.add("hidden"); return; }
+    panel.classList.remove("hidden");
+    var tbl = $("vip-table"); tbl.innerHTML = "";
+    var head = el("tr"); ["Producto", "Boletas", "Compras", "Recaudo"].forEach(function (h) { head.appendChild(el("th", "", h)); }); tbl.appendChild(head);
+    [["VIP 1 día", vs.vip_1], ["VIP 2 días", vs.vip_2], ["Vice Experience", vs.vice]].forEach(function (r) {
+      var tr = el("tr"); tr.appendChild(el("td", "", r[0]));
+      tr.appendChild(el("td", "num", String(r[1].boletas))); tr.appendChild(el("td", "num", String(r[1].compras))); tr.appendChild(el("td", "num pay", money(r[1].recaudo)));
+      if (!r[1].boletas) tr.className = "muted"; tbl.appendChild(tr);
+    });
+    var tt = el("tr", "total-row"); tt.appendChild(el("td", "", "Total VIP y Vice"));
+    tt.appendChild(el("td", "num", String(vs.total.boletas))); tt.appendChild(el("td", "num", String(vs.total.compras))); tt.appendChild(el("td", "num pay", money(vs.total.recaudo))); tbl.appendChild(tt);
+    Object.keys(vs.by_night || {}).sort().forEach(function (n) {
+      var tr = el("tr", "muted"); tr.appendChild(el("td", "", "Cupos usados el " + nightLong(n)));
+      tr.appendChild(el("td", "num", "VIP " + vs.by_night[n].vip + " · Vice " + vs.by_night[n].vice)); tr.appendChild(el("td", "num", "")); tr.appendChild(el("td", "num", "")); tbl.appendChild(tr);
+    });
   }
   $("sales-refresh").addEventListener("click", loadSales);
 
@@ -638,7 +673,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (t["2-dias"] != null) parts.push(t["2-dias"] + "% en 2 días");
     return parts.join(" · ");
   }
-  function earnedOf(p) { return Number(p.commission || 0) + Number(p.bonus && p.bonus.reached ? p.bonus.reached.bonus : 0); }
+  function earnedOf(p) { return Number(p.commission || 0) + Number(p.vip_commission || 0) + Number(p.bonus && p.bonus.reached ? p.bonus.reached.bonus : 0); }
 
   // Cuenta valores iguales sin importar mayúsculas, tildes ni signos; muestra la grafía más usada.
   function facetOf(list, getValue, getKey) {
@@ -899,13 +934,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       dr.appendChild(dl); dr.appendChild(sw);
       row.appendChild(dr);
       var stats = el("div", "prow-stats");
-      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(p.commission), "ganado por sus boletas vendidas"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
+      [[p.sold, "boletas pagadas (" + p.sold_1 + " de 1 día · " + p.sold_2 + " de 2 días)"], [money(Number(p.commission || 0) + Number(p.vip_commission || 0)), "ganado por sus boletas vendidas"], [money(p.bonus.reached ? p.bonus.reached.bonus : 0), "bono alcanzado"]].forEach(function (x) {
         var d = el("div"); d.appendChild(el("b", "", String(x[0]))); d.appendChild(el("span", "", x[1])); stats.appendChild(d);
       });
       row.appendChild(stats);
       var tot = el("div", "total-earned");
       tot.appendChild(document.createTextNode("Total ganado (boletas + bono): ")); tot.appendChild(el("b", "", money(earnedOf(p))));
       row.appendChild(tot);
+      if (p.vip_sold || p.vice_sold) row.appendChild(el("div", "total-earned", "VIP vendidos: " + (p.vip_sold || 0) + " · Vice Experience: " + (p.vice_sold || 0) + " · comisión VIP " + money(p.vip_commission || 0) + " (no suma a metas ni bonos)"));
       var goal = el("div", "goal");
       if (p.bonus.next) {
         goal.textContent = "Le faltan " + p.bonus.missing + " boletas para la meta +" + p.bonus.next.at + " (" + money(p.bonus.next.bonus) + ")";
@@ -1064,7 +1100,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       // Etiqueta de categoría
       var cat = CAT[t.category] || "";
-      var type = t.access_type === "1-dia" ? "ACCESO 1 DÍA" : "ACCESO 2 DÍAS";
+      var type = t.tier === "vice" ? "VICE EXPERIENCE" : (t.tier === "vip" ? "VIP · " : "ACCESO ") + (t.access_type === "1-dia" ? "1 DÍA" : "2 DÍAS");
       var tag = (cat && t.category !== "venta" ? cat.toUpperCase() + " · " : "") + type;
       x.font = DISPLAY.replace("{s}", 34);
       var tw = x.measureText(tag).width + 64;
@@ -1089,8 +1125,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       x.fillText((t.name || "").toUpperCase(), W / 2, 1110);
       x.fillStyle = "#f7cf8c"; x.font = "600 34px -apple-system, 'Segoe UI', Roboto, sans-serif";
       x.fillText("Boleta " + t.n + " de " + t.total, W / 2, 1165);
+      if (t.tier === "vip" || t.tier === "vice") {
+        x.fillStyle = "#f4ecdb"; x.font = "700 28px -apple-system, 'Segoe UI', Roboto, sans-serif";
+        x.fillText(t.tier === "vice" ? "Incluye media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") : "Stage VIP · Ingreso preferencial", W / 2, 1208);
+      }
       x.fillStyle = "#f0a93b"; x.font = DISPLAY.replace("{s}", 30);
-      x.fillText("30 Y 31 DE OCTUBRE · PLOT BOGOTÁ", W / 2, 1250);
+      x.fillText(t.night ? nightLong(t.night).toUpperCase() + " · PLOT BOGOTÁ" : "30 Y 31 DE OCTUBRE · PLOT BOGOTÁ", W / 2, 1250);
       x.fillStyle = "rgba(244,236,219,0.7)"; x.font = "500 26px -apple-system, 'Segoe UI', Roboto, sans-serif";
       x.fillText("Presenta este código en la entrada · Es personal, no lo compartas", W / 2, 1300);
 
@@ -1165,6 +1205,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // ---------- Lista ----------
   function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
   function fmtNight(n) { var p = n.split("-"); return Number(p[2]) + " oct"; }
+  var DAYS_ES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  function nightLong(n) { var p = String(n || "").split("-"); if (p.length !== 3) return ""; return DAYS_ES[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()] + " " + (+p[2]) + " de octubre"; }
+  function drinkName(o) { return o === "redbull" ? "Red Bull" : o === "agua" ? "agua" : ""; }
+  function tierName(t) { return t === "vice" ? "Vice Experience" : t === "vip" ? "VIP" : ""; }
   var LV = { page: 100, shown: 100 };
   function fmtWhen(iso) {
     if (!iso) return "";
@@ -1182,12 +1226,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function listFiltered() {
     var tokens = norm($("l-q").value.trim()).split(/\s+/).filter(Boolean);
-    var cat = $("l-cat").value, type = $("l-type").value, state = $("l-state").value, sort = $("l-sort").value;
+    var cat = $("l-cat").value, type = $("l-type").value, state = $("l-state").value, sort = $("l-sort").value, tier = $("l-tier").value;
     var out = all.filter(function (t) {
       if (cat === "__rev" && !t.revoked) return false;
       if (cat === "__dup" && !(t.conflicts && t.conflicts.length)) return false;
       if (cat && cat.charAt(0) !== "_" && t.category !== cat) return false;
       if (type && t.access_type !== type) return false;
+      if (tier && (t.tier || "general") !== tier) return false;
       if (state === "in" && !(t.checkins || []).length) return false;
       if (state === "none" && ((t.checkins || []).length || t.revoked)) return false;
       if (state.indexOf("n:") === 0 && !(t.checkins || []).some(function (c) { return c.night === state.slice(2); })) return false;
@@ -1204,7 +1249,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     };
     return out.sort(cmp[sort] || byDate);
   }
-  function listFiltersActive() { return !!($("l-q").value.trim() || $("l-cat").value || $("l-type").value || $("l-state").value); }
+  function listFiltersActive() { return !!($("l-q").value.trim() || $("l-cat").value || $("l-type").value || $("l-tier").value || $("l-state").value); }
   // Las opciones muestran cuántas boletas hay en cada una.
   function buildListFilters() {
     var base = { "l-cat": null, "l-type": null };
@@ -1217,6 +1262,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     Array.prototype.forEach.call($("l-type").options, function (o) {
       if (o.getAttribute("data-base") == null) o.setAttribute("data-base", o.textContent);
       o.textContent = o.getAttribute("data-base") + " (" + (o.value ? count(function (t) { return t.access_type === o.value; }) : all.length) + ")";
+    });
+    Array.prototype.forEach.call($("l-tier").options, function (o) {
+      if (o.getAttribute("data-base") == null) o.setAttribute("data-base", o.textContent);
+      o.textContent = o.getAttribute("data-base") + " (" + (o.value ? count(function (t) { return (t.tier || "general") === o.value; }) : all.length) + ")";
     });
     var st = $("l-state"), cur = st.value, nights = {};
     all.forEach(function (t) { (t.checkins || []).forEach(function (c) { if (c.night) nights[c.night] = (nights[c.night] || 0) + 1; }); });
@@ -1241,9 +1290,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var name = document.createElement("div"); name.className = "row-name";
       var pill = document.createElement("span"); pill.className = "pill " + t.category; pill.textContent = CAT[t.category] || t.category;
       var tpill = document.createElement("span"); tpill.className = "pill " + (t.access_type === "1-dia" ? "d1" : "d2"); tpill.textContent = t.access_type === "1-dia" ? "1 día" : "2 días";
-      name.appendChild(pill); name.appendChild(tpill); name.appendChild(document.createTextNode(t.name || "—"));
+      name.appendChild(pill);
+      if (t.tier === "vip" || t.tier === "vice") { var vpill = document.createElement("span"); vpill.className = "pill " + t.tier; vpill.textContent = tierName(t.tier); name.appendChild(vpill); }
+      name.appendChild(tpill); name.appendChild(document.createTextNode(t.name || "—"));
       var meta = document.createElement("div"); meta.className = "row-meta";
-      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.phone ? " · Tel. " + t.phone : "") + (t.note ? " · " + t.note : "") + (t.created_at ? " · " + fmtWhen(t.created_at) : "");
+      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.phone ? " · Tel. " + t.phone : "") + (t.night ? " · solo " + nightLong(t.night) : "") + (t.option ? " · " + drinkName(t.option) : "") + (t.note ? " · " + t.note : "") + (t.created_at ? " · " + fmtWhen(t.created_at) : "");
       var st = document.createElement("div"); st.className = "row-state";
       if (t.revoked) { st.className += " rev"; st.textContent = "Anulada" + (t.revoked_reason ? ": " + t.revoked_reason : ""); }
       else if (t.checkins.length) { st.className += " used"; st.textContent = "Entró: " + t.checkins.map(function (c) { return fmtNight(c.night) + (c.device ? " (" + c.device + ")" : ""); }).join(", "); }
@@ -1265,9 +1316,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   var resetAndRender = function () { LV.shown = LV.page; renderList(); };
   $("l-q").addEventListener("input", resetAndRender);
-  ["l-cat", "l-type", "l-state", "l-sort"].forEach(function (id) { $(id).addEventListener("change", resetAndRender); });
+  ["l-cat", "l-type", "l-tier", "l-state", "l-sort"].forEach(function (id) { $(id).addEventListener("change", resetAndRender); });
   $("l-more").addEventListener("click", function () { LV.shown += LV.page; renderList(); });
-  $("l-clear").addEventListener("click", function () { $("l-q").value = ""; $("l-cat").value = ""; $("l-type").value = ""; $("l-state").value = ""; resetAndRender(); });
+  $("l-clear").addEventListener("click", function () { $("l-q").value = ""; $("l-cat").value = ""; $("l-type").value = ""; $("l-tier").value = ""; $("l-state").value = ""; resetAndRender(); });
 
   function toggleRevoke(t, btn) {
     var action = t.revoked ? "restore" : "revoke", reason = "";
