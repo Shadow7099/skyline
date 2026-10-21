@@ -413,6 +413,10 @@
     var t = byToken[token];
     if (t && t.revoked) return { ok: false, reason: "Esta boleta fue anulada." };
     var night = currentNight();
+    // VIP 1 día y Vice Experience: solo valen la noche para la que se compraron.
+    if (t && t.night && !isTestMode() && t.night !== night) {
+      return { ok: false, reason: (t.tier === "vice" ? "Vice Experience" : "Boleta VIP") + " válida solo la noche del " + fmtNight(t.night) + "." };
+    }
     var used = checkinsFor(token);
     if (type === "2") {
       var tonight = used.filter(function (c) { return c.night === night; })[0];
@@ -469,6 +473,7 @@
           return { ok: false, reason: evaluate(token, byToken[token] ? byToken[token].type : "2").reason || "Esta boleta ya fue usada" + byDevice(d.first) + "." };
         }
         if (d.code === "revoked") return { ok: false, reason: "Esta boleta fue anulada." };
+        if (d.code === "wrong_night") return { ok: false, reason: (d.ticket && d.ticket.tier === "vice" ? "Vice Experience" : "Boleta VIP") + " válida solo la noche del " + fmtNight(d.valid_night) + "." };
         return { ok: false, reason: "Esta boleta no está registrada en el sistema." };
       })
       .catch(function () {
@@ -479,10 +484,19 @@
       });
   }
 
+  function drinkName(o) { return o === "redbull" ? "Red Bull" : o === "agua" ? "agua" : ""; }
+  function tierTag(t) { return !t ? "" : t.tier === "vice" ? " · VICE EXPERIENCE" : t.tier === "vip" ? " · VIP" : ""; }
+  function perkText(t) {
+    if (!t) return "";
+    if (t.tier === "vip") return "VIP: acceso al Stage VIP e ingreso preferencial.";
+    if (t.tier === "vice") return "Vice Experience: entregar media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") + ".";
+    return "";
+  }
   function ticketLine(t, type) {
     var kind = type === "1" ? "Acceso 1 día" : "Acceso 2 días";
     if (!t) return kind;
-    return (t.cat ? t.cat + " · " : "") + kind + " · boleta " + t.n + " de " + t.total;
+    var lvl = t.tier === "vice" ? "VICE EXPERIENCE · " : t.tier === "vip" ? "VIP · " : "";
+    return (t.cat ? t.cat + " · " : "") + lvl + kind + (t.night ? " (solo " + fmtNight(t.night) + ")" : "") + " · boleta " + t.n + " de " + t.total;
   }
 
   // ---------- Resultado en pantalla ----------
@@ -561,7 +575,8 @@
         if (!tt) extra = (extra ? extra + " " : "") + "Boleta auténtica comprada después de la última sincronización.";
         if (isTestMode()) extra = (extra ? extra + " " : "") + "Modo prueba: no se guardó.";
         else if (r.offline) extra = (extra ? extra + " " : "") + "Registrada sin señal; se sube al volver la conexión.";
-        showVerdict(true, "Puede entrar", tt ? tt.name : "Boleta válida", ticketLine(tt, qr.type), extra);
+        if (perkText(tt)) extra = perkText(tt) + (extra ? " " + extra : "");
+        showVerdict(true, "Puede entrar" + tierTag(tt), tt ? tt.name : "Boleta válida", ticketLine(tt, qr.type), extra);
       });
     }).finally(function () { busy = false; setChecking(false); });
   }
@@ -757,7 +772,7 @@
         tryAdmit(t.token).then(function (r) {
           closeSearch();
           if (!r.ok) { showVerdict(false, "No puede entrar", t.name, ticketLine(t, t.type), r.reason); return; }
-          showVerdict(true, "Puede entrar", t.name, ticketLine(t, t.type), "Entrada registrada a mano." + (isTestMode() ? " Modo prueba: no se guardó." : r.offline ? " Sin señal; se sube después." : ""));
+          showVerdict(true, "Puede entrar" + tierTag(t), t.name, ticketLine(t, t.type), (perkText(t) ? perkText(t) + " " : "") + "Entrada registrada a mano." + (isTestMode() ? " Modo prueba: no se guardó." : r.offline ? " Sin señal; se sube después." : ""));
         });
       });
       row.appendChild(name); row.appendChild(b); row.appendChild(meta); row.appendChild(st);
