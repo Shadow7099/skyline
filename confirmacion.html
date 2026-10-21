@@ -166,7 +166,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     list = list.filter(function (x) { return x.id !== o.id; });
     list.unshift({
       id: o.id, at: prev.at || Date.now(), name: o.full_name,
-      label: (o.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " x" + o.quantity,
+      label: productLabel(o) + " x" + o.quantity,
       status: o.status
     });
     lsSet(ORDERS_KEY, list.slice(0, 10));
@@ -212,6 +212,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
   function accessLabel(a) { return a === "1-dia" ? "Acceso 1 día" : "Acceso 2 días"; }
+  // VIP y Vice Experience (las generales se ven exactamente igual que siempre)
+  function productLabel(o) {
+    if (o.tier === "vice") return "Vice Experience";
+    if (o.tier === "vip") return "VIP · " + accessLabel(o.access_type);
+    return accessLabel(o.access_type);
+  }
+  var DAYS_ES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"], MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  function nightLong(n) {
+    var p = String(n || "").split("-"); if (p.length !== 3) return "";
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    return DAYS_ES[d.getUTCDay()] + " " + (+p[2]) + " de " + MONTHS_ES[+p[1] - 1];
+  }
+  function drinkName(o) { return o === "redbull" ? "Red Bull" : o === "agua" ? "agua" : ""; }
 
   function header(icon, title, statusText, cls) {
     card.innerHTML = "";
@@ -222,7 +235,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function details(o) {
     var d = el("div", "detail");
-    [["Boleta", accessLabel(o.access_type)], ["Cantidad", String(o.quantity)], ["Total", money(o.total)], ["Comprador", o.full_name || ""], ["# de reserva", o.id]].forEach(function (r) {
+    var rows = [["Boleta", productLabel(o)]];
+    if (o.night) rows.push(["Noche", nightLong(o.night)]);
+    rows = rows.concat([["Cantidad", String(o.quantity)], ["Total", money(o.total)], ["Comprador", o.full_name || ""], ["# de reserva", o.id]]);
+    rows.forEach(function (r) {
       var row = el("div", "row"); row.appendChild(el("span", "", r[0]));
       var v = el("span", "", r[1]); if (r[0] === "# de reserva") v.style.fontSize = "11px";
       row.appendChild(v); d.appendChild(row);
@@ -281,13 +297,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var rendered = [];
     o.tickets.forEach(function (t) {
       var box = el("div", "ticket");
-      var img = el("img"); img.alt = "Boleta " + t.n + " de " + t.total + ", " + accessLabel(t.access_type) + ", a nombre de " + (o.full_name || "");
+      var img = el("img"); img.alt = "Boleta " + t.n + " de " + t.total + ", " + productLabel({ tier: t.tier || o.tier, access_type: t.access_type }) + ", a nombre de " + (o.full_name || "");
       var acts = el("div", "ticket-actions");
       var dl = el("button", "btn", "Descargar");
       var sh = el("button", "btn ghost", "Compartir");
       acts.appendChild(dl); acts.appendChild(sh);
       box.appendChild(img); box.appendChild(acts); grid.appendChild(box);
-      var ticket = { qr_payload: t.qr_payload, access_type: t.access_type, n: t.n, total: t.total, name: o.full_name, category: "venta" };
+      var ticket = { qr_payload: t.qr_payload, access_type: t.access_type, n: t.n, total: t.total, name: o.full_name, category: "venta", tier: t.tier || o.tier || "general", night: t.night || null, option: t.option || null };
       rendered.push(renderTicket(ticket).then(function (blob) {
         img.src = URL.createObjectURL(blob);
         var item = { blob: blob, name: fileName(ticket) };
@@ -372,7 +388,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         x.fillText("SKYLINE", W / 2, 150);
         x.fillStyle = "#f0a93b"; x.font = DISPLAY.replace("{s}", 36); x.fillText("HALLOWEEN FEST", W / 2, 205);
       }
-      var tag = t.access_type === "1-dia" ? "ACCESO 1 DÍA" : "ACCESO 2 DÍAS";
+      var tag = t.tier === "vice" ? "VICE EXPERIENCE" : (t.tier === "vip" ? "VIP · " : "ACCESO ") + (t.access_type === "1-dia" ? "1 DÍA" : "2 DÍAS");
       x.font = DISPLAY.replace("{s}", 34);
       var tw = x.measureText(tag).width + 64;
       x.fillStyle = "#f0a93b"; roundRect(x, (W - tw) / 2, 300, tw, 70, 35); x.fill();
@@ -392,8 +408,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       x.fillText((t.name || "").toUpperCase(), W / 2, 1110);
       x.fillStyle = "#f7cf8c"; x.font = "600 34px -apple-system, 'Segoe UI', Roboto, sans-serif";
       x.fillText("Boleta " + t.n + " de " + t.total, W / 2, 1165);
+      if (t.tier === "vip" || t.tier === "vice") {
+        x.fillStyle = "#f4ecdb"; x.font = "700 28px -apple-system, 'Segoe UI', Roboto, sans-serif";
+        x.fillText(t.tier === "vice" ? "Incluye media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") : "Stage VIP · Ingreso preferencial", W / 2, 1208);
+      }
       x.fillStyle = "#f0a93b"; x.font = DISPLAY.replace("{s}", 30);
-      x.fillText("30 Y 31 DE OCTUBRE · PLOT BOGOTÁ", W / 2, 1250);
+      x.fillText(t.night ? nightLong(t.night).toUpperCase() + " · PLOT BOGOTÁ" : "30 Y 31 DE OCTUBRE · PLOT BOGOTÁ", W / 2, 1250);
       x.fillStyle = "rgba(244,236,219,0.7)"; x.font = "500 26px -apple-system, 'Segoe UI', Roboto, sans-serif";
       x.fillText("Presenta este código en la entrada · Es personal, no lo compartas", W / 2, 1300);
       return new Promise(function (res) { c.toBlob(function (b) { res(b); }, "image/png"); });
