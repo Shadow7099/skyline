@@ -579,6 +579,26 @@
     color:rgba(244,236,219,0.6);
     text-align:center;
   }
+
+  /* ---------- VIP y Vice Experience ---------- */
+  .vip-head{ text-align:center; max-width:600px; margin:64px auto 30px; }
+  .vip-head h3{ font-size:clamp(1.7rem, 5vw, 2.4rem); color:var(--bone); }
+  .vip-head p{ margin-top:10px; color:var(--gold-pale); font-size:1.02rem; }
+  .price-panels.vip-panels{ grid-template-columns:repeat(3, 1fr); }
+  @media (max-width:980px){ .price-panels.vip-panels{ grid-template-columns:1fr; } }
+  .price-panel.vip-card .price-panel-head{ background:var(--gold-pale); }
+  .price-panel.vice-card .price-panel-head{ background:var(--purple-glow); color:var(--bone); }
+  .vip-note{ padding:14px 22px 0; font-size:0.88rem; color:var(--gold-pale); }
+  .vice-body{ padding:22px 22px 6px; flex:1; }
+  .vice-price{ font-family:'Eurostile Extended', 'Michroma', sans-serif; font-weight:700; font-size:2.3rem; color:var(--gold); line-height:1; }
+  .vice-price small{ display:block; margin-top:6px; font-family:inherit; font-weight:600; font-size:0.8rem; color:var(--gold-pale); letter-spacing:0.5px; text-transform:uppercase; }
+  .vice-list{ list-style:none; margin:18px 0 0; padding:0; }
+  .vice-list li{ padding:9px 0; border-bottom:1px dashed rgba(244,236,219,0.25); font-size:0.95rem; color:var(--bone); }
+  .vice-list li:last-child{ border-bottom:none; }
+  .vice-list li::before{ content:'◆'; color:var(--gold); margin-right:10px; font-size:0.8rem; }
+  .vice-stock{ margin-top:14px; font-size:0.82rem; color:var(--gold-pale); min-height:1.2em; }
+  .vip-perks{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px 26px; margin:30px auto 0; padding:0; list-style:none; font-weight:700; color:var(--bone); }
+  .vip-perks li::before{ content:'◆'; color:var(--gold); margin-right:8px; }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -700,6 +720,11 @@ fbq('track', 'PageView');
         <p>Una terraza en las alturas de La Calera con una vista exclusiva de Bogotá. El spot perfecto para tomarte una foto con tu disfraz.</p>
       </div>
 
+      <div class="feature-card">
+        <h3>Experiencias VIP</h3>
+        <p>Stage VIP con ingreso preferencial, y Vice Experience con media de Antioqueño y tu bebida incluida. Cupos limitados por noche.</p>
+      </div>
+
     </div>
   </div>
 </section>
@@ -764,6 +789,81 @@ fbq('track', 'PageView');
       </div>
 
     </div>
+
+    <div class="vip-head" id="vip">
+      <h3>Experiencias VIP</h3>
+      <p>Stage VIP e ingreso preferencial. Cupos limitados por noche: se agotan por etapa y el precio sube.</p>
+    </div>
+
+    <div class="price-panels vip-panels">
+
+      <div class="price-panel vip-card">
+        <div class="price-panel-head">VIP 1 día</div>
+        <p class="vip-note">Eliges la noche: viernes 30 o sábado 31 de octubre.</p>
+        <div class="price-rows" data-vip="1-dia">
+          <div class="price-row active" data-stage="Etapa 1">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+            <div class="amount" data-amount>$50.000</div>
+          </div>
+          <div class="price-row" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+            <div class="amount" data-amount>$60.000</div>
+          </div>
+          <div class="price-row" data-stage="Etapa 3">
+            <div class="stage"><span class="stage-name">Etapa 3</span></div>
+            <div class="amount" data-amount>$70.000</div>
+          </div>
+        </div>
+        <div class="price-panel-foot">
+          <a href="/comprar.html?producto=vip&tipo=1-dia" class="btn btn-primary btn-block">Comprar VIP 1 día</a>
+        </div>
+      </div>
+
+      <div class="price-panel vip-card">
+        <div class="price-panel-head">VIP 2 días</div>
+        <p class="vip-note">Las dos noches: viernes 30 y sábado 31 de octubre.</p>
+        <div class="price-rows" data-vip="2-dias">
+          <div class="price-row active" data-stage="Etapa 1">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+            <div class="amount" data-amount>$80.000</div>
+          </div>
+          <div class="price-row" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+            <div class="amount" data-amount>$90.000</div>
+          </div>
+          <div class="price-row" data-stage="Etapa 3">
+            <div class="stage"><span class="stage-name">Etapa 3</span></div>
+            <div class="amount" data-amount>$100.000</div>
+          </div>
+        </div>
+        <div class="price-panel-foot">
+          <a href="/comprar.html?producto=vip&tipo=2-dias" class="btn btn-primary btn-block">Comprar VIP 2 días</a>
+        </div>
+      </div>
+
+      <div class="price-panel vice-card">
+        <div class="price-panel-head">Vice Experience</div>
+        <div class="vice-body">
+          <div class="vice-price"><span id="vice-price">$200.000</span><small>por persona</small></div>
+          <ul class="vice-list">
+            <li>Entrada al festival para una sola noche</li>
+            <li>Media de Antioqueño por persona</li>
+            <li>Un Red Bull o agua, a tu elección</li>
+            <li>Acceso al Stage VIP</li>
+          </ul>
+          <div class="vice-stock" id="vice-stock"></div>
+        </div>
+        <div class="price-panel-foot">
+          <a href="/comprar.html?producto=vice" class="btn btn-primary btn-block">Comprar Vice Experience</a>
+        </div>
+      </div>
+
+    </div>
+
+    <ul class="vip-perks">
+      <li>Acceso al Stage VIP</li>
+      <li>Ingreso preferencial</li>
+    </ul>
 
     <p class="price-note">Etapas disponibles hasta agotar existencias, la única diferencia entre cada etapa es el precio.</p>
   </div>
@@ -856,5 +956,52 @@ fbq('track', 'PageView');
   setInterval(updateCountdown, 1000);
 </script>
 
+
+<script>
+// VIP y Vice Experience: marca la etapa vigente y los cupos con los datos del servidor.
+// Si no hay conexión, la página queda con los precios de arriba.
+(function () {
+  var URL = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/vip-order";
+  function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
+  function mark(panel, currentOrders, stageNames) {
+    var minCur = Math.min.apply(null, currentOrders.map(function (o) { return o == null ? 99 : o; }));
+    Array.prototype.forEach.call(panel.querySelectorAll(".price-row"), function (row, i) {
+      var order = i + 1, tag = row.querySelector("[data-tag]"), stageTag = tag;
+      var isCurrent = currentOrders.indexOf(order) >= 0, isClosed = order < minCur;
+      row.classList.toggle("active", isCurrent); row.classList.toggle("sold-out", isClosed);
+      if (!stageTag) { stageTag = document.createElement("span"); stageTag.className = "stage-tag"; stageTag.setAttribute("data-tag", ""); row.querySelector(".stage").appendChild(stageTag); }
+      stageTag.textContent = isClosed ? "Agotada" : isCurrent ? "Etapa activa ahora" : (order === minCur + 1 ? "Próxima etapa" : "");
+    });
+  }
+  fetch(URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" }) })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (d) {
+      if (!d || !d.vip || !d.vice) return;
+      var order = {};
+      (d.vip.stages || []).forEach(function (s, i) { order[s.stage] = i + 1; });
+      var prices = d.vip.prices || {};
+      Array.prototype.forEach.call(document.querySelectorAll("[data-vip]"), function (panel) {
+        var a = panel.getAttribute("data-vip");
+        Array.prototype.forEach.call(panel.querySelectorAll(".price-row"), function (row) {
+          var p = prices[a] && prices[a][row.getAttribute("data-stage")];
+          if (p) row.querySelector("[data-amount]").textContent = money(p);
+        });
+        var cur;
+        if (a === "2-dias") cur = [d.vip["2-dias"] && d.vip["2-dias"].ok ? order[d.vip["2-dias"].stage] : 99];
+        else cur = Object.keys(d.vip["1-dia"] || {}).map(function (n) { var v = d.vip["1-dia"][n]; return v && v.ok ? order[v.stage] : 99; });
+        cur = cur.filter(function (x) { return x !== 99; });
+        mark(panel, cur.length ? cur : [99]);
+      });
+      var vp = document.getElementById("vice-price"); if (vp && d.vice.price) vp.textContent = money(d.vice.price);
+      var vs = document.getElementById("vice-stock");
+      if (vs && d.vice.remaining) {
+        vs.textContent = (d.nights || []).map(function (n) {
+          var r = d.vice.remaining[n.night] || 0, short = n.label.replace(/^(\S+).*?(\d+).*$/, "$1 $2");
+          return short + ": " + (r > 0 ? r + " cupos" : "agotado");
+        }).join(" · ");
+      }
+    }).catch(function () {});
+})();
+</script>
 </body>
 </html>
