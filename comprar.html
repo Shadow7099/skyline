@@ -332,6 +332,13 @@
     color:var(--smoke);
     margin-top:14px;
   }
+
+  /* VIP y Vice Experience */
+  .prod-note{ background:rgba(240,169,59,0.1); border-left:3px solid var(--gold); padding:10px 12px; border-radius:8px; font-size:0.88rem; color:var(--smoke); margin:10px 0 0; line-height:1.45; }
+  .stock-note{ margin-top:12px; padding:8px 12px; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--gold-pale); background:rgba(224,85,106,0.12); border:1px solid var(--danger); }
+  .drink-row{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .drink-row span{ min-width:92px; font-size:0.9rem; color:var(--gold-pale); font-weight:600; }
+  .drink-row select{ flex:1; }
 </style>
 <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 </head>
@@ -354,8 +361,28 @@
   <div class="panel">
     <div class="panel-head">Tu boleta</div>
     <div class="panel-body">
-      <label for="access_type">Tipo de acceso <span class="required">*</span></label>
-      <select id="access_type"></select>
+      <label for="product">Tipo de boleta <span class="required">*</span></label>
+      <select id="product">
+        <option value="general">General</option>
+        <option value="vip">VIP · Stage VIP e ingreso preferencial</option>
+        <option value="vice">Vice Experience · entrada + media de Antioqueño</option>
+      </select>
+      <div class="prod-note hidden" id="prod-note"></div>
+
+      <div id="access-wrap">
+        <label for="access_type">Tipo de acceso <span class="required">*</span></label>
+        <select id="access_type"></select>
+      </div>
+
+      <div id="night-wrap" class="hidden">
+        <label for="night">Noche <span class="required">*</span></label>
+        <select id="night"></select>
+      </div>
+
+      <div id="drinks-wrap" class="hidden">
+        <label>Bebida de cada persona <span class="required">*</span></label>
+        <div id="drinks-list"></div>
+      </div>
 
       <label>Cantidad de boletas <span class="required">*</span></label>
       <div class="qty-row">
@@ -363,6 +390,7 @@
         <span class="qty-val" id="qty-val">1</span>
         <button type="button" class="qty-btn" id="qty-plus" aria-label="Sumar">+</button>
       </div>
+      <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
         <button type="button" class="promo-toggle" id="promo-toggle" aria-expanded="false">¿Tienes código de descuento?</button>
@@ -435,6 +463,9 @@
 
   var params = new URLSearchParams(window.location.search);
   var initialTipo = params.get("tipo") === "1-dia" ? "1-dia" : "2-dias";
+  var initialProduct = ["vip", "vice"].indexOf(params.get("producto")) >= 0 ? params.get("producto") : "general";
+  // VIP y Vice Experience: la disponibilidad (precios, etapas y cupos por noche) la manda el servidor.
+  var product = initialProduct, AV = null, wantedNight = params.get("noche") || "", drinks = [], preferredAccess = initialTipo;
 
   // Promotor: el servidor confirma el código y el descuento; aquí solo se muestra.
   var promo = null;      // { code, name, discounts: { "1-dia": n, "2-dias": n } }
@@ -442,8 +473,9 @@
 
   var accessSelect = document.getElementById("access_type");
   function renderOptions() {
-    var current = accessSelect.value || initialTipo;
+    var current = (product === "vice" ? accessSelect.value : preferredAccess) || accessSelect.value || initialTipo;
     accessSelect.innerHTML = "";
+    if (product === "vip" || product === "vice") { renderVipOptions(current); return; }
     Object.keys(PRICES).forEach(function (key) {
       var opt = document.createElement("option");
       opt.value = key;
@@ -465,17 +497,24 @@
   function money(n) { return "$" + n.toLocaleString("es-CO"); }
 
   function renderTotals() {
-    var info = PRICES[accessSelect.value];
-    var disc = promo ? (promo.discounts[accessSelect.value] || 0) : 0;
-    var unit = info.price - disc;
+    var vipMode = product === "vip" || product === "vice";
+    var cur = vipMode ? vipCurrent() : null;
+    var info = vipMode ? null : PRICES[accessSelect.value];
+    var disc = !vipMode && promo ? (promo.discounts[accessSelect.value] || 0) : 0;
+    var list = vipMode ? (cur.ready && !cur.soldOut ? cur.price : null) : info.price;
+    var unit = list == null ? null : list - disc;
+    if (vipMode) { var mx = effectiveMax(); if (qty > mx) qty = mx; }
     qtyVal.textContent = qty;
     qtyEcho.textContent = qty;
-    document.getElementById("row-list").classList.toggle("hidden", !(promo && disc > 0));
-    document.getElementById("row-disc").classList.toggle("hidden", !(promo && disc > 0));
-    document.getElementById("list-price").textContent = money(info.price);
+    var showDisc = !vipMode && promo && disc > 0;
+    document.getElementById("row-list").classList.toggle("hidden", !showDisc);
+    document.getElementById("row-disc").classList.toggle("hidden", !showDisc);
+    document.getElementById("list-price").textContent = list == null ? "—" : money(list);
     document.getElementById("disc-price").textContent = "−" + money(disc);
-    unitPriceEl.textContent = money(unit);
-    totalPriceEl.textContent = money(unit * qty);
+    unitPriceEl.textContent = unit == null ? "—" : money(unit);
+    totalPriceEl.textContent = unit == null ? "—" : money(unit * qty);
+    renderStock(cur);
+    renderDrinks();
   }
 
   // Precios vigentes desde el servidor (por si cambió la etapa) y validación del código.
@@ -494,6 +533,132 @@
   loadPrices("").then(function (res) {
     if (res.ok) { applyServerPrices(res.d); renderOptions(); renderTotals(); }
   }).catch(function () {});
+
+  // ---------- VIP y Vice Experience ----------
+  var productSel = document.getElementById("product"), nightSel = document.getElementById("night");
+  var accessWrap = document.getElementById("access-wrap"), nightWrap = document.getElementById("night-wrap");
+  var drinksWrap = document.getElementById("drinks-wrap"), drinksList = document.getElementById("drinks-list");
+  var stockNote = document.getElementById("stock-note"), prodNote = document.getElementById("prod-note");
+  var NOTES = {
+    vip: "VIP incluye acceso al Stage VIP e ingreso preferencial. Cupos limitados por noche. Los VIP se venden a precio completo.",
+    vice: "Vice Experience incluye la entrada al festival para una sola noche, una media de Antioqueño por persona y un Red Bull o agua a tu elección. Cupos limitados por noche."
+  };
+  function pesos(n) { return "$" + Number(n).toLocaleString("es-CO"); }
+  function vipOneDay(n) { return AV && AV.vip && AV.vip["1-dia"] ? AV.vip["1-dia"][n] : null; }
+  // Precio, etapa y cupos del VIP / Vice elegido ({ ready:false } mientras falte la noche o la disponibilidad)
+  function vipCurrent() {
+    if (!AV) return { ready: false };
+    if (product === "vice") {
+      if (!nightSel.value) return { ready: false };
+      var rem = (AV.vice.remaining || {})[nightSel.value] || 0;
+      return { ready: true, soldOut: rem <= 0 || AV.vice.active === false, price: AV.vice.price, stage: "Vice Experience", remaining: rem };
+    }
+    var v;
+    if (accessSelect.value === "2-dias") v = AV.vip["2-dias"];
+    else { if (!nightSel.value) return { ready: false }; v = vipOneDay(nightSel.value); }
+    if (!v) return { ready: false };
+    if (!v.ok) return { ready: true, soldOut: true, remaining: 0 };
+    return { ready: true, soldOut: false, price: v.price, stage: v.stage, remaining: v.remaining };
+  }
+  // Máximo de boletas que se pueden pedir ahora (10 por compra y nunca más que los cupos que quedan)
+  function effectiveMax() {
+    var m = maxQty;
+    if (product === "vip" || product === "vice") {
+      m = Math.min(m, 10);
+      var c = vipCurrent();
+      if (c.ready && c.remaining != null) m = Math.min(m, Math.max(c.remaining, 0));
+    }
+    return Math.max(m, 1);
+  }
+  function renderVipOptions(current) {
+    if (product === "vice") {
+      var o = document.createElement("option"); o.value = "1-dia";
+      o.textContent = "Vice Experience — " + (AV ? pesos(AV.vice.price) + " por persona" : "cargando…");
+      accessSelect.appendChild(o); accessSelect.value = "1-dia"; return;
+    }
+    [["1-dia", "VIP 1 día (eliges la noche)"], ["2-dias", "VIP 2 días (las dos noches)"]].forEach(function (x) {
+      var o = document.createElement("option"); o.value = x[0];
+      var t = x[1], v = x[0] === "2-dias" && AV && AV.vip ? AV.vip["2-dias"] : null;
+      if (v) t += v.ok ? " — " + pesos(v.price) + " (" + v.stage + ")" : " — agotado";
+      o.textContent = t; accessSelect.appendChild(o);
+    });
+    accessSelect.value = current === "1-dia" ? "1-dia" : "2-dias";
+  }
+  function renderNights() {
+    var prev = nightSel.value || wantedNight;
+    nightSel.innerHTML = "";
+    var ph = document.createElement("option"); ph.value = ""; ph.textContent = "Elige la noche"; nightSel.appendChild(ph);
+    ((AV && AV.nights) || []).forEach(function (n) {
+      var o = document.createElement("option"), t = n.label;
+      if (product === "vice") {
+        var rem = (AV.vice.remaining || {})[n.night] || 0;
+        t += rem > 0 ? " · quedan " + rem : " · agotado"; o.disabled = rem <= 0;
+      } else {
+        var v = vipOneDay(n.night);
+        if (v && v.ok) t += " · " + pesos(v.price) + " (" + v.stage + ") · quedan " + v.remaining;
+        else { t += " · agotado"; o.disabled = true; }
+      }
+      o.value = n.night; o.textContent = t; nightSel.appendChild(o);
+    });
+    var ok = Array.prototype.some.call(nightSel.options, function (o) { return o.value === prev && !o.disabled; });
+    nightSel.value = ok ? prev : ""; wantedNight = "";
+  }
+  function renderStock(cur) {
+    var t = "";
+    if (product === "vip" || product === "vice") {
+      if (!AV) t = "Cargando disponibilidad…";
+      else if (cur && cur.ready && cur.soldOut) t = "Esa opción está agotada. Prueba con otra noche.";
+      else if (cur && cur.ready && cur.remaining != null && cur.remaining <= 10) t = "¡Solo quedan " + cur.remaining + " cupos!";
+    }
+    stockNote.textContent = t; stockNote.classList.toggle("hidden", !t);
+  }
+  function renderDrinks() {
+    drinksList.innerHTML = "";
+    if (product !== "vice") return;
+    for (var i = 0; i < qty; i++) (function (i) {
+      var row = document.createElement("div"); row.className = "drink-row";
+      var lb = document.createElement("span"); lb.textContent = "Persona " + (i + 1);
+      var sel = document.createElement("select"); sel.setAttribute("aria-label", "Bebida de la persona " + (i + 1));
+      [["", "Elige…"], ["redbull", "Red Bull"], ["agua", "Agua"]].forEach(function (x) { var o = document.createElement("option"); o.value = x[0]; o.textContent = x[1]; sel.appendChild(o); });
+      sel.value = drinks[i] || "";
+      sel.addEventListener("change", function () { drinks[i] = sel.value; saveDraft(); });
+      row.appendChild(lb); row.appendChild(sel); drinksList.appendChild(row);
+    })(i);
+  }
+  function renderProduct() {
+    var vipMode = product === "vip" || product === "vice";
+    accessWrap.classList.toggle("hidden", product === "vice");
+    nightWrap.classList.toggle("hidden", !(product === "vice" || (product === "vip" && accessSelect.value === "1-dia")));
+    drinksWrap.classList.toggle("hidden", product !== "vice");
+    prodNote.textContent = NOTES[product] || ""; prodNote.classList.toggle("hidden", !NOTES[product]);
+    renderOptions();
+    if (vipMode && AV) renderNights();
+    renderTotals();
+  }
+  function loadAvailability() {
+    return fetch(FUNCTIONS_BASE + "/vip-order", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" })
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (d) { if (d && d.nights && d.vip && d.vice) { AV = d; renderProduct(); } })
+      .catch(function () { /* sin disponibilidad: el VIP queda en espera, la compra general no se afecta */ });
+  }
+  // Datos que recibe el servidor para VIP / Vice (el precio y los cupos los decide el servidor, nunca el navegador).
+  function vipBody(b) {
+    var body = { action: "create", tier: product, access_type: product === "vice" ? "1-dia" : b.access_type, quantity: b.quantity,
+      full_name: b.full_name, document_id: b.document_id, email: b.email, phone: b.phone, promo_code: b.promo_code };
+    if (product === "vice" || b.access_type === "1-dia") body.night = nightSel.value;
+    if (product === "vice") body.drinks = drinks.slice(0, b.quantity);
+    return body;
+  }
+  function productLabel(b) {
+    if (product === "vice") return "Vice Experience";
+    return (product === "vip" ? "VIP · " : "") + (b.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días");
+  }
+  productSel.addEventListener("change", function () { product = productSel.value; renderProduct(); });
+  nightSel.addEventListener("change", function () { renderTotals(); });
+  productSel.value = product;
+  renderProduct();
+  loadAvailability();
 
   var promoMsg = document.getElementById("promo-msg");
   function setPromoMsg(text, cls, withRemove) {
@@ -552,9 +717,9 @@
     if (qty > 1) { qty--; renderTotals(); }
   });
   document.getElementById("qty-plus").addEventListener("click", function () {
-    if (qty < maxQty) { qty++; renderTotals(); }
+    if (qty < effectiveMax()) { qty++; renderTotals(); }
   });
-  accessSelect.addEventListener("change", function () { renderTotals(); });
+  accessSelect.addEventListener("change", function () { if (product !== "vice") preferredAccess = accessSelect.value; renderProduct(); });
 
   function showMsg(text, type) {
     var msg = document.getElementById("msg");
@@ -581,6 +746,16 @@
 
   function validateForm() {
     var buyer = currentBuyer();
+    if (product === "vip" || product === "vice") {
+      var cur = vipCurrent();
+      if (!AV) { showMsg("No pudimos cargar la disponibilidad. Recarga la página e intenta de nuevo."); return false; }
+      if ((product === "vice" || accessSelect.value === "1-dia") && !nightSel.value) { showMsg("Elige la noche."); return false; }
+      if (cur.soldOut) { showMsg("Esa opción está agotada para la noche elegida."); return false; }
+      if (qty > effectiveMax()) { showMsg("Solo quedan " + effectiveMax() + " cupos."); return false; }
+      if (product === "vice") {
+        for (var i = 0; i < qty; i++) if (!drinks[i]) { showMsg("Elige Red Bull o agua para la persona " + (i + 1) + "."); return false; }
+      }
+    }
     if (!buyer.full_name) { showMsg("Por favor ingresa tu nombre completo."); return false; }
     if (!buyer.document_id) { showMsg("Por favor ingresa tu número de documento."); return false; }
     if (!buyer.email) { showMsg("Por favor ingresa tu correo electrónico."); return false; }
@@ -628,10 +803,10 @@
     var buyer = currentBuyer();
     setPaying(true);
 
-    fetch(FUNCTIONS_BASE + "/create-order", {
+    fetch(FUNCTIONS_BASE + (product === "general" ? "/create-order" : "/vip-order"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buyer)
+      body: JSON.stringify(product === "general" ? buyer : vipBody(buyer))
     })
       .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
       .then(function (res) {
@@ -667,6 +842,7 @@
       })
       .catch(function (err) {
         setPaying(false);
+        if (product !== "general") loadAvailability();   // por si se agotó mientras compraba
         showMsg(err && err.message && err.message !== "Failed to fetch"
           ? err.message
           : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
@@ -682,6 +858,7 @@
   function saveDraft() {
     lsSet(DRAFT_KEY, {
       access_type: accessSelect.value, quantity: qty,
+      product: product, night: nightSel.value, drinks: drinks,
       full_name: document.getElementById("full_name").value,
       document_id: document.getElementById("document_id").value,
       email: document.getElementById("email").value,
@@ -697,7 +874,7 @@
 
   function rememberOrder(orderId, buyer) {
     var list = lsGet(ORDERS_KEY, []).filter(function (o) { return o.id !== orderId; });
-    var label = (buyer.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " x" + buyer.quantity;
+    var label = productLabel(buyer) + " x" + buyer.quantity;
     list.unshift({ id: orderId, at: Date.now(), label: label, name: buyer.full_name });
     lsSet(ORDERS_KEY, list.slice(0, 10));
     saveDraft();
@@ -706,12 +883,15 @@
   function restoreDraft() {
     var d = lsGet(DRAFT_KEY, null);
     if (!d || Date.now() - (d.saved_at || 0) > 7 * 86400000) return;   // borradores de más de 7 días se ignoran
-    if (!params.get("tipo") && PRICES[d.access_type]) accessSelect.value = d.access_type;
+    if (!params.get("producto") && ["general", "vip", "vice"].indexOf(d.product) >= 0) {
+      product = d.product; productSel.value = product; wantedNight = d.night || ""; drinks = Array.isArray(d.drinks) ? d.drinks : [];
+    }
+    if (!params.get("tipo") && PRICES[d.access_type]) { accessSelect.value = d.access_type; preferredAccess = d.access_type; }
     ["full_name", "document_id", "email", "phone"].forEach(function (id) { if (d[id]) document.getElementById(id).value = d[id]; });
     document.getElementById("terms_accept").checked = !!d.terms;
     var wantQty = Math.max(1, Math.min(50, parseInt(d.quantity, 10) || 1));
     qty = Math.min(wantQty, maxQty);
-    renderTotals();
+    renderProduct();
     if (d.promo_code) {
       document.getElementById("promo-box").classList.remove("hidden");
       document.getElementById("promo-toggle").setAttribute("aria-expanded", "true");
