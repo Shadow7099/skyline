@@ -488,7 +488,7 @@
   function tierTag(t) { return !t ? "" : t.tier === "vice" ? " · VICE EXPERIENCE" : t.tier === "vip" ? " · VIP" : ""; }
   function perkText(t) {
     if (!t) return "";
-    if (t.tier === "vip") return "VIP: acceso al Stage VIP e ingreso preferencial.";
+    if (t.tier === "vip") return "VIP: acceso al Stage VIP y Fast Pass.";
     if (t.tier === "vice") return "Vice Experience: entregar media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") + ".";
     return "";
   }
