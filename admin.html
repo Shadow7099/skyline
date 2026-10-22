@@ -220,6 +220,11 @@
   /* VIP y Vice Experience */
   .pill.vip{ background:var(--gold-pale); color:var(--ink); }
   .pill.vice{ background:var(--plum-3); color:var(--bone); border:1px solid var(--gold); }
+
+  /* Ventas directas */
+  .sale-box{ margin:14px 0 4px; padding:14px; border:2px dashed var(--gold); border-radius:12px; background:rgba(240,169,59,0.07); }
+  .sale-box .tnote{ margin:0 0 10px; }
+  .sale-total{ margin-top:10px; font-weight:800; font-size:1.05rem; color:var(--gold); }
 </style>
 </head>
 <body>
@@ -245,7 +250,7 @@
       </div>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" id="tab-sales" aria-selected="true">Ventas</button>
-        <button class="tab" role="tab" id="tab-create" aria-selected="false">Crear cortesías</button>
+        <button class="tab" role="tab" id="tab-create" aria-selected="false">Cortesías y ventas</button>
         <button class="tab" role="tab" id="tab-list" aria-selected="false">Todas las boletas</button>
         <button class="tab" role="tab" id="tab-promo" aria-selected="false">Promotores</button>
       </div>
@@ -269,8 +274,15 @@
           <div class="table-wrap"><table class="ptable sales-table" id="sales-table"></table></div>
           <div class="sales-foot">
             <span id="sales-updated"></span>
+            <button class="btn sm" id="sales-export" type="button">Descargar Excel</button>
             <button class="btn sm ghost" id="sales-refresh" type="button">Actualizar</button>
           </div>
+        </div>
+      </div>
+      <div class="panel hidden" id="direct-panel">
+        <div class="panel-head">Ventas directas (hechas por el administrador)</div>
+        <div class="panel-body">
+          <div class="table-wrap"><table class="ptable sales-table" id="direct-table"></table></div>
         </div>
       </div>
       <div class="panel hidden" id="vip-panel">
@@ -285,13 +297,14 @@
     <!-- Crear -->
     <div id="view-create" class="hidden">
       <div class="panel">
-        <div class="panel-head">Nueva cortesía</div>
+        <div class="panel-head" id="create-head">Nueva cortesía</div>
         <div class="panel-body">
           <div class="grid2">
             <div>
               <label for="f-cat">Categoría</label>
               <select class="field" id="f-cat">
                 <option value="cortesia">Cortesía</option>
+                <option value="venta_directa">Venta directa (grupo, con valor)</option>
                 <option value="staff">Staff</option>
                 <option value="artista">Artista</option>
                 <option value="prensa">Prensa</option>
@@ -326,7 +339,29 @@
               <input class="field" id="f-phone" type="tel" autocomplete="off" maxlength="30" placeholder="300 123 4567">
             </div>
           </div>
-          <label for="f-note">Nota interna (opcional)</label>
+          <div class="sale-box hidden" id="sale-fields">
+            <p class="tnote">Venta hecha por ti (no pasa por la página). Cada boleta queda registrada con lo que valió y aparece en el Excel y en las ventas del panel.</p>
+            <div class="grid2">
+              <div>
+                <label for="f-price">Valor de cada boleta (COP)</label>
+                <input class="field" id="f-price" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="Ej: 25000">
+              </div>
+              <div>
+                <label for="f-method">Forma de pago</label>
+                <select class="field" id="f-method">
+                  <option value="">Elige…</option>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="nequi">Nequi</option>
+                  <option value="daviplata">Daviplata</option>
+                  <option value="tarjeta">Tarjeta / datáfono</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="sale-total" id="sale-total">Total de la venta: —</div>
+          </div>
+          <label for="f-note" id="f-note-label">Nota interna (opcional)</label>
           <input class="field" id="f-note" maxlength="200" placeholder="Ej: invitados del DJ, patrocinador, etc.">
           <button class="btn block" id="create-btn">Crear boletas</button>
           <div class="msg" id="create-msg" role="alert"></div>
@@ -454,6 +489,7 @@
             <select class="field" id="l-cat" aria-label="Filtrar categoría">
               <option value="">Todas</option>
               <option value="venta">Vendidas</option>
+              <option value="venta_directa">Ventas directas</option>
               <option value="cortesia">Cortesía</option>
               <option value="staff">Staff</option>
               <option value="artista">Artista</option>
@@ -502,7 +538,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   "use strict";
   var API = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/admin-tickets";
   var LOGO = "https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png";
-  var CAT = { venta: "Venta", cortesia: "Cortesía", staff: "Staff", artista: "Artista", prensa: "Prensa", proveedor: "Proveedor" };
+  var CAT = { venta: "Venta", venta_directa: "Venta directa", cortesia: "Cortesía", staff: "Staff", artista: "Artista", prensa: "Prensa", proveedor: "Proveedor" };
+  var METHOD = { efectivo: "Efectivo", transferencia: "Transferencia", nequi: "Nequi", daviplata: "Daviplata", tarjeta: "Tarjeta / datáfono", otro: "Otro" };
   var $ = function (id) { return document.getElementById(id); };
 
   var pin = "";
@@ -607,6 +644,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       tt.appendChild(el("td", "num pay", money(d.total.recaudo)));
       tbl.appendChild(tt);
       renderVipSales(d.vip_summary);
+      renderDirectSales(d.direct_summary, d);
       var now = new Date();
       $("sales-updated").textContent = "Actualizado a las " + now.toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
     }).catch(function (e) { $("sales-updated").textContent = e.message; });
@@ -628,6 +666,34 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       tr.appendChild(el("td", "num", "VIP " + vs.by_night[n].vip + " · Vice " + vs.by_night[n].vice)); tr.appendChild(el("td", "num", "")); tr.appendChild(el("td", "num", "")); tbl.appendChild(tr);
     });
   }
+  function renderDirectSales(ds, all) {
+    var panel = $("direct-panel"); if (!ds) { panel.classList.add("hidden"); return; }
+    panel.classList.remove("hidden");
+    var tbl = $("direct-table"); tbl.innerHTML = "";
+    var head = el("tr"); ["Ventas del administrador", "Boletas", "Ventas", "Recaudo"].forEach(function (h) { head.appendChild(el("th", "", h)); }); tbl.appendChild(head);
+    function row(label, r, cls) {
+      var tr = el("tr", cls || ""); tr.appendChild(el("td", "", label));
+      tr.appendChild(el("td", "num", String(r.boletas))); tr.appendChild(el("td", "num", String(r.compras))); tr.appendChild(el("td", "num pay", money(r.recaudo))); tbl.appendChild(tr);
+    }
+    if (!ds.total.boletas) {
+      var tr0 = el("tr", "muted"); tr0.appendChild(el("td", "", "Aún no hay ventas directas. Regístralas en «Cortesías y ventas».")); tr0.appendChild(el("td", "", "")); tr0.appendChild(el("td", "", "")); tr0.appendChild(el("td", "", "")); tbl.appendChild(tr0);
+    } else {
+      row("Acceso 1 día", ds.by_type["1-dia"] || { boletas: 0, compras: 0, recaudo: 0 }, ds.by_type["1-dia"] && ds.by_type["1-dia"].boletas ? "" : "muted");
+      row("Acceso 2 días", ds.by_type["2-dias"] || { boletas: 0, compras: 0, recaudo: 0 }, ds.by_type["2-dias"] && ds.by_type["2-dias"].boletas ? "" : "muted");
+      row("Total ventas directas", ds.total, "total-row");
+      Object.keys(ds.by_method || {}).sort().forEach(function (m) { row("Pagado en " + (METHOD[m] || m), ds.by_method[m], "muted"); });
+    }
+    // Todo lo recaudado: página (general) + VIP/Vice + ventas directas
+    var web = (all && all.total && all.total.recaudo) || 0, vip = (all && all.vip_summary && all.vip_summary.total && all.vip_summary.total.recaudo) || 0;
+    var sum = el("tr", "total-row"); sum.appendChild(el("td", "", "Recaudo total (página + VIP + ventas directas)"));
+    sum.appendChild(el("td", "", "")); sum.appendChild(el("td", "", "")); sum.appendChild(el("td", "num pay", money(web + vip + ds.total.recaudo))); tbl.appendChild(sum);
+  }
+  $("sales-export").addEventListener("click", function () {
+    var b = $("sales-export"); b.disabled = true; b.textContent = "Preparando…";
+    api("export").then(function (d) {
+      download(new Blob([d.csv], { type: "text/csv;charset=utf-8" }), d.filename);
+    }).catch(function (e) { alert(e.message); }).finally(function () { b.disabled = false; b.textContent = "Descargar Excel"; });
+  });
   $("sales-refresh").addEventListener("click", loadSales);
 
   // ---------- Promotores ----------
@@ -1019,38 +1085,65 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       Array.prototype.forEach.call($("f-type").querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b); });
     });
   });
-  function qty() { var n = parseInt($("f-qty").value, 10); return isNaN(n) ? 1 : Math.min(50, Math.max(1, n)); }
-  $("q-minus").addEventListener("click", function () { $("f-qty").value = Math.max(1, qty() - 1); });
-  $("q-plus").addEventListener("click", function () { $("f-qty").value = Math.min(50, qty() + 1); });
+  function isDirect() { return $("f-cat").value === "venta_directa"; }
+  function maxQty() { return isDirect() ? 200 : 50; }
+  function priceVal() { return parseInt(String($("f-price").value).replace(/\D/g, ""), 10) || 0; }
+  function qty() { var n = parseInt($("f-qty").value, 10); return isNaN(n) ? 1 : Math.min(maxQty(), Math.max(1, n)); }
+  function updateSale() {
+    var d = isDirect();
+    $("sale-fields").classList.toggle("hidden", !d);
+    $("create-head").textContent = d ? "Nueva venta directa" : "Nueva cortesía";
+    document.querySelector('label[for="f-name"]').textContent = d ? "Nombre de quien compra" : "Nombre de quien recibe";
+    $("f-note-label").textContent = d ? "Nota (opcional): grupo, colegio, descuento…" : "Nota interna (opcional)";
+    $("f-note").placeholder = d ? "Ej: grupo del colegio X, 12 personas, descuento del 20%" : "Ej: invitados del DJ, patrocinador, etc.";
+    $("create-btn").textContent = d ? "Registrar venta y crear boletas" : "Crear boletas";
+    var p = priceVal(), n = qty();
+    $("sale-total").textContent = "Total de la venta: " + (p ? n + " × " + money(p) + " = " + money(p * n) : "—");
+    $("f-qty").value = n;
+  }
+  $("f-cat").addEventListener("change", updateSale);
+  $("f-price").addEventListener("input", updateSale);
+  $("q-minus").addEventListener("click", function () { $("f-qty").value = Math.max(1, qty() - 1); updateSale(); });
+  $("q-plus").addEventListener("click", function () { $("f-qty").value = Math.min(maxQty(), qty() + 1); updateSale(); });
+  $("f-qty").addEventListener("input", updateSale);
   $("f-qty").addEventListener("blur", function () { $("f-qty").value = qty(); });
 
   var lastBatch = [];
   $("create-btn").addEventListener("click", function () {
-    var name = $("f-name").value.trim();
+    var name = $("f-name").value.trim(), direct = isDirect();
     $("create-msg").className = "msg"; $("create-msg").textContent = "";
-    if (name.length < 2) { $("create-msg").textContent = "Escribe el nombre de quien recibe la boleta."; $("f-name").focus(); return; }
-    var n = qty();
+    if (name.length < 2) { $("create-msg").textContent = direct ? "Escribe el nombre de quien compra." : "Escribe el nombre de quien recibe la boleta."; $("f-name").focus(); return; }
+    var n = qty(), price = priceVal(), method = $("f-method").value;
+    if (direct) {
+      if (price < 1000) { $("create-msg").textContent = "Escribe cuánto valió cada boleta (por ejemplo 25000)."; $("f-price").focus(); return; }
+      if (!method) { $("create-msg").textContent = "Elige la forma de pago."; $("f-method").focus(); return; }
+    }
     $("create-btn").disabled = true; $("create-btn").textContent = "Creando…";
-    api("create", {
+    var body = {
       category: $("f-cat").value, access_type: accessType, quantity: n,
       name: name, doc: $("f-doc").value.trim(), phone: $("f-phone").value.trim(), note: $("f-note").value.trim()
-    }).then(function (d) {
+    };
+    if (direct) { body.unit_price = price; body.payment_method = method; }
+    api("create", body).then(function (d) {
       lastBatch = (d.tickets || []).map(normalize);
       $("create-msg").className = "msg ok";
-      $("create-msg").textContent = n === 1 ? "Boleta creada." : n + " boletas creadas.";
+      $("create-msg").textContent = direct
+        ? "Venta registrada: " + n + (n === 1 ? " boleta × " : " boletas × ") + money(price) + " = " + money(price * n) + " (" + METHOD[method] + ")."
+        : (n === 1 ? "Boleta creada." : n + " boletas creadas.");
       showResult(lastBatch);
-      ["f-name", "f-doc", "f-phone", "f-note"].forEach(function (id) { $(id).value = ""; });
-      $("f-qty").value = 1;
+      [direct ? "f-price" : "", "f-name", "f-doc", "f-phone", "f-note"].forEach(function (id) { if (id) $(id).value = ""; });
+      $("f-qty").value = 1; updateSale();
       refresh();
     }).catch(function (e) { $("create-msg").textContent = e.message; })
-      .finally(function () { $("create-btn").disabled = false; $("create-btn").textContent = "Crear boletas"; });
+      .finally(function () { $("create-btn").disabled = false; updateSale(); });
   });
 
   function normalize(t) {
     return {
       id: t.id, qr_payload: t.qr_payload, category: t.category, access_type: t.access_type,
       n: t.ticket_number || t.n, total: t.ticket_total || t.total,
-      name: t.holder_name || t.name, phone: t.holder_phone || t.phone || ""
+      name: t.holder_name || t.name, phone: t.holder_phone || t.phone || "",
+      price: t.price == null ? null : t.price, payment_method: t.payment_method || null
     };
   }
 
@@ -1101,7 +1194,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       // Etiqueta de categoría
       var cat = CAT[t.category] || "";
       var type = t.tier === "vice" ? "VICE EXPERIENCE" : (t.tier === "vip" ? "VIP · " : "ACCESO ") + (t.access_type === "1-dia" ? "1 DÍA" : "2 DÍAS");
-      var tag = (cat && t.category !== "venta" ? cat.toUpperCase() + " · " : "") + type;
+      var tag = (cat && t.category !== "venta" && t.category !== "venta_directa" ? cat.toUpperCase() + " · " : "") + type;
       x.font = DISPLAY.replace("{s}", 34);
       var tw = x.measureText(tag).width + 64;
       x.fillStyle = "#f0a93b"; roundRect(x, (W - tw) / 2, 300, tw, 70, 35); x.fill();
@@ -1127,7 +1220,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       x.fillText("Boleta " + t.n + " de " + t.total, W / 2, 1165);
       if (t.tier === "vip" || t.tier === "vice") {
         x.fillStyle = "#f4ecdb"; x.font = "700 28px -apple-system, 'Segoe UI', Roboto, sans-serif";
-        x.fillText(t.tier === "vice" ? "Incluye media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") : "Stage VIP · Ingreso preferencial", W / 2, 1208);
+        x.fillText(t.tier === "vice" ? "Incluye media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") : "Stage VIP · Fast Pass", W / 2, 1208);
       }
       x.fillStyle = "#f0a93b"; x.font = DISPLAY.replace("{s}", 30);
       x.fillText(t.night ? nightLong(t.night).toUpperCase() + " · PLOT BOGOTÁ" : "30 Y 31 DE OCTUBRE · PLOT BOGOTÁ", W / 2, 1250);
@@ -1167,7 +1260,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function showResult(tickets) {
     $("result").classList.remove("hidden");
     var t0 = tickets[0];
-    $("result-title").textContent = (tickets.length === 1 ? "1 boleta" : tickets.length + " boletas") + " para " + (t0 ? t0.name : "");
+    $("result-title").textContent = (t0 && t0.category === "venta_directa" && t0.price ? (tickets.length === 1 ? "1 boleta vendida" : tickets.length + " boletas vendidas") + " a " + t0.name + " · " + money(t0.price) + " c/u"
+      : (tickets.length === 1 ? "1 boleta" : tickets.length + " boletas") + " para " + (t0 ? t0.name : ""));
     var box = $("cards"); box.innerHTML = ""; rendered = [];
     var phone = (t0 && t0.phone || "").replace(/\D/g, "");
     if (phone.length === 10 && phone.charAt(0) === "3") phone = "57" + phone;
@@ -1294,7 +1388,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (t.tier === "vip" || t.tier === "vice") { var vpill = document.createElement("span"); vpill.className = "pill " + t.tier; vpill.textContent = tierName(t.tier); name.appendChild(vpill); }
       name.appendChild(tpill); name.appendChild(document.createTextNode(t.name || "—"));
       var meta = document.createElement("div"); meta.className = "row-meta";
-      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.phone ? " · Tel. " + t.phone : "") + (t.night ? " · solo " + nightLong(t.night) : "") + (t.option ? " · " + drinkName(t.option) : "") + (t.note ? " · " + t.note : "") + (t.created_at ? " · " + fmtWhen(t.created_at) : "");
+      meta.textContent = (t.access_type === "1-dia" ? "Acceso 1 día" : "Acceso 2 días") + " · boleta " + t.n + " de " + t.total + (t.doc ? " · Doc. " + t.doc : "") + (t.phone ? " · Tel. " + t.phone : "") + (t.night ? " · solo " + nightLong(t.night) : "") + (t.option ? " · " + drinkName(t.option) : "") + (t.price ? " · Valor " + money(t.price) + (t.payment_method ? " (" + (METHOD[t.payment_method] || t.payment_method) + ")" : "") : "") + (t.note ? " · " + t.note : "") + (t.created_at ? " · " + fmtWhen(t.created_at) : "");
       var st = document.createElement("div"); st.className = "row-state";
       if (t.revoked) { st.className += " rev"; st.textContent = "Anulada" + (t.revoked_reason ? ": " + t.revoked_reason : ""); }
       else if (t.checkins.length) { st.className += " used"; st.textContent = "Entró: " + t.checkins.map(function (c) { return fmtNight(c.night) + (c.device ? " (" + c.device + ")" : ""); }).join(", "); }
