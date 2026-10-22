@@ -364,7 +364,7 @@
       <label for="product">Tipo de boleta <span class="required">*</span></label>
       <select id="product">
         <option value="general">General</option>
-        <option value="vip">VIP · Stage VIP e ingreso preferencial</option>
+        <option value="vip">VIP · Stage VIP y Fast Pass</option>
         <option value="vice">Vice Experience · entrada + media de Antioqueño</option>
       </select>
       <div class="prod-note hidden" id="prod-note"></div>
@@ -540,7 +540,7 @@
   var drinksWrap = document.getElementById("drinks-wrap"), drinksList = document.getElementById("drinks-list");
   var stockNote = document.getElementById("stock-note"), prodNote = document.getElementById("prod-note");
   var NOTES = {
-    vip: "VIP incluye acceso al Stage VIP e ingreso preferencial. Cupos limitados por noche. Los VIP se venden a precio completo.",
+    vip: "VIP incluye acceso al Stage VIP y Fast Pass. Cupos limitados por noche. Los VIP se venden a precio completo.",
     vice: "Vice Experience incluye la entrada al festival para una sola noche, una media de Antioqueño por persona y un Red Bull o agua a tu elección. Cupos limitados por noche."
   };
   function pesos(n) { return "$" + Number(n).toLocaleString("es-CO"); }
