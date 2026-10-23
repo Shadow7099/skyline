@@ -225,6 +225,11 @@
   .sale-box{ margin:14px 0 4px; padding:14px; border:2px dashed var(--gold); border-radius:12px; background:rgba(240,169,59,0.07); }
   .sale-box .tnote{ margin:0 0 10px; }
   .sale-total{ margin-top:10px; font-weight:800; font-size:1.05rem; color:var(--gold); }
+
+  /* Compras */
+  .pill.st-pagado{ background:var(--go); color:#08130c; }
+  .pill.st-pendiente_pago{ background:var(--gold); color:var(--ink); }
+  .pill.st-fallido{ background:var(--stop); color:#fff; }
 </style>
 </head>
 <body>
@@ -252,6 +257,7 @@
         <button class="tab" role="tab" id="tab-sales" aria-selected="true">Ventas</button>
         <button class="tab" role="tab" id="tab-create" aria-selected="false">Cortesías y ventas</button>
         <button class="tab" role="tab" id="tab-list" aria-selected="false">Todas las boletas</button>
+        <button class="tab" role="tab" id="tab-orders" aria-selected="false">Compras</button>
         <button class="tab" role="tab" id="tab-promo" aria-selected="false">Promotores</button>
       </div>
     </div>
@@ -471,12 +477,34 @@
     </div>
 
     <!-- Lista -->
+    <div id="view-orders" class="hidden">
+      <div class="panel">
+        <div class="panel-head">Compras (pagadas, pendientes y rechazadas)</div>
+        <div class="panel-body">
+          <p class="tnote">Aquí aparece cada compra hecha en la página, aunque todavía no tenga boleta. Si un cliente dice que pagó y no le llegó el QR, búscalo y toca «Verificar pago con Bold».</p>
+          <div class="pgrid top">
+            <input class="field" id="o-q" type="search" placeholder="Buscar por nombre, cédula, correo, teléfono, # de compra o pago de Bold" autocomplete="off" aria-label="Buscar compra">
+            <select class="field" id="o-status" aria-label="Filtrar por estado de la compra">
+              <option value="">Todas las compras</option>
+              <option value="pagado">Pagadas</option>
+              <option value="pendiente_pago">Pendientes de pago</option>
+              <option value="fallido">Rechazadas</option>
+            </select>
+          </div>
+          <div class="pcount"><span id="o-count"></span><button class="linkbtn hidden" id="o-clear" type="button">Limpiar filtros</button></div>
+          <div class="msg" id="o-msg" role="status"></div>
+          <div class="rows" id="o-rows"></div>
+          <button class="btn ghost block hidden" id="o-more" type="button">Mostrar más</button>
+        </div>
+      </div>
+    </div>
+
     <div id="view-list" class="hidden">
       <div class="panel">
         <div class="panel-head">Todas las boletas</div>
         <div class="panel-body">
           <div class="pgrid top">
-            <input class="field" id="l-q" type="search" placeholder="Buscar por nombre, cédula, teléfono o nota" autocomplete="off" aria-label="Buscar boleta">
+            <input class="field" id="l-q" type="search" placeholder="Buscar por nombre, cédula, correo, teléfono, código o nota" autocomplete="off" aria-label="Buscar boleta">
             <select class="field" id="l-sort" aria-label="Ordenar boletas">
               <option value="recent">Más recientes</option>
               <option value="oldest">Menos recientes</option>
@@ -587,18 +615,110 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // ---------- Pestañas ----------
   function tab(which) {
-    ["sales", "create", "list", "promo"].forEach(function (k) {
+    ["sales", "create", "list", "orders", "promo"].forEach(function (k) {
       $("tab-" + k).setAttribute("aria-selected", k === which);
       $("view-" + k).classList.toggle("hidden", k !== which);
     });
     if (which === "list") refresh();
+    if (which === "orders") loadOrders();
     if (which === "sales") loadSales();
     if (which === "promo") loadPromoters();
   }
   $("tab-sales").addEventListener("click", function () { tab("sales"); });
   $("tab-create").addEventListener("click", function () { tab("create"); });
   $("tab-list").addEventListener("click", function () { tab("list"); });
+  $("tab-orders").addEventListener("click", function () { tab("orders"); });
   $("tab-promo").addEventListener("click", function () { tab("promo"); });
+
+  // ---------- Compras (todas, también las pendientes) ----------
+  var ORDERS = [], OV = { page: 100, shown: 100 };
+  var STATUS_NAME = { pagado: "Pagada", pendiente_pago: "Pendiente de pago", fallido: "Rechazada" };
+  var RECON_URL = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/reconcile-orders";
+  var SITE_URL = "https://www.skylinepresenta.com";
+  function ordersFiltered() {
+    var tokens = norm($("o-q").value.trim()).split(/\s+/).filter(Boolean), st = $("o-status").value;
+    return ORDERS.filter(function (o) {
+      if (st && o.status !== st) return false;
+      if (!tokens.length) return true;
+      var hay = norm([o.name, o.doc, o.email, o.phone, o.id, o.pay_id, STATUS_NAME[o.status], tierName(o.tier), o.access_type === "1-dia" ? "1 dia acceso 1 dia" : "2 dias acceso 2 dias", o.night ? nightLong(o.night) : ""].join(" ")),
+        digits = String(o.doc || "").replace(/\D/g, "") + " " + String(o.phone || "").replace(/\D/g, "");
+      return tokens.every(function (tk) {
+        var d = tk.replace(/\D/g, "");
+        if (/^[\d.\-]+$/.test(tk) && d.length >= 3) return digits.indexOf(d) >= 0 || hay.indexOf(tk) >= 0;
+        return hay.indexOf(tk) >= 0;
+      });
+    });
+  }
+  function orderMsg(text, kind) { var m = $("o-msg"); m.textContent = text || ""; m.className = "msg" + (kind ? " " + kind : ""); }
+  function renderOrders() {
+    var box = $("o-rows"); box.innerHTML = "";
+    var list = ordersFiltered(), shown = Math.min(list.length, OV.shown), active = !!($("o-q").value.trim() || $("o-status").value);
+    $("o-count").textContent = "Mostrando " + shown + " de " + list.length + " compras" + (active ? " (" + ORDERS.length + " en total)" : "");
+    $("o-clear").classList.toggle("hidden", !active);
+    $("o-more").classList.toggle("hidden", list.length <= shown);
+    if (list.length > shown) $("o-more").textContent = "Mostrar más (" + (list.length - shown) + " restantes)";
+    if (!list.length) { box.appendChild(el("div", "empty", ORDERS.length ? "No hay compras con ese filtro." : "Todavía no hay compras.")); return; }
+    list.slice(0, OV.shown).forEach(function (o) {
+      var row = el("div", "row"), name = el("div", "row-name");
+      name.appendChild(el("span", "pill st-" + o.status, STATUS_NAME[o.status] || o.status));
+      if (o.tier === "vip" || o.tier === "vice") name.appendChild(el("span", "pill " + o.tier, tierName(o.tier)));
+      name.appendChild(el("span", "pill " + (o.access_type === "1-dia" ? "d1" : "d2"), o.access_type === "1-dia" ? "1 día" : "2 días"));
+      name.appendChild(document.createTextNode(o.name || "—"));
+      var meta = el("div", "row-meta", o.quantity + (o.quantity === 1 ? " boleta" : " boletas") + " · " + money(o.total) + (o.doc ? " · Doc. " + o.doc : "") + (o.phone ? " · Tel. " + o.phone : "") + (o.email ? " · " + o.email : "") +
+        (o.night ? " · solo " + nightLong(o.night) : "") + (o.created_at ? " · " + fmtWhen(o.created_at) : "") + " · # " + String(o.id).slice(0, 8) + (o.pay_id ? " · Bold " + o.pay_id : ""));
+      var st = el("div", "row-state");
+      if (o.status === "pagado") { st.className += o.with_qr >= o.quantity ? " used" : ""; st.textContent = o.with_qr >= o.quantity ? "Pagada · " + o.with_qr + " boleta(s) con QR lista(s)" : "Pagada · faltan boletas por emitir (" + o.with_qr + " de " + o.quantity + ")"; }
+      else if (o.status === "pendiente_pago") st.textContent = "Sin confirmar: todavía no hay boleta. Toca «Verificar pago con Bold».";
+      else { st.className += " rev"; st.textContent = "Bold rechazó el pago: no hay boleta."; }
+      var acts = el("div", "row-actions");
+      if (o.status !== "pagado") {
+        var chk = el("button", "btn sm", "Verificar pago con Bold"); chk.type = "button";
+        chk.onclick = function () { verifyOrder(o, chk); }; acts.appendChild(chk);
+      } else {
+        var link = SITE_URL + "/confirmacion.html?bold-order-id=" + o.id;
+        var cp = el("button", "btn sm", "Copiar enlace de sus boletas"); cp.type = "button";
+        cp.onclick = function () {
+          (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { cp.textContent = "¡Copiado!"; setTimeout(function () { cp.textContent = "Copiar enlace de sus boletas"; }, 1800); }, function () { prompt("Copia este enlace y envíaselo al cliente:", link); });
+        };
+        var op = el("a", "btn sm ghost", "Abrir"); op.href = link; op.target = "_blank"; op.rel = "noopener";
+        acts.appendChild(cp); acts.appendChild(op);
+      }
+      row.appendChild(name); row.appendChild(acts); row.appendChild(meta); row.appendChild(st);
+      box.appendChild(row);
+    });
+  }
+  // keepMsg: al recargar después de verificar un pago, se conserva el mensaje con el resultado.
+  function loadOrders(keepMsg) {
+    if (!keepMsg) orderMsg("Cargando compras…", "");
+    return api("orders_list").then(function (d) { ORDERS = d.orders || []; if (!keepMsg) orderMsg("", ""); OV.shown = OV.page; renderOrders(); })
+      .catch(function (e) { orderMsg(e.message, "error"); });
+  }
+  // Pregunta a Bold por esta compra y, si está aprobada, la deja pagada con sus boletas.
+  function verifyOrder(o, btn) {
+    btn.disabled = true; btn.textContent = "Verificando con Bold…"; orderMsg("", "");
+    fetch(RECON_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: pin, order_id: o.id }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, d: d }; }); })
+      .then(function (res) {
+        if (res.status === 401) { logout(); throw new Error("PIN incorrecto."); }
+        if (res.status >= 400) throw new Error(res.d.error || "No se pudo verificar.");
+        var r0 = (res.d.resultados || [])[0], who = o.name || "la compra";
+        if (!r0) orderMsg("La compra de " + who + " ya estaba pagada.", "ok");
+        else if (r0.result === "paid") orderMsg("¡Listo! Bold confirmó el pago de " + who + ". Ya quedó pagada y con sus boletas: copia su enlace y envíaselo.", "ok");
+        else if (r0.result === "processing") orderMsg("El pago de " + who + " sigue EN PROCESO en Bold (por ejemplo PSE). Se confirmará solo cuando el banco lo apruebe.", "");
+        else if (r0.result === "rejected") orderMsg("Bold RECHAZÓ el pago de " + who + " (" + r0.detail + "). No hay boleta.", "error");
+        else if (r0.result === "no_payment") orderMsg("Bold no tiene ningún intento de pago de " + who + ": no llegó a pagar (o pasaron más de 24 horas, que es lo que Bold conserva).", "");
+        else if (r0.result === "amount_mismatch") orderMsg("Bold aprobó un pago de otro valor para " + who + ". No se marcó como pagada: revísalo en Bold.", "error");
+        else orderMsg("No se pudo verificar ahora (" + r0.result + "). Intenta de nuevo en un minuto.", "error");
+        return loadOrders(true);
+      })
+      .catch(function (e) { orderMsg(e.message || "Sin conexión.", "error"); })
+      .finally(function () { btn.disabled = false; btn.textContent = "Verificar pago con Bold"; });
+  }
+  var resetOrders = function () { OV.shown = OV.page; renderOrders(); };
+  $("o-q").addEventListener("input", resetOrders);
+  $("o-status").addEventListener("change", resetOrders);
+  $("o-more").addEventListener("click", function () { OV.shown += OV.page; renderOrders(); });
+  $("o-clear").addEventListener("click", function () { $("o-q").value = ""; $("o-status").value = ""; resetOrders(); });
 
   // ---------- Ventas ----------
   var STAGE_NAME = { "Lanzamiento": "Creyentes (Lanzamiento)" };
@@ -1310,10 +1430,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function lastEntry(t) { var m = ""; (t.checkins || []).forEach(function (c) { if (String(c.scanned_at || "") > m) m = String(c.scanned_at || ""); }); return m; }
   function matchesSearch(t, tokens) {
-    var hay = norm([t.name, t.doc, t.phone, t.note].join(" ")), digits = String(t.doc || "").replace(/\D/g, "") + " " + String(t.phone || "").replace(/\D/g, "");
+    // Todo lo que se puede buscar: nombre, cédula, correo, teléfono, nota, # de compra, pago de Bold, código de la boleta,
+    // categoría, nivel, tipo de acceso, forma de pago y noche.
+    var code = String(t.token || "").slice(0, 8);
+    var hay = norm([t.name, t.doc, t.email, t.phone, t.note, t.order_id, t.pay_id, code, CAT[t.category], tierName(t.tier), t.access_type === "1-dia" ? "1 dia acceso 1 dia" : "2 dias acceso 2 dias",
+      t.payment_method ? METHOD[t.payment_method] : "", t.night ? nightLong(t.night) : ""].join(" ")),
+      digits = String(t.doc || "").replace(/\D/g, "") + " " + String(t.phone || "").replace(/\D/g, "");
     for (var i = 0; i < tokens.length; i++) {
       var tk = tokens[i], d = tk.replace(/\D/g, "");
-      if (/^[\d.\-]+$/.test(tk) && d.length >= 3) { if (digits.indexOf(d) < 0) return false; }   // cédula o teléfono, con o sin puntos
+      if (/^[\d.\-]+$/.test(tk) && d.length >= 3) { if (digits.indexOf(d) < 0 && hay.indexOf(tk) < 0) return false; }   // cédula o teléfono, con o sin puntos
       else if (hay.indexOf(tk) < 0) return false;
     }
     return true;
