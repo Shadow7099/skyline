@@ -721,6 +721,17 @@
   });
   accessSelect.addEventListener("change", function () { if (product !== "vice") preferredAccess = accessSelect.value; renderProduct(); });
 
+  // Protección contra pagos repetidos: ya hay una compra anterior de este comprador en proceso.
+  function showProcessing(text, orderId) {
+    var msg = document.getElementById("msg");
+    msg.className = "msg loading";
+    msg.textContent = text + " ";
+    var a = document.createElement("a");
+    a.href = "confirmacion.html?bold-order-id=" + encodeURIComponent(orderId);
+    a.textContent = "Ver el estado de mi pago";
+    a.style.textDecoration = "underline"; a.style.fontWeight = "700"; a.style.color = "inherit";
+    msg.appendChild(a);
+  }
   function showMsg(text, type) {
     var msg = document.getElementById("msg");
     msg.textContent = text;
@@ -810,6 +821,18 @@
     })
       .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
       .then(function (res) {
+        // Su pago anterior ya estaba aprobado: se le llevan sus boletas en vez de cobrarle de nuevo.
+        if (res.data && res.data.already_paid) {
+          showMsg("¡Tu pago anterior ya estaba aprobado! Te llevamos a tus boletas…", "loading");
+          window.location.href = "confirmacion.html?bold-order-id=" + encodeURIComponent(res.data.order_id);
+          return new Promise(function () {});
+        }
+        // Su pago anterior sigue en proceso con el banco: que no pague otra vez.
+        if (!res.ok && res.data && res.data.processing) {
+          showProcessing(res.data.error, res.data.order_id);
+          setPaying(false);
+          return new Promise(function () {});
+        }
         if (!res.ok) {
           throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
         }
