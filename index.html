@@ -599,6 +599,26 @@
   .vice-stock{ margin-top:14px; font-size:0.82rem; color:var(--gold-pale); min-height:1.2em; }
   .vip-perks{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px 26px; margin:30px auto 0; padding:0; list-style:none; font-weight:700; color:var(--bone); }
   .vip-perks li::before{ content:'◆'; color:var(--gold); margin-right:8px; }
+
+  /* ---------- Transporte oficial by Wagon ---------- */
+  .transport{ background:var(--purple-deepest); border-top:4px solid var(--line); }
+  .wagon-grid{ display:grid; grid-template-columns:minmax(0, 430px) 1fr; gap:34px; align-items:center; max-width:980px; margin:0 auto; }
+  .wagon-grid.no-poster{ grid-template-columns:1fr; max-width:560px; }
+  .wagon-grid.no-poster .wagon-poster{ display:none; }
+  @media (max-width:820px){ .wagon-grid{ grid-template-columns:1fr; max-width:520px; } }
+  .wagon-poster{ display:block; border:3px solid var(--line); border-radius:var(--radius-panel); overflow:hidden; box-shadow:var(--shadow-hard); background:var(--purple-deep); transition:transform 0.15s ease; }
+  .wagon-poster:hover{ transform:translate(-2px,-2px); }
+  .wagon-poster img{ width:100%; height:auto; }
+  .wagon-info{ background:var(--purple-deep); border:3px solid var(--line); border-radius:var(--radius-panel); box-shadow:var(--shadow-hard); overflow:hidden; }
+  .wagon-info-head{ background:var(--gold); color:var(--ink); padding:14px 22px; font-family:'Eurostile Extended','Michroma',sans-serif; text-transform:uppercase; letter-spacing:0.5px; font-size:1.05rem; border-bottom:3px solid var(--line); }
+  .wagon-rows{ padding:12px 22px 4px; }
+  .wagon-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px dashed rgba(244,236,219,0.25); }
+  .wagon-row:last-child{ border-bottom:none; }
+  .wagon-row .pax{ font-weight:600; color:var(--bone); text-transform:uppercase; letter-spacing:0.3px; }
+  .wagon-row .amount{ font-family:'Eurostile Extended','Michroma',sans-serif; font-weight:700; font-size:1.1rem; color:var(--gold); }
+  .wagon-how{ padding:6px 22px 4px; color:var(--smoke); font-size:0.95rem; }
+  .wagon-how strong{ color:var(--gold); }
+  .wagon-foot{ padding:14px 22px 22px; }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -624,6 +644,7 @@ fbq('track', 'PageView');
       <li><a href="#fiesta">La fiesta</a></li>
       <li><a href="#boletas">Boletas</a></li>
       <li><a href="#mapa">El lugar</a></li>
+      <li><a href="#transporte">Transporte</a></li>
       <li><a href="#info">Info</a></li>
       <li><a href="/crew.html">Skyline Crew</a></li>
       <li><a href="/terminos.html">Términos y condiciones</a></li>
@@ -723,6 +744,12 @@ fbq('track', 'PageView');
       <div class="feature-card">
         <h3>Experiencias VIP</h3>
         <p>Stage VIP con Fast Pass, y Vice Experience con media de Antioqueño y tu bebida incluida. Cupos limitados por noche.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-emoji">🚌</span>
+        <h3>Transporte oficial by Wagon</h3>
+        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a></p>
       </div>
 
     </div>
@@ -880,6 +907,36 @@ fbq('track', 'PageView');
   </div>
 </section>
 
+
+<section class="section transport" id="transporte">
+  <div class="container">
+    <div class="section-head">
+      <h2 style="color:var(--bone)">Transporte oficial</h2>
+      <p>Transporte oficial by Wagon, ida y vuelta, hasta PLOT Bogotá.</p>
+    </div>
+    <div class="wagon-grid" id="wagonGrid">
+      <a class="wagon-poster" href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" aria-label="Reservar el transporte oficial en Wagon">
+        <img id="wagonImg" alt="Transporte oficial by Wagon para Skyline Halloween Fest: precios ida y vuelta por grupo" loading="lazy" decoding="async">
+      </a>
+      <div class="wagon-info">
+        <div class="wagon-info-head">Precios (ida y vuelta)</div>
+        <div class="wagon-rows">
+          <div class="wagon-row"><span class="pax">2-4 pax</span><span class="amount">$250.000</span></div>
+          <div class="wagon-row"><span class="pax">6-9 pax</span><span class="amount">$370.000</span></div>
+          <div class="wagon-row"><span class="pax">10-14 pax</span><span class="amount">$430.000</span></div>
+          <div class="wagon-row"><span class="pax">15-18 pax</span><span class="amount">$485.000</span></div>
+          <div class="wagon-row"><span class="pax">25-30 pax</span><span class="amount">$485.000</span></div>
+          <div class="wagon-row"><span class="pax">31-40 pax</span><span class="amount">$485.000</span></div>
+        </div>
+        <p class="wagon-how">Descarga la app <strong>Wagon</strong> y busca <strong>Skyline Halloween Fest</strong>.</p>
+        <div class="wagon-foot">
+          <a href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" class="btn btn-primary btn-block" data-cta="wagon">Reservar transporte en Wagon</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="final-cta">
   <div class="container">
     <h2>¡No te quedes por fuera!</h2>
@@ -1001,6 +1058,17 @@ fbq('track', 'PageView');
         }).join(" · ");
       }
     }).catch(function () {});
+})();
+</script>
+
+<script>
+// Póster del transporte oficial (Wagon). Si la imagen no carga, la sección se muestra igual con los precios en texto.
+(function () {
+  var WAGON_IMG = "https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/wagon-transporte.webp";
+  var grid = document.getElementById("wagonGrid"), img = document.getElementById("wagonImg");
+  if (!grid || !img) return;
+  img.addEventListener("error", function () { grid.classList.add("no-poster"); });
+  if (WAGON_IMG) img.src = WAGON_IMG; else grid.classList.add("no-poster");
 })();
 </script>
 </body>
