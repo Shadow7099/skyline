@@ -665,6 +665,9 @@
   .crew-title{ text-shadow:3px 3px 0 #000; }
   .crew-sub, .meta-pill{ border-color:#262626; }
   footer{ background:#000; }
+  .crew-panels .amount small{ display:block; font-size:0.72rem; color:var(--gold-pale); font-weight:600; }
+  .price-panel.vip-crew .price-panel-head{ background:var(--gold-pale); }
+  .crew-panels .bonus{ grid-column:1 / -1; max-width:520px; width:100%; justify-self:center; }
 </style>
 </head>
 <body>
@@ -727,6 +730,17 @@
           <div class="price-row"><span class="stage-name">Etapa 2</span><span class="crew-price">$55.000</span><span class="amount">$10.000</span></div>
           <div class="price-row"><span class="stage-name">Etapa 3</span><span class="crew-price">$65.000</span><span class="amount">$9.000</span></div>
         </div>
+      </div>
+
+      <div class="price-panel vip-crew">
+        <div class="price-panel-head">VIP</div>
+        <div class="price-rows">
+          <div class="price-row crew-head"><span>Etapa</span><span>Valor</span><span>Tu comisión</span></div>
+          <div class="price-row"><span class="stage-name">Etapa 1</span><span class="crew-price">$50.000</span><span class="amount">$8.000 <small>16%</small></span></div>
+          <div class="price-row"><span class="stage-name">Etapa 2</span><span class="crew-price">$60.000</span><span class="amount">$12.000 <small>20%</small></span></div>
+          <div class="price-row"><span class="stage-name">Etapa 3</span><span class="crew-price">$70.000</span><span class="amount">$15.000 <small>21,43%</small></span></div>
+        </div>
+        <p class="bonus-note">Comisión por cada boleta VIP vendida (% sobre el valor). Los VIP se venden a <strong>precio completo</strong> y su comisión <strong>no suma a los bonos por metas</strong>.</p>
       </div>
 
       <div class="price-panel bonus">
