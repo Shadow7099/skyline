@@ -619,6 +619,9 @@
   .wagon-how{ padding:6px 22px 4px; color:var(--smoke); font-size:0.95rem; }
   .wagon-how strong{ color:var(--gold); }
   .wagon-foot{ padding:14px 22px 22px; }
+  .vip-includes{ padding-top:6px; color:var(--bone); font-weight:600; }
+  .vip-includes strong{ color:var(--gold); }
+  .vice-list li strong{ color:var(--gold); }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -825,46 +828,48 @@ fbq('track', 'PageView');
     <div class="price-panels vip-panels">
 
       <div class="price-panel vip-card">
-        <div class="price-panel-head">VIP 1 día</div>
-        <p class="vip-note">Eliges la noche: viernes 30 o sábado 31 de octubre.</p>
-        <div class="price-rows" data-vip="1-dia">
-          <div class="price-row active" data-stage="Etapa 1">
-            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
-            <div class="amount" data-amount>$50.000</div>
-          </div>
-          <div class="price-row" data-stage="Etapa 2">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
-            <div class="amount" data-amount>$60.000</div>
-          </div>
-          <div class="price-row" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span></div>
-            <div class="amount" data-amount>$70.000</div>
-          </div>
-        </div>
-        <div class="price-panel-foot">
-          <a href="/comprar.html?producto=vip&tipo=1-dia" class="btn btn-primary btn-block">Comprar VIP 1 día</a>
-        </div>
-      </div>
-
-      <div class="price-panel vip-card">
         <div class="price-panel-head">VIP 2 días</div>
         <p class="vip-note">Las dos noches: viernes 30 y sábado 31 de octubre.</p>
+        <p class="vip-note vip-includes">Incluye <strong>Fast Pass</strong> y acceso al Stage VIP.</p>
         <div class="price-rows" data-vip="2-dias">
-          <div class="price-row active" data-stage="Etapa 1">
-            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+          <div class="price-row sold-out" data-stage="Etapa 1">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Agotada</span></div>
             <div class="amount" data-amount>$80.000</div>
           </div>
-          <div class="price-row" data-stage="Etapa 2">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+          <div class="price-row active" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
             <div class="amount" data-amount>$90.000</div>
           </div>
           <div class="price-row" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
             <div class="amount" data-amount>$100.000</div>
           </div>
         </div>
         <div class="price-panel-foot">
           <a href="/comprar.html?producto=vip&tipo=2-dias" class="btn btn-primary btn-block">Comprar VIP 2 días</a>
+        </div>
+      </div>
+
+      <div class="price-panel vip-card">
+        <div class="price-panel-head">VIP 1 día</div>
+        <p class="vip-note">Eliges la noche: viernes 30 o sábado 31 de octubre.</p>
+        <p class="vip-note vip-includes">Incluye <strong>Fast Pass</strong> y acceso al Stage VIP.</p>
+        <div class="price-rows" data-vip="1-dia">
+          <div class="price-row sold-out" data-stage="Etapa 1">
+            <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Agotada</span></div>
+            <div class="amount" data-amount>$50.000</div>
+          </div>
+          <div class="price-row active" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+            <div class="amount" data-amount>$60.000</div>
+          </div>
+          <div class="price-row" data-stage="Etapa 3">
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+            <div class="amount" data-amount>$70.000</div>
+          </div>
+        </div>
+        <div class="price-panel-foot">
+          <a href="/comprar.html?producto=vip&tipo=1-dia" class="btn btn-primary btn-block">Comprar VIP 1 día</a>
         </div>
       </div>
 
@@ -877,6 +882,7 @@ fbq('track', 'PageView');
             <li>Media de Antioqueño por persona</li>
             <li>Un Red Bull o agua, a tu elección</li>
             <li>Acceso al Stage VIP</li>
+            <li><strong>Fast Pass</strong></li>
           </ul>
           <div class="vice-stock" id="vice-stock"></div>
         </div>
