@@ -489,7 +489,7 @@
   function perkText(t) {
     if (!t) return "";
     if (t.tier === "vip") return "VIP: acceso al Stage VIP y Fast Pass.";
-    if (t.tier === "vice") return "Vice Experience: entregar media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") + ".";
+    if (t.tier === "vice") return "Vice Experience: Fast Pass · entregar media de Antioqueño" + (drinkName(t.option) ? " + " + drinkName(t.option) : "") + ".";
     return "";
   }
   function ticketLine(t, type) {
