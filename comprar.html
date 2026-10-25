@@ -365,7 +365,7 @@
       <select id="product">
         <option value="general">General</option>
         <option value="vip">VIP · Stage VIP y Fast Pass</option>
-        <option value="vice">Vice Experience · entrada + media de Antioqueño</option>
+        <option value="vice">Vice Experience · Fast Pass + media de Antioqueño</option>
       </select>
       <div class="prod-note hidden" id="prod-note"></div>
 
@@ -541,7 +541,7 @@
   var stockNote = document.getElementById("stock-note"), prodNote = document.getElementById("prod-note");
   var NOTES = {
     vip: "VIP incluye acceso al Stage VIP y Fast Pass. Cupos limitados por noche. Los VIP se venden a precio completo.",
-    vice: "Vice Experience incluye la entrada al festival para una sola noche, una media de Antioqueño por persona y un Red Bull o agua a tu elección. Cupos limitados por noche."
+    vice: "Vice Experience incluye la entrada al festival para una sola noche, Fast Pass, una media de Antioqueño por persona y un Red Bull o agua a tu elección. Cupos limitados por noche."
   };
   function pesos(n) { return "$" + Number(n).toLocaleString("es-CO"); }
   function vipOneDay(n) { return AV && AV.vip && AV.vip["1-dia"] ? AV.vip["1-dia"][n] : null; }
@@ -576,7 +576,7 @@
       o.textContent = "Vice Experience — " + (AV ? pesos(AV.vice.price) + " por persona" : "cargando…");
       accessSelect.appendChild(o); accessSelect.value = "1-dia"; return;
     }
-    [["1-dia", "VIP 1 día (eliges la noche)"], ["2-dias", "VIP 2 días (las dos noches)"]].forEach(function (x) {
+    [["2-dias", "VIP 2 días (las dos noches)"], ["1-dia", "VIP 1 día (eliges la noche)"]].forEach(function (x) {
       var o = document.createElement("option"); o.value = x[0];
       var t = x[1], v = x[0] === "2-dias" && AV && AV.vip ? AV.vip["2-dias"] : null;
       if (v) t += v.ok ? " — " + pesos(v.price) + " (" + v.stage + ")" : " — agotado";
