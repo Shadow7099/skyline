@@ -258,6 +258,7 @@
         <button class="tab" role="tab" id="tab-create" aria-selected="false">Cortesías y ventas</button>
         <button class="tab" role="tab" id="tab-list" aria-selected="false">Todas las boletas</button>
         <button class="tab" role="tab" id="tab-orders" aria-selected="false">Compras</button>
+        <button class="tab" role="tab" id="tab-parking" aria-selected="false">Parqueadero</button>
         <button class="tab" role="tab" id="tab-promo" aria-selected="false">Promotores</button>
       </div>
     </div>
@@ -499,6 +500,29 @@
       </div>
     </div>
 
+    <div id="view-parking" class="hidden">
+      <div class="panel">
+        <div class="panel-head">Parqueadero (pagos en línea)</div>
+        <div class="panel-body">
+          <div class="stats" id="pk-stats"></div>
+          <p class="tnote">Busca por placa, nombre del conductor, cédula, celular o referencia del vehículo. Si alguien dice que pagó y aparece pendiente, toca «Verificar pago con Bold».</p>
+          <div class="pgrid top">
+            <input class="field" id="pk-q" type="search" placeholder="Buscar por placa, nombre, cédula, celular o referencia" autocomplete="off" aria-label="Buscar parqueadero">
+            <select class="field" id="pk-status" aria-label="Filtrar por estado del pago">
+              <option value="">Todos los pagos</option>
+              <option value="pagado">Pagados</option>
+              <option value="pendiente_pago">Pendientes de pago</option>
+              <option value="fallido">Rechazados</option>
+            </select>
+          </div>
+          <div class="pcount"><span id="pk-count"></span><button class="linkbtn hidden" id="pk-clear" type="button">Limpiar filtros</button></div>
+          <div class="msg" id="pk-msg" role="status"></div>
+          <div class="rows" id="pk-rows"></div>
+          <button class="btn ghost block hidden" id="pk-more" type="button">Mostrar más</button>
+        </div>
+      </div>
+    </div>
+
     <div id="view-list" class="hidden">
       <div class="panel">
         <div class="panel-head">Todas las boletas</div>
@@ -615,12 +639,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // ---------- Pestañas ----------
   function tab(which) {
-    ["sales", "create", "list", "orders", "promo"].forEach(function (k) {
+    ["sales", "create", "list", "orders", "parking", "promo"].forEach(function (k) {
       $("tab-" + k).setAttribute("aria-selected", k === which);
       $("view-" + k).classList.toggle("hidden", k !== which);
     });
     if (which === "list") refresh();
     if (which === "orders") loadOrders();
+    if (which === "parking") loadParking();
     if (which === "sales") loadSales();
     if (which === "promo") loadPromoters();
   }
@@ -628,6 +653,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   $("tab-create").addEventListener("click", function () { tab("create"); });
   $("tab-list").addEventListener("click", function () { tab("list"); });
   $("tab-orders").addEventListener("click", function () { tab("orders"); });
+  $("tab-parking").addEventListener("click", function () { tab("parking"); });
   $("tab-promo").addEventListener("click", function () { tab("promo"); });
 
   // ---------- Compras (todas, también las pendientes) ----------
@@ -719,6 +745,84 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   $("o-status").addEventListener("change", resetOrders);
   $("o-more").addEventListener("click", function () { OV.shown += OV.page; renderOrders(); });
   $("o-clear").addEventListener("click", function () { $("o-q").value = ""; $("o-status").value = ""; resetOrders(); });
+
+  // ---------- Parqueadero (pagos en línea) ----------
+  var PARK = [], PV = { page: 100, shown: 100 };
+  var VEHICLE = { carro: "Carro", moto: "Moto" };
+  function plateKey(v) { return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); }
+  function parkMsg(text, kind) { var m = $("pk-msg"); m.textContent = text || ""; m.className = "msg" + (kind ? " " + kind : ""); }
+  function parkFiltered() {
+    var q = $("pk-q").value.trim(), tokens = norm(q).split(/\s+/).filter(Boolean), pq = plateKey(q), st = $("pk-status").value;
+    return PARK.filter(function (o) {
+      if (st && o.status !== st) return false;
+      if (!tokens.length) return true;
+      if (pq.length >= 3 && plateKey(o.plate).indexOf(pq) >= 0) return true;                       // placa con o sin guiones/espacios
+      var hay = norm([o.plate, o.name, o.doc, o.phone, o.vehicle_ref, o.id, o.pay_id, VEHICLE[o.vehicle_type], STATUS_NAME[o.status]].join(" ")),
+        digits = String(o.doc || "").replace(/\D/g, "") + " " + String(o.phone || "").replace(/\D/g, "");
+      return tokens.every(function (tk) { var d = tk.replace(/\D/g, ""); if (/^[\d.\-]+$/.test(tk) && d.length >= 3) return digits.indexOf(d) >= 0 || hay.indexOf(tk) >= 0; return hay.indexOf(tk) >= 0; });
+    });
+  }
+  function renderParkStats() {
+    var paid = PARK.filter(function (o) { return o.status === "pagado"; }), box = $("pk-stats"); box.innerHTML = "";
+    var cars = paid.filter(function (o) { return o.vehicle_type === "carro"; }).length, bikes = paid.filter(function (o) { return o.vehicle_type === "moto"; }).length;
+    var total = paid.reduce(function (a, o) { return a + o.total; }, 0), pend = PARK.filter(function (o) { return o.status === "pendiente_pago"; }).length;
+    [[String(cars), "carros pagados"], [String(bikes), "motos pagadas"], [money(total), "recaudado en parqueadero"], [String(pend), "pagos pendientes"]].forEach(function (x) {
+      var c = el("div", "stat"); c.appendChild(el("b", "", x[0])); c.appendChild(el("span", "", x[1])); box.appendChild(c);
+    });
+  }
+  function renderParking() {
+    var box = $("pk-rows"); box.innerHTML = "";
+    var list = parkFiltered(), shown = Math.min(list.length, PV.shown), active = !!($("pk-q").value.trim() || $("pk-status").value);
+    $("pk-count").textContent = "Mostrando " + shown + " de " + list.length + " pagos" + (active ? " (" + PARK.length + " en total)" : "");
+    $("pk-clear").classList.toggle("hidden", !active);
+    $("pk-more").classList.toggle("hidden", list.length <= shown);
+    if (list.length > shown) $("pk-more").textContent = "Mostrar más (" + (list.length - shown) + " restantes)";
+    if (!list.length) { box.appendChild(el("div", "empty", PARK.length ? "No hay pagos con ese filtro." : "Todavía no hay pagos de parqueadero.")); return; }
+    list.slice(0, PV.shown).forEach(function (o) {
+      var row = el("div", "row"), name = el("div", "row-name");
+      name.appendChild(el("span", "pill st-" + o.status, STATUS_NAME[o.status] || o.status));
+      name.appendChild(el("span", "pill " + (o.vehicle_type === "moto" ? "d1" : "d2"), VEHICLE[o.vehicle_type] || o.vehicle_type));
+      name.appendChild(document.createTextNode(o.plate + " · " + (o.name || "—")));
+      var meta = el("div", "row-meta", (o.vehicle_ref || "") + " · " + money(o.total) + (o.doc ? " · Doc. " + o.doc : "") + (o.phone ? " · Cel. " + o.phone : "") + (o.created_at ? " · " + fmtWhen(o.created_at) : "") + " · # " + String(o.id).slice(0, 8) + (o.pay_id ? " · Bold " + o.pay_id : ""));
+      var st = el("div", "row-state");
+      if (o.status === "pagado") { st.className += " used"; st.textContent = "Parqueadero pagado" + (o.paid_at ? " · " + fmtWhen(o.paid_at) : ""); }
+      else if (o.status === "pendiente_pago") st.textContent = "Sin confirmar: todavía no hay pago aprobado.";
+      else { st.className += " rev"; st.textContent = "Bold rechazó el pago."; }
+      var acts = el("div", "row-actions");
+      if (o.status !== "pagado") { var chk = el("button", "btn sm", "Verificar pago con Bold"); chk.type = "button"; chk.onclick = function () { verifyParking(o, chk); }; acts.appendChild(chk); }
+      row.appendChild(name); row.appendChild(acts); row.appendChild(meta); row.appendChild(st); box.appendChild(row);
+    });
+  }
+  function loadParking(keepMsg) {
+    if (!keepMsg) parkMsg("Cargando pagos de parqueadero…", "");
+    return api("parking_list").then(function (d) { PARK = d.orders || []; if (!keepMsg) parkMsg("", ""); PV.shown = PV.page; renderParkStats(); renderParking(); })
+      .catch(function (e) { parkMsg(e.message, "error"); });
+  }
+  function verifyParking(o, btn) {
+    btn.disabled = true; btn.textContent = "Verificando con Bold…"; parkMsg("", "");
+    fetch(RECON_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: pin, order_id: o.id }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, d: d }; }); })
+      .then(function (res) {
+        if (res.status === 401) { logout(); throw new Error("PIN incorrecto."); }
+        if (res.status >= 400) throw new Error(res.d.error || "No se pudo verificar.");
+        var r0 = (res.d.resultados || [])[0], who = o.plate;
+        if (!r0) parkMsg("El parqueadero de " + who + " ya estaba pagado.", "ok");
+        else if (r0.result === "paid") parkMsg("¡Listo! Bold confirmó el pago del parqueadero de " + who + ".", "ok");
+        else if (r0.result === "processing") parkMsg("El pago de " + who + " sigue EN PROCESO en Bold (por ejemplo PSE). Se confirmará cuando el banco lo apruebe.", "");
+        else if (r0.result === "rejected") parkMsg("Bold RECHAZÓ el pago de " + who + " (" + r0.detail + ").", "error");
+        else if (r0.result === "no_payment") parkMsg("Bold no tiene ningún intento de pago de " + who + ": no llegó a pagar (o pasaron más de 24 horas, que es lo que Bold conserva).", "");
+        else if (r0.result === "amount_mismatch") parkMsg("Bold aprobó un pago de otro valor para " + who + ". No se marcó como pagado: revísalo en Bold.", "error");
+        else parkMsg("No se pudo verificar ahora (" + r0.result + "). Intenta de nuevo en un minuto.", "error");
+        return loadParking(true);
+      })
+      .catch(function (e) { parkMsg(e.message || "Sin conexión.", "error"); })
+      .finally(function () { btn.disabled = false; btn.textContent = "Verificar pago con Bold"; });
+  }
+  var resetPark = function () { PV.shown = PV.page; renderParking(); };
+  $("pk-q").addEventListener("input", resetPark);
+  $("pk-status").addEventListener("change", resetPark);
+  $("pk-more").addEventListener("click", function () { PV.shown += PV.page; renderParking(); });
+  $("pk-clear").addEventListener("click", function () { $("pk-q").value = ""; $("pk-status").value = ""; resetPark(); });
 
   // ---------- Ventas ----------
   var STAGE_NAME = { "Lanzamiento": "Creyentes (Lanzamiento)" };
