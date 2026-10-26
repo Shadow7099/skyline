@@ -622,6 +622,16 @@
   .vip-includes{ padding-top:6px; color:var(--bone); font-weight:600; }
   .vip-includes strong{ color:var(--gold); }
   .vice-list li strong{ color:var(--gold); }
+
+  /* ---------- Servicio de parqueadero ---------- */
+  .parking{ background:var(--purple-deep); border-top:4px solid var(--line); }
+  .parking-grid{ display:grid; grid-template-columns:1fr 1fr; gap:26px; max-width:760px; margin:0 auto; }
+  @media (max-width:640px){ .parking-grid{ grid-template-columns:1fr; } }
+  .parking-body{ padding:26px 22px 8px; text-align:center; flex:1; }
+  .parking-price{ font-family:'Eurostile Extended','Michroma',sans-serif; font-weight:700; font-size:2.4rem; color:var(--gold); line-height:1; }
+  .parking-body small{ display:block; margin-top:8px; color:var(--gold-pale); text-transform:uppercase; letter-spacing:0.5px; font-size:0.8rem; font-weight:600; }
+  .parking-data{ max-width:620px; margin:26px auto 0; text-align:center; color:var(--smoke); font-size:0.95rem; }
+  .parking-data strong{ color:var(--gold); }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -648,6 +658,7 @@ fbq('track', 'PageView');
       <li><a href="#boletas">Boletas</a></li>
       <li><a href="#mapa">El lugar</a></li>
       <li><a href="#transporte">Transporte</a></li>
+      <li><a href="#parqueadero">Parqueadero</a></li>
       <li><a href="#info">Info</a></li>
       <li><a href="/crew.html">Skyline Crew</a></li>
       <li><a href="/terminos.html">Términos y condiciones</a></li>
@@ -731,7 +742,7 @@ fbq('track', 'PageView');
 
       <div class="feature-card">
         <h3>Parqueadero disponible</h3>
-        <p>Carros: $30.000 · Motos: $20.000 (tarifas plenas).</p>
+        <p>Carros: $30.000 · Motos: $20.000 (tarifas plenas). <a href="#parqueadero" style="color:var(--gold)">Pagar parqueadero</a></p>
       </div>
 
       <div class="feature-card">
@@ -943,6 +954,28 @@ fbq('track', 'PageView');
   </div>
 </section>
 
+<section class="section parking" id="parqueadero">
+  <div class="container">
+    <div class="section-head">
+      <h2 style="color:var(--bone)">Servicio de parqueadero</h2>
+      <p>Tarifas plenas. Paga tu parqueadero en línea.</p>
+    </div>
+    <div class="parking-grid">
+      <div class="price-panel">
+        <div class="price-panel-head">Carro</div>
+        <div class="parking-body"><div class="parking-price" id="pkCarro">$30.000</div><small>Tarifa plena</small></div>
+        <div class="price-panel-foot"><a href="/parqueadero.html?tipo=carro" class="btn btn-primary btn-block" data-cta="parking-car">Pagar parqueadero · Carro</a></div>
+      </div>
+      <div class="price-panel">
+        <div class="price-panel-head">Moto</div>
+        <div class="parking-body"><div class="parking-price" id="pkMoto">$20.000</div><small>Tarifa plena</small></div>
+        <div class="price-panel-foot"><a href="/parqueadero.html?tipo=moto" class="btn btn-primary btn-block" data-cta="parking-bike">Pagar parqueadero · Moto</a></div>
+      </div>
+    </div>
+    <p class="parking-data">Para pagar te pediremos: <strong>nombre completo (conductor)</strong>, <strong>referencia del vehículo</strong>, <strong>placa</strong>, <strong>celular</strong> y <strong>cédula</strong>.</p>
+  </div>
+</section>
+
 <section class="final-cta">
   <div class="container">
     <h2>¡No te quedes por fuera!</h2>
@@ -1075,6 +1108,20 @@ fbq('track', 'PageView');
   if (!grid || !img) return;
   img.addEventListener("error", function () { grid.classList.add("no-poster"); });
   if (WAGON_IMG) img.src = WAGON_IMG; else grid.classList.add("no-poster");
+})();
+</script>
+
+<script>
+// Tarifas del parqueadero desde el servidor (si falla, quedan las de arriba).
+(function () {
+  fetch("https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/parking-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "prices" }) })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (d) {
+      var p = d && d.prices; if (!p) return;
+      var f = function (n) { return "$" + Number(n).toLocaleString("es-CO"); };
+      if (p.carro) document.getElementById("pkCarro").textContent = f(p.carro);
+      if (p.moto) document.getElementById("pkMoto").textContent = f(p.moto);
+    }).catch(function () {});
 })();
 </script>
 </body>
