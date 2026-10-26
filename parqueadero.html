@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Parqueadero · Skyline Halloween Fest</title>
+<meta name="description" content="Paga tu parqueadero para Skyline Halloween Fest, 30 y 31 de octubre en PLOT Bogotá." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+  @font-face{
+    font-family:'Eurostile Extended';
+    src: url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/Eurostile%20Extended%20Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root{
+    --ink:#160b23;
+    --purple-deepest:#1d0e33;
+    --purple-deep:#2a1348;
+    --purple:#3d1c66;
+    --purple-light:#5a3593;
+    --purple-glow:#7c4fc4;
+    --gold:#f0a93b;
+    --gold-deep:#c97e1e;
+    --gold-pale:#f7cf8c;
+    --bone:#f4ecdb;
+    --smoke:#efe6f6;
+    --line:#0e0518;
+    --danger:#e0556a;
+    --ok:#5fbf8f;
+    --radius-tag:18px;
+    --radius-panel:22px;
+    --shadow-hard: 6px 6px 0 var(--line);
+    --shadow-hard-sm: 4px 4px 0 var(--line);
+    --maxw: 640px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background-color:var(--purple-deepest);
+    background-image:
+      radial-gradient(rgba(244,236,219,0.06) 1.4px, transparent 1.4px),
+      linear-gradient(135deg, rgba(29,14,51,0.95) 0%, rgba(42,19,72,0.93) 50%, rgba(29,14,51,0.96) 100%),
+      url('https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/FONDO%202.webp');
+    background-size:16px 16px, auto, cover;
+    background-position:0 0, center, center;
+    background-repeat:repeat, no-repeat, no-repeat;
+    background-attachment:scroll, fixed, fixed;
+    color:var(--smoke);
+    font-family:'Eurostile Extended', 'Michroma', -apple-system, 'Segoe UI', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+
+  h1,h2,.display{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    line-height:0.98;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    margin:0;
+    color:var(--bone);
+  }
+
+  a{color:inherit;}
+
+  .container{max-width:var(--maxw); margin:0 auto; padding:0 20px;}
+
+  .topbar{
+    background:rgba(29,14,51,0.92);
+    border-bottom:3px solid var(--line);
+    padding:16px 0;
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(6px);
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    text-decoration:none;
+    color:var(--gold-pale);
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-weight:600;
+  }
+  .back-link:hover{ color:var(--gold); }
+
+  .page-head{ padding:36px 0 8px; text-align:left; }
+  .page-head h1{ font-size:clamp(2rem, 8vw, 2.6rem); }
+  .page-head .sub{ margin-top:8px; color:var(--gold-pale); font-size:0.95rem; }
+
+  .panel{
+    background:var(--purple-deepest);
+    border:3px solid var(--line);
+    border-radius:var(--radius-panel);
+    overflow:hidden;
+    box-shadow:var(--shadow-hard);
+    margin-top:22px;
+  }
+  .panel-head{
+    background:var(--gold);
+    color:var(--ink);
+    padding:14px 20px;
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-size:1.05rem;
+    border-bottom:3px solid var(--line);
+  }
+  .panel-body{ padding:20px; }
+
+  label{
+    display:block;
+    font-size:0.82rem;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--gold-pale);
+    margin:16px 0 6px;
+    font-weight:600;
+  }
+  label:first-child{ margin-top:0; }
+  label .required{
+    color:var(--danger);
+    margin-left:2px;
+  }
+
+  select, input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:10px;
+    border:2px solid var(--purple-light);
+    background:var(--purple-deep);
+    color:var(--bone);
+    font-size:15px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color 0.2s ease;
+  }
+  select:focus, input:focus{ 
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(240,169,59,0.1);
+  }
+  select{ appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4' stroke='%23f0a93b' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:38px;
+  }
+
+  .qty-row{ display:flex; align-items:center; gap:12px; }
+  .qty-btn{
+    width:44px; height:44px; flex-shrink:0;
+    border-radius:10px;
+    border:2px solid var(--line);
+    background:var(--gold);
+    color:var(--ink);
+    font-size:20px; font-weight:700;
+    cursor:pointer;
+    box-shadow:var(--shadow-hard-sm);
+    transition:all 0.15s ease;
+  }
+  .qty-btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--line); }
+  .qty-btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--line); }
+  .qty-val{
+    flex:1; text-align:center;
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-size:1.3rem;
+    color:var(--bone);
+  }
+
+  .summary{
+    margin-top:18px;
+    border:2px dashed rgba(244,236,219,0.3);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .summary-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0;
+    border-bottom:1px dashed rgba(244,236,219,0.2);
+    font-size:0.92rem;
+  }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row.total{ padding-top:12px; }
+  .summary-row.total .label{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    text-transform:uppercase;
+    font-size:0.95rem;
+    color:var(--bone);
+  }
+  .summary-row.total .amount{
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:700;
+    font-size:1.4rem;
+    color:var(--gold);
+  }
+  .summary-row .amount-sm{ color:var(--gold-pale); }
+
+  .pay-btn{
+    display:block; width:100%; margin-top:20px;
+    padding:16px 20px;
+    border-radius:10px;
+    border:3px solid var(--line);
+    background:var(--gold);
+    color:var(--ink);
+    font-family:'Eurostile Extended', 'Michroma', sans-serif;
+    font-weight:700; font-size:1rem;
+    text-transform:uppercase; letter-spacing:0.5px;
+    cursor:pointer;
+    box-shadow:var(--shadow-hard-sm);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .pay-btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--line); }
+  .pay-btn:active{ transform:translate(0,0); box-shadow:2px 2px 0 var(--line); }
+  .pay-btn:disabled{ opacity:0.6; cursor:wait; transform:none; box-shadow:var(--shadow-hard-sm); }
+
+  .hidden{ display:none !important; }
+  .resume{
+    margin-top:22px; padding:16px 18px;
+    border:3px solid var(--line); border-radius:16px;
+    background:var(--purple-deep); box-shadow:var(--shadow-hard-sm);
+    font-size:0.92rem; line-height:1.5;
+  }
+  .resume.paid{ border-color:#5fbf8f; }
+  .resume.pending{ border-color:var(--gold); }
+  .resume-title{ font-weight:700; color:var(--bone); margin:0 0 4px; }
+  .resume-text{ color:var(--gold-pale); margin:0 0 12px; }
+  .resume-links{ display:flex; flex-direction:column; gap:8px; }
+  .resume-link{
+    display:block; text-align:center; text-decoration:none;
+    padding:12px 14px; border-radius:10px; border:2px solid var(--line);
+    background:var(--gold); color:var(--ink); font-weight:700;
+    box-shadow:var(--shadow-hard-sm);
+  }
+  .promo{ margin-top:18px; }
+  .promo-toggle{
+    background:none; border:none; padding:0; cursor:pointer;
+    color:var(--gold-pale); text-decoration:underline; text-underline-offset:3px;
+    font-family:inherit; font-size:0.85rem;
+  }
+  .promo-row{ display:flex; gap:10px; }
+  .promo-row input{ flex:1; text-transform:uppercase; letter-spacing:0.5px; }
+  .promo-apply{
+    flex-shrink:0; padding:0 18px; border-radius:10px;
+    border:2px solid var(--line); background:var(--gold); color:var(--ink);
+    font-family:inherit; font-weight:700; cursor:pointer;
+    box-shadow:var(--shadow-hard-sm);
+  }
+  .promo-apply:disabled{ opacity:0.6; cursor:wait; }
+  .promo-msg{ font-size:0.85rem; margin-top:8px; min-height:1.2em; line-height:1.4; }
+  .promo-msg.ok{ color:#7fe0a6; }
+  .promo-msg.err{ color:var(--danger); }
+  .promo-msg button{ background:none; border:none; color:var(--gold-pale); text-decoration:underline; cursor:pointer; font:inherit; padding:0; margin-left:6px; }
+  .msg{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:0.88rem;
+    display:none;
+    border:2px solid var(--line);
+  }
+  .msg.error{ 
+    background:rgba(224,85,106,0.15); 
+    color:var(--danger); 
+    border-color:var(--danger); 
+    display:block; 
+  }
+  .msg.loading{ 
+    background:rgba(244,236,219,0.08); 
+    color:var(--gold-pale); 
+    display:block; 
+  }
+  .msg.ok{
+    background:rgba(95,191,143,0.1);
+    color:var(--ok);
+    border-color:var(--ok);
+    display:block;
+  }
+
+  .terms-checkbox{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:16px;
+    padding:12px 14px;
+    background:var(--purple-deep);
+    border-radius:10px;
+    border:1px solid var(--purple-light);
+  }
+  .terms-checkbox input[type="checkbox"]{
+    width:auto;
+    margin-top:2px;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  .terms-checkbox label{
+    margin:0;
+    color:var(--smoke);
+    font-size:0.9rem;
+    text-transform:none;
+    letter-spacing:normal;
+    cursor:pointer;
+    flex:1;
+  }
+  .terms-checkbox a{
+    color:var(--gold);
+    text-decoration:none;
+  }
+  .terms-checkbox a:hover{
+    text-decoration:underline;
+  }
+
+  .footnote{
+    font-size:0.78rem;
+    color:rgba(244,236,219,0.6);
+    text-align:center;
+    margin-top:22px;
+  }
+
+  .info-box{
+    background:rgba(124,79,196,0.1);
+    border-left:3px solid var(--purple-glow);
+    padding:12px 14px;
+    border-radius:8px;
+    font-size:0.9rem;
+    color:var(--smoke);
+    margin-top:14px;
+  }
+
+  /* VIP y Vice Experience */
+  .prod-note{ background:rgba(240,169,59,0.1); border-left:3px solid var(--gold); padding:10px 12px; border-radius:8px; font-size:0.88rem; color:var(--smoke); margin:10px 0 0; line-height:1.45; }
+  .stock-note{ margin-top:12px; padding:8px 12px; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--gold-pale); background:rgba(224,85,106,0.12); border:1px solid var(--danger); }
+  .drink-row{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .drink-row span{ min-width:92px; font-size:0.9rem; color:var(--gold-pale); font-weight:600; }
+  .drink-row select{ flex:1; }
+
+  /* Parqueadero */
+  .plate-big{ display:inline-block; font-family:'Eurostile Extended','Michroma',sans-serif; font-weight:700; font-size:clamp(2rem,9vw,3rem); letter-spacing:4px; color:var(--ink); background:var(--gold); border:3px solid var(--line); border-radius:12px; padding:8px 22px; box-shadow:var(--shadow-hard-sm); margin:10px 0 6px; }
+  .status-card{ text-align:center; }
+  .status-card h2{ font-family:'Eurostile Extended','Michroma',sans-serif; font-size:1.4rem; text-transform:uppercase; margin:6px 0 4px; color:var(--bone); }
+  .status-card .icon{ font-size:2.6rem; }
+  .status-card .detail{ text-align:left; margin-top:14px; border:2px dashed rgba(244,236,219,0.3); border-radius:14px; padding:12px 16px; }
+  .status-card .drow{ display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px dashed rgba(244,236,219,0.2); font-size:0.92rem; }
+  .status-card .drow:last-child{ border-bottom:none; }
+  .status-card .drow span:first-child{ color:var(--gold-pale); text-transform:uppercase; font-size:0.75rem; letter-spacing:0.4px; }
+  .status-card .drow span:last-child{ color:var(--bone); font-weight:700; text-align:right; }
+  .status-card .hint{ font-size:0.88rem; color:var(--gold-pale); margin-top:14px; }
+  .status-card .linkbtn{ display:inline-block; margin-top:16px; padding:12px 22px; background:var(--gold); color:var(--ink); border:3px solid var(--line); border-radius:8px; font-weight:700; text-decoration:none; text-transform:uppercase; box-shadow:var(--shadow-hard-sm); font-size:0.85rem; letter-spacing:0.4px; }
+</style>
+<script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <a class="back-link" href="/index.html#parqueadero">&larr; Volver a la página principal</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>Parqueadero</h1>
+    <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · PLOT Bogotá</p>
+  </div>
+
+  <div id="view-form">
+    <div class="panel">
+      <div class="panel-head">Tu vehículo</div>
+      <div class="panel-body">
+        <label for="vehicle_type">Tipo de vehículo <span class="required">*</span></label>
+        <select id="vehicle_type">
+          <option value="carro">Carro</option>
+          <option value="moto">Moto</option>
+        </select>
+
+        <label for="vehicle_ref">Referencia del vehículo <span class="required">*</span></label>
+        <input id="vehicle_ref" type="text" autocomplete="off" maxlength="60" placeholder="Ej: Mazda 3 rojo" />
+
+        <label for="plate">Placa <span class="required">*</span></label>
+        <input id="plate" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="Ej: ABC123" />
+
+        <div class="summary">
+          <div class="summary-row"><span>Tarifa plena</span><span class="amount-sm" id="unit-price">—</span></div>
+          <div class="summary-row total"><span class="label">Total a pagar</span><span class="amount" id="total-price">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">Datos del conductor</div>
+      <div class="panel-body">
+        <label for="driver_name">Nombre completo (conductor) <span class="required">*</span></label>
+        <input id="driver_name" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+
+        <label for="phone">Celular <span class="required">*</span></label>
+        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="3001234567" />
+
+        <label for="document_id">Cédula <span class="required">*</span></label>
+        <input id="document_id" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="Ej: 1234567890" />
+
+        <div class="terms-checkbox">
+          <input type="checkbox" id="terms_accept" />
+          <label for="terms_accept">
+            Acepto los <a href="./terminos.html" target="_blank" rel="noopener">términos y condiciones</a>
+            y el derecho de admisión y permanencia.
+          </label>
+        </div>
+
+        <button type="button" id="pay-btn" class="pay-btn">Pagar con Bold</button>
+        <div id="msg" class="msg"></div>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Tu pago se confirma automáticamente en cuanto Bold lo apruebe.<br>
+      Al terminar verás tu comprobante: guarda una captura de pantalla.
+    </p>
+  </div>
+
+  <div id="view-status" class="hidden">
+    <div class="panel"><div class="panel-body status-card" id="status-card"></div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
+  var WHATSAPP = "https://wa.me/573133308294";
+  var PRICES = { carro: 30000, moto: 20000 };   // respaldo; las tarifas reales las manda el servidor
+  var params = new URLSearchParams(window.location.search);
+  var $ = function (id) { return document.getElementById(id); };
+  function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
+  function call(body) {
+    return fetch(FUNCTIONS_BASE + "/parking-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); });
+  }
+
+  // ====================== Vista: comprobante / estado del pago ======================
+  var orderId = params.get("bold-order-id");
+  if (orderId) { showStatus(orderId); return; }
+
+  // ====================== Vista: formulario ======================
+  var typeSel = $("vehicle_type"), payBtn = $("pay-btn"), paying = false;
+  var tipoParam = params.get("tipo"); if (tipoParam === "carro" || tipoParam === "moto") typeSel.value = tipoParam;
+
+  function renderTotals() {
+    var p = PRICES[typeSel.value];
+    $("unit-price").textContent = p ? money(p) : "—"; $("total-price").textContent = p ? money(p) : "—";
+  }
+  typeSel.addEventListener("change", renderTotals);
+  renderTotals();
+  call({ action: "prices" }).then(function (res) { if (res.ok && res.data && res.data.prices) { PRICES = Object.assign({}, PRICES, res.data.prices); renderTotals(); } }).catch(function () {});
+
+  $("plate").addEventListener("input", function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""); });
+  ["phone", "document_id"].forEach(function (id) { $(id).addEventListener("input", function () { this.value = this.value.replace(/[^0-9+]/g, ""); }); });
+
+  var msg = $("msg");
+  function showMsg(text, type) { msg.textContent = text; msg.className = "msg " + (type || "error"); }
+  function clearMsg() { msg.className = "msg"; msg.textContent = ""; }
+  function showProcessing(text, id) {
+    msg.className = "msg loading"; msg.textContent = text + " ";
+    var a = document.createElement("a"); a.href = "parqueadero.html?bold-order-id=" + encodeURIComponent(id); a.textContent = "Ver el estado de mi pago";
+    a.style.textDecoration = "underline"; a.style.fontWeight = "700"; a.style.color = "inherit"; msg.appendChild(a);
+  }
+  function setPaying(s) { paying = s; payBtn.disabled = s; payBtn.textContent = s ? "Preparando tu pago…" : "Pagar con Bold"; }
+
+  function data() {
+    return { vehicle_type: typeSel.value, vehicle_ref: $("vehicle_ref").value.trim(), plate: $("plate").value.trim(),
+      driver_name: $("driver_name").value.trim(), phone: $("phone").value.trim(), document_id: $("document_id").value.trim() };
+  }
+  function validate(d) {
+    if (!d.vehicle_ref) return "Escribe la referencia del vehículo (por ejemplo: Mazda 3 rojo).";
+    if (!/^[A-Za-z0-9-]{5,8}$/.test(d.plate) || d.plate.replace(/-/g, "").length < 5) return "Escribe la placa del vehículo (por ejemplo: ABC123).";
+    if (!/\S+\s+\S+/.test(d.driver_name)) return "Escribe el nombre completo del conductor.";
+    var ph = d.phone.replace(/\D/g, ""); if (ph.length === 12 && ph.indexOf("57") === 0) ph = ph.slice(2);
+    if (ph.length !== 10) return "Escribe un celular de 10 dígitos.";
+    var doc = d.document_id.replace(/\D/g, ""); if (doc.length < 5 || doc.length > 12) return "Escribe la cédula del conductor (solo números).";
+    if (!$("terms_accept").checked) return "Debes aceptar los términos y condiciones para continuar.";
+    return "";
+  }
+  function boldReady() {
+    return new Promise(function (resolve, reject) {
+      if (window.BoldCheckout) { resolve(); return; }
+      var tries = 0, t = setInterval(function () { tries++; if (window.BoldCheckout) { clearInterval(t); resolve(); } else if (tries > 50) { clearInterval(t); reject(new Error("bold_not_loaded")); } }, 100);
+    });
+  }
+
+  payBtn.addEventListener("click", function () {
+    if (paying) return;
+    clearMsg();
+    var d = data(), err = validate(d);
+    if (err) { showMsg(err); return; }
+    setPaying(true);
+    call(Object.assign({ action: "create" }, d)).then(function (res) {
+      if (res.data && res.data.already_paid) {
+        showMsg("¡Tu parqueadero ya estaba pagado! Te llevamos a tu comprobante…", "loading");
+        window.location.href = "parqueadero.html?bold-order-id=" + encodeURIComponent(res.data.order_id);
+        return new Promise(function () {});
+      }
+      if (!res.ok && res.data && res.data.processing) { showProcessing(res.data.error, res.data.order_id); setPaying(false); return new Promise(function () {}); }
+      if (!res.ok) throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
+      return boldReady().then(function () { return res.data; }, function () { throw new Error("No se pudo cargar la pasarela de Bold. Revisa tu conexión o desactiva el bloqueador de anuncios e intenta de nuevo."); });
+    }).then(function (o) {
+      var ph = d.phone.replace(/\D/g, ""); if (ph.length === 12 && ph.indexOf("57") === 0) ph = ph.slice(2);
+      var checkout = new window.BoldCheckout({
+        orderId: o.order_id, currency: o.currency, amount: String(o.amount), apiKey: o.api_key, integritySignature: o.integrity_signature,
+        description: o.description, redirectionUrl: o.redirection_url,
+        customerData: JSON.stringify({ fullName: d.driver_name, phone: ph, dialCode: "+57", documentNumber: d.document_id.replace(/\D/g, ""), documentType: "CC" })
+      });
+      showMsg("Abriendo la pasarela de Bold…", "loading");
+      checkout.open();
+      setTimeout(function () { setPaying(false); clearMsg(); }, 4000);
+    }).catch(function (e) {
+      setPaying(false);
+      showMsg(e && e.message && e.message !== "Failed to fetch" ? e.message : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
+    });
+  });
+
+  // ====================== Comprobante ======================
+  function showStatus(id) {
+    $("view-form").classList.add("hidden"); $("view-status").classList.remove("hidden");
+    var card = $("status-card"), tries = 0;
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function row(k, v) { var r = el("div", "drow"); r.appendChild(el("span", "", k)); r.appendChild(el("span", "", v)); return r; }
+    function render(o, kind) {
+      card.innerHTML = "";
+      if (kind === "paid") {
+        card.appendChild(el("div", "icon", "🅿️")); card.appendChild(el("h2", "", "¡Parqueadero pagado!"));
+        card.appendChild(el("div", "plate-big", o.plate));
+        var det = el("div", "detail");
+        det.appendChild(row("Conductor", o.driver_name)); det.appendChild(row("Vehículo", (o.vehicle_type === "moto" ? "Moto" : "Carro") + " · " + o.vehicle_ref));
+        det.appendChild(row("Valor pagado", money(o.total))); det.appendChild(row("# de reserva", String(o.id).slice(0, 8).toUpperCase()));
+        card.appendChild(det); card.appendChild(el("p", "hint", "Guarda una captura de pantalla de este comprobante."));
+      } else if (kind === "failed") {
+        card.appendChild(el("div", "icon", "✕")); card.appendChild(el("h2", "", "El pago no se pudo completar"));
+        card.appendChild(el("p", "hint", "No se te cobró. Puedes intentarlo de nuevo."));
+        var a = el("a", "linkbtn", "Intentar de nuevo"); a.href = "parqueadero.html"; card.appendChild(a);
+      } else if (kind === "missing") {
+        card.appendChild(el("div", "icon", "⚠️")); card.appendChild(el("h2", "", "No encontramos tu pago"));
+        card.appendChild(el("p", "hint", "Escríbenos por WhatsApp para verificarlo."));
+        var w = el("a", "linkbtn", "Escríbenos por WhatsApp"); w.href = WHATSAPP; w.target = "_blank"; w.rel = "noopener"; card.appendChild(w);
+      } else {
+        card.appendChild(el("div", "icon", "⏳")); card.appendChild(el("h2", "", "Estamos confirmando tu pago…"));
+        card.appendChild(el("p", "hint", tries > 24 ? "Tu banco aún no lo confirma. Esta página se actualiza sola; también puedes volver a abrirla más tarde con este mismo enlace." : "Esto puede tardar unos segundos (con PSE puede tardar unos minutos). No cierres esta página."));
+      }
+    }
+    function poll() {
+      tries++;
+      call({ action: "status", order_id: id }).then(function (res) {
+        if (res.status === 404) { render(null, "missing"); return; }
+        if (!res.ok) { render(null, "pending"); setTimeout(poll, 5000); return; }
+        if (res.data.status === "pagado") { render(res.data, "paid"); return; }
+        if (res.data.status === "fallido") { render(res.data, "failed"); return; }
+        render(res.data, "pending"); setTimeout(poll, tries > 24 ? 15000 : 4000);
+      }).catch(function () { render(null, "pending"); setTimeout(poll, 6000); });
+    }
+    render(null, "pending"); poll();
+  }
+})();
+</script>
+</body>
+</html>
