@@ -230,6 +230,14 @@
   .pill.st-pagado{ background:var(--go); color:#08130c; }
   .pill.st-pendiente_pago{ background:var(--gold); color:var(--ink); }
   .pill.st-fallido{ background:var(--stop); color:#fff; }
+
+  /* Cortesías VIP / Vice */
+  .tier-box{ margin-top:14px; padding:14px; border:2px dashed var(--plum-3); border-radius:14px; }
+  .drinks-list{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  @media (max-width:520px){ .drinks-list{ grid-template-columns:1fr; } }
+  .drink-item{ display:flex; align-items:center; gap:8px; }
+  .drink-item span{ font-size:0.8rem; color:var(--gold-pale); min-width:62px; }
+  .drink-item select{ flex:1; }
 </style>
 </head>
 <body>
@@ -318,7 +326,7 @@
                 <option value="proveedor">Proveedor</option>
               </select>
             </div>
-            <div>
+            <div id="type-box">
               <label>Tipo de acceso</label>
               <div class="seg" id="f-type">
                 <button type="button" data-v="2-dias" aria-pressed="true">2 días</button>
@@ -345,6 +353,31 @@
               <label for="f-phone">WhatsApp (opcional)</label>
               <input class="field" id="f-phone" type="tel" autocomplete="off" maxlength="30" placeholder="300 123 4567">
             </div>
+          </div>
+          <div class="tier-box" id="tier-box">
+            <div class="grid2">
+              <div>
+                <label for="f-tier">Nivel de la boleta</label>
+                <select class="field" id="f-tier">
+                  <option value="general">General</option>
+                  <option value="vip">VIP (Stage VIP + Fast Pass)</option>
+                  <option value="vice">Vice Experience (Fast Pass + media + bebida)</option>
+                </select>
+              </div>
+              <div id="night-box" class="hidden">
+                <label for="f-night">Noche</label>
+                <select class="field" id="f-night">
+                  <option value="">Elige la noche…</option>
+                  <option value="2026-10-30">Viernes 30 de octubre</option>
+                  <option value="2026-10-31">Sábado 31 de octubre</option>
+                </select>
+              </div>
+            </div>
+            <div id="drinks-box" class="hidden" style="margin-top:12px">
+              <label>Bebida de cada persona</label>
+              <div class="drinks-list" id="drinks-list"></div>
+            </div>
+            <p class="tnote hidden" id="tier-note" style="margin:12px 0 0"></p>
           </div>
           <div class="sale-box hidden" id="sale-fields">
             <p class="tnote">Venta hecha por ti (no pasa por la página). Cada boleta queda registrada con lo que valió y aparece en el Excel y en las ventas del panel.</p>
@@ -1307,9 +1340,46 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     b.addEventListener("click", function () {
       accessType = b.getAttribute("data-v");
       Array.prototype.forEach.call($("f-type").querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b); });
+      updateTier();
     });
   });
   function isDirect() { return $("f-cat").value === "venta_directa"; }
+  // Nivel de la cortesía: General, VIP o Vice Experience (las ventas directas son siempre generales)
+  function tierVal() { return isDirect() ? "general" : $("f-tier").value; }
+  function needsNight() { var t = tierVal(); return t === "vice" || (t === "vip" && accessType === "1-dia"); }
+  var accessBeforeVice = null, drinkChoices = [];
+  function paintAccess() {
+    Array.prototype.forEach.call($("f-type").querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x.getAttribute("data-v") === accessType); });
+  }
+  function renderDrinks() {
+    var box = $("drinks-list"), n = qty(), keep = drinkChoices.slice();
+    box.innerHTML = "";
+    for (var i = 0; i < n; i++) {
+      var w = el("div", "drink-item"); w.appendChild(el("span", "", "Boleta " + (i + 1)));
+      var s = el("select", "field");
+      [["redbull", "Red Bull"], ["agua", "Agua"]].forEach(function (o) { var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; s.appendChild(op); });
+      s.value = keep[i] || "redbull"; drinkChoices[i] = s.value;
+      (function (idx, sel) { sel.addEventListener("change", function () { drinkChoices[idx] = sel.value; }); })(i, s);
+      w.appendChild(s); box.appendChild(w);
+    }
+    drinkChoices.length = n;
+  }
+  function updateTier() {
+    var direct = isDirect();
+    $("tier-box").classList.toggle("hidden", direct);
+    if (direct) $("f-tier").value = "general";
+    var tr = tierVal();
+    if (tr === "vice") { if (accessBeforeVice === null) accessBeforeVice = accessType; accessType = "1-dia"; paintAccess(); }
+    else if (accessBeforeVice !== null) { accessType = accessBeforeVice; accessBeforeVice = null; paintAccess(); }
+    $("type-box").classList.toggle("hidden", tr === "vice");                      // Vice siempre es de una sola noche
+    $("night-box").classList.toggle("hidden", !needsNight());
+    $("drinks-box").classList.toggle("hidden", tr !== "vice");
+    if (tr === "vice") renderDrinks();
+    var note = $("tier-note");
+    note.textContent = tr === "vip" ? (accessType === "2-dias" ? "VIP de 2 días: vale las dos noches. Incluye Stage VIP y Fast Pass." : "VIP de 1 día: vale solo la noche que elijas. Incluye Stage VIP y Fast Pass.") + " Las cortesías no descuentan cupos de venta."
+      : tr === "vice" ? "Vice Experience: entrada de una sola noche con Fast Pass, media de Antioqueño y la bebida elegida. Las cortesías no descuentan cupos de venta." : "";
+    note.classList.toggle("hidden", tr === "general" || direct);
+  }
   function maxQty() { return isDirect() ? 200 : 50; }
   function priceVal() { return parseInt(String($("f-price").value).replace(/\D/g, ""), 10) || 0; }
   function qty() { var n = parseInt($("f-qty").value, 10); return isNaN(n) ? 1 : Math.min(maxQty(), Math.max(1, n)); }
@@ -1324,7 +1394,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var p = priceVal(), n = qty();
     $("sale-total").textContent = "Total de la venta: " + (p ? n + " × " + money(p) + " = " + money(p * n) : "—");
     $("f-qty").value = n;
+    updateTier();
   }
+  $("f-tier").addEventListener("change", updateSale);
   $("f-cat").addEventListener("change", updateSale);
   $("f-price").addEventListener("input", updateSale);
   $("q-minus").addEventListener("click", function () { $("f-qty").value = Math.max(1, qty() - 1); updateSale(); });
@@ -1342,18 +1414,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (price < 1000) { $("create-msg").textContent = "Escribe cuánto valió cada boleta (por ejemplo 25000)."; $("f-price").focus(); return; }
       if (!method) { $("create-msg").textContent = "Elige la forma de pago."; $("f-method").focus(); return; }
     }
+    var tr = tierVal();
+    if (needsNight() && !$("f-night").value) { $("create-msg").textContent = "Elige la noche: viernes 30 o sábado 31 de octubre."; $("f-night").focus(); return; }
     $("create-btn").disabled = true; $("create-btn").textContent = "Creando…";
     var body = {
       category: $("f-cat").value, access_type: accessType, quantity: n,
       name: name, doc: $("f-doc").value.trim(), phone: $("f-phone").value.trim(), note: $("f-note").value.trim()
     };
+    if (tr !== "general") { body.tier = tr; if (needsNight()) body.night = $("f-night").value; if (tr === "vice") body.drinks = drinkChoices.slice(0, n); }
     if (direct) { body.unit_price = price; body.payment_method = method; }
     api("create", body).then(function (d) {
       lastBatch = (d.tickets || []).map(normalize);
       $("create-msg").className = "msg ok";
       $("create-msg").textContent = direct
         ? "Venta registrada: " + n + (n === 1 ? " boleta × " : " boletas × ") + money(price) + " = " + money(price * n) + " (" + METHOD[method] + ")."
-        : (n === 1 ? "Boleta creada." : n + " boletas creadas.");
+        : (tr === "general" ? (n === 1 ? "Boleta creada." : n + " boletas creadas.") : (n === 1 ? "Boleta " : n + " boletas ") + tierName(tr) + (n === 1 ? " creada." : " creadas.") + (needsNight() ? " (" + nightLong($("f-night").value) + ")" : " (las dos noches)"));
       showResult(lastBatch);
       [direct ? "f-price" : "", "f-name", "f-doc", "f-phone", "f-note"].forEach(function (id) { if (id) $(id).value = ""; });
       $("f-qty").value = 1; updateSale();
@@ -1367,7 +1442,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       id: t.id, qr_payload: t.qr_payload, category: t.category, access_type: t.access_type,
       n: t.ticket_number || t.n, total: t.ticket_total || t.total,
       name: t.holder_name || t.name, phone: t.holder_phone || t.phone || "",
-      price: t.price == null ? null : t.price, payment_method: t.payment_method || null
+      price: t.price == null ? null : t.price, payment_method: t.payment_method || null,
+      tier: t.tier || "general", night: t.valid_night || t.night || null, option: t.option || null
     };
   }
 
