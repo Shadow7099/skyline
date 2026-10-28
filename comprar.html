@@ -347,6 +347,17 @@
   .promo-offer button{ display:block; width:100%; margin-top:10px; padding:12px; border-radius:8px; border:3px solid var(--line); background:var(--gold); color:var(--ink); font-family:inherit; font-weight:700; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.4px; cursor:pointer; box-shadow:var(--shadow-hard-sm); }
   .promo-offer button:disabled{ opacity:0.5; cursor:not-allowed; }
 </style>
+<script>
+// Fila virtual: para comprar hay que pasar primero por la fila (fila.html). El pase dura 30 minutos en esta pestaña.
+(function () {
+  var pass = 0;
+  try { pass = parseInt(sessionStorage.getItem("sky_queue_pass") || "0", 10) || 0; } catch (e) { return; }   // sin almacenamiento: no se bloquea la compra
+  if (pass && Date.now() - pass < 30 * 60000) return;
+  window.__skyRedirecting = true;
+  window.__skyRedirectTo = "fila.html?ir=" + encodeURIComponent("comprar.html" + window.location.search);
+  window.location.replace(window.__skyRedirectTo);
+})();
+</script>
 <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 </head>
 <body>
@@ -451,20 +462,20 @@
         </label>
       </div>
 
-      <button type="button" id="pay-btn" class="pay-btn">Continuar al pago</button>
+      <button type="button" id="pay-btn" class="pay-btn">Pagar con Bold</button>
       <div id="msg" class="msg"></div>
     </div>
   </div>
 
   <p class="footnote">
-    Al continuar entrarás a una fila virtual de unos 30 segundos antes de pagar.
-    <br>Tu compra se confirma automáticamente en cuanto Bold apruebe el pago.
+    Tu compra se confirma automáticamente en cuanto Bold apruebe el pago.
     <br>Al finalizar, escríbenos por WhatsApp y te enviamos tu boleta.
   </p>
 </div>
 
 <script>
 (function () {
+  if (window.__skyRedirecting) return;   // se está yendo a la fila: no cargar nada de la compra
   var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
 
   var PRICES = {
@@ -901,7 +912,7 @@
   function setPaying(state) {
     paying = state;
     payBtn.disabled = state;
-    payBtn.textContent = state ? "Entrando a la fila virtual…" : "Continuar al pago";
+    payBtn.textContent = state ? "Preparando tu pago…" : "Pagar con Bold";
   }
 
   function boldReady() {
@@ -916,25 +927,71 @@
     });
   }
 
-  // Pagar: se guarda lo elegido y se pasa a la FILA VIRTUAL (fila.html). Allí se espera el turno y se hace el pago.
   payBtn.addEventListener("click", function () {
     if (paying) return;
     clearMsg();
     if (!validateForm()) return;
 
     var buyer = currentBuyer();
-    var job = {
-      endpoint: product === "general" ? "/create-order" : "/vip-order",
-      body: product === "general" ? buyer : vipBody(buyer),
-      buyer: buyer, product: product, label: productLabel(buyer) + " x" + buyer.quantity, total: totalPriceEl.textContent, at: Date.now()
-    };
-    try { sessionStorage.setItem("sky_queue_job", JSON.stringify(job)); }
-    catch (e) { showMsg("Tu navegador no permite continuar (el almacenamiento está bloqueado). Sal del modo privado e intenta de nuevo."); return; }
-    saveDraft();
     setPaying(true);
-    window.location.href = "fila.html";
+
+    fetch(FUNCTIONS_BASE + (product === "general" ? "/create-order" : "/vip-order"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product === "general" ? buyer : vipBody(buyer))
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (res) {
+        // Su pago anterior ya estaba aprobado: se le llevan sus boletas en vez de cobrarle de nuevo.
+        if (res.data && res.data.already_paid) {
+          showMsg("¡Tu pago anterior ya estaba aprobado! Te llevamos a tus boletas…", "loading");
+          window.location.href = "confirmacion.html?bold-order-id=" + encodeURIComponent(res.data.order_id);
+          return new Promise(function () {});
+        }
+        // Su pago anterior sigue en proceso con el banco: que no pague otra vez.
+        if (!res.ok && res.data && res.data.processing) {
+          showProcessing(res.data.error, res.data.order_id);
+          setPaying(false);
+          return new Promise(function () {});
+        }
+        if (!res.ok) {
+          throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
+        }
+        return boldReady().then(function () { return res.data; }, function () {
+          throw new Error("No se pudo cargar la pasarela de Bold. Revisa tu conexión o desactiva el bloqueador de anuncios e intenta de nuevo.");
+        });
+      })
+      .then(function (d) {
+        rememberOrder(d.order_id, buyer);
+        var checkout = new window.BoldCheckout({
+          orderId: d.order_id,
+          currency: d.currency,
+          amount: String(d.amount),
+          apiKey: d.api_key,
+          integritySignature: d.integrity_signature,
+          description: d.description,
+          redirectionUrl: d.redirection_url,
+          customerData: JSON.stringify({
+            email: buyer.email,
+            fullName: buyer.full_name,
+            phone: buyer.phone.replace(/\D/g, ""),
+            dialCode: "+57",
+            documentNumber: buyer.document_id.replace(/\D/g, ""),
+            documentType: "CC"
+          })
+        });
+        showMsg("Abriendo la pasarela de Bold…", "loading");
+        checkout.open();
+        setTimeout(function () { setPaying(false); clearMsg(); }, 4000);
+      })
+      .catch(function (err) {
+        setPaying(false);
+        if (product !== "general") loadAvailability();   // por si se agotó mientras compraba
+        showMsg(err && err.message && err.message !== "Failed to fetch"
+          ? err.message
+          : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
+      });
   });
-  window.addEventListener("pageshow", function () { setPaying(false); });   // si vuelve atrás desde la fila
 
 
   // ---------- Memoria del proceso de compra (sobrevive a recargar la página) ----------
