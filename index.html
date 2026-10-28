@@ -632,6 +632,18 @@
   .parking-body small{ display:block; margin-top:8px; color:var(--gold-pale); text-transform:uppercase; letter-spacing:0.5px; font-size:0.8rem; font-weight:600; }
   .parking-data{ max-width:620px; margin:26px auto 0; text-align:center; color:var(--smoke); font-size:0.95rem; }
   .parking-data strong{ color:var(--gold); }
+
+  /* ---------- Promo 3x2 ---------- */
+  .promo-3x2.hidden{ display:none; }
+  .promo-strip{ background:var(--gold); color:var(--ink); border:3px solid var(--line); border-radius:var(--radius-panel); box-shadow:var(--shadow-hard); text-align:center; padding:14px 18px; margin:0 auto 26px; max-width:760px; font-weight:700; }
+  .promo-strip.hidden{ display:none; }
+  .promo-strip b{ font-family:'Eurostile Extended','Michroma',sans-serif; text-transform:uppercase; letter-spacing:0.5px; }
+  .badge-3x2{ float:right; background:var(--ink); color:var(--gold); font-size:0.8rem; letter-spacing:1px; padding:3px 12px; border-radius:999px; border:2px solid var(--line); }
+  .promo-3x2{ background:var(--gold); color:var(--ink); border-bottom:4px solid var(--line); text-align:center; padding:16px 20px; }
+  .promo-3x2 .p3-title{ font-family:'Eurostile Extended','Michroma',sans-serif; font-size:clamp(1.3rem,4.5vw,2rem); text-transform:uppercase; letter-spacing:1px; line-height:1.05; }
+  .promo-3x2 .p3-sub{ margin-top:6px; font-weight:700; font-size:0.95rem; }
+  .promo-3x2 .p3-end{ display:inline-block; margin-top:8px; background:var(--ink); color:var(--gold); padding:4px 14px; border-radius:6px; font-size:0.82rem; letter-spacing:0.5px; text-transform:uppercase; font-weight:700; }
+  .promo-3x2 .btn{ margin-top:12px; background:var(--ink); color:var(--gold); }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -699,6 +711,13 @@ fbq('track', 'PageView');
 
   <div class="city-wrap"><img class="city" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/3.webp" alt="" decoding="async"></div>
 </header>
+
+<div class="promo-3x2 hidden" id="promo3x2" role="region" aria-label="Promoción 3x2">
+  <div class="p3-title">🎉 Promo 3x2 · Lleva 3 y paga 2</div>
+  <div class="p3-sub">En todas las boletas (generales y VIP, de 1 y 2 días) · no aplica a Vice Experience</div>
+  <div class="p3-end" id="promo3x2End"></div><br>
+  <a href="#boletas" class="btn">Aprovechar la promo</a>
+</div>
 
 <div class="countdown-bar">
   <div class="container countdown-row">
@@ -776,6 +795,8 @@ fbq('track', 'PageView');
       <h2 style="color:var(--bone)">Boletería</h2>
       <p>Los precios suben en cada etapa, compra antes y paga menos.</p>
     </div>
+
+    <div class="promo-strip hidden" id="promoStrip" role="status"></div>
 
     <div class="price-panels">
 
@@ -1121,6 +1142,41 @@ fbq('track', 'PageView');
       var f = function (n) { return "$" + Number(n).toLocaleString("es-CO"); };
       if (p.carro) document.getElementById("pkCarro").textContent = f(p.carro);
       if (p.moto) document.getElementById("pkMoto").textContent = f(p.moto);
+    }).catch(function () {});
+})();
+</script>
+
+<script>
+// Promo 3x2: el cartel, la franja de boletas y las etiquetas solo aparecen mientras el servidor diga que la promo está vigente.
+(function () {
+  fetch("https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/vip-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" }) })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (d) {
+      var p = d && d.promo; if (!p || !p.active) return;
+      var g = p.group || 3, paid = p.paid || 2, label = "", today = false;
+      try {
+        var opts = { timeZone: "America/Bogota" }, end = new Date(p.ends_at);
+        today = end.toLocaleDateString("es-CO", opts) === new Date().toLocaleDateString("es-CO", opts);
+        label = end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" });
+      } catch (e) {}
+      var when = today ? "Solo por hoy" : (label ? "Válida hasta el " + label : "Por tiempo limitado");
+      var title = "🎉 Promo " + g + "x" + paid + " · Lleva " + g + " y paga " + paid;
+      var banner = document.getElementById("promo3x2");
+      banner.querySelector(".p3-title").textContent = title;
+      document.getElementById("promo3x2End").textContent = when;
+      banner.classList.remove("hidden");
+      var strip = document.getElementById("promoStrip");
+      if (strip) {
+        strip.innerHTML = "";
+        var b = document.createElement("b"); b.textContent = g + "x" + paid + " en todas las etapas · " + when.toLowerCase();
+        strip.appendChild(b);
+        strip.appendChild(document.createElement("br"));
+        strip.appendChild(document.createTextNode("Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience."));
+        strip.classList.remove("hidden");
+      }
+      document.querySelectorAll("#boletas .price-panel:not(.vice-card) .price-panel-head").forEach(function (h) {
+        var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = g + "x" + paid; h.appendChild(s);
+      });
     }).catch(function () {});
 })();
 </script>
