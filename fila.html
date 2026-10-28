@@ -385,8 +385,8 @@
 
 <script>
 (function () {
-  var DURATION = 60000;              // la fila dura 1 minuto (mínimo)
-  var MIN_START = 15, MAX_START = 30; // posición inicial al azar entre 15 y 30
+  var DURATION = 135000;             // la fila dura 2 minutos y 15 segundos
+  var MIN_START = 30, MAX_START = 60; // posición inicial al azar entre 30 y 60
   var $ = function (id) { return document.getElementById(id); };
 
   // A dónde ir cuando llegue el turno: siempre una página de compra del mismo sitio (nunca un enlace externo).
@@ -403,11 +403,11 @@
   sum.appendChild(document.createTextNode("Vas a comprar: "));
   var b1 = document.createElement("b"); b1.textContent = label; sum.appendChild(b1);
 
-  // ---------- La fila: sale de un número al azar (15–30) y baja hasta 0 en 1 minuto ----------
+  // ---------- La fila: sale de un número al azar (30–60) y baja hasta 0 en 2 min 15 s ----------
   var start = MIN_START + Math.floor(Math.random() * (MAX_START - MIN_START + 1));
   var times = [];                                         // cuándo baja cada puesto (en ms desde que entró)
   for (var i = 0; i < start - 1; i++) times.push(500 + Math.random() * (DURATION - 500));   // ninguno baja antes de 0,5 s
-  times.push(DURATION);                                   // el último puesto baja justo al minuto
+  times.push(DURATION);                                   // el último puesto baja justo al final (2 min 15 s)
   times.sort(function (a, b) { return a - b; });
   var t0 = Date.now(), ready = false;
   var pos = $("q-pos"), btn = $("go-btn");
