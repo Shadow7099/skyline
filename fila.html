@@ -358,13 +358,12 @@
   .q-hint{ margin-top:14px; font-size:0.82rem; color:rgba(244,236,219,0.6); }
   .pay-btn:disabled{ opacity:0.55; cursor:not-allowed; }
 </style>
-<script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 </head>
 <body>
 
 <div class="topbar">
   <div class="container">
-    <a class="back-link" href="comprar.html">&larr; Volver y editar mi compra</a>
+    <a class="back-link" href="/index.html#boletas">&larr; Volver a boletería</a>
   </div>
 </div>
 
@@ -377,14 +376,13 @@
   <div class="panel">
     <div class="panel-head" id="q-head">Estás en la fila</div>
     <div class="panel-body queue">
-      <p class="q-sub" id="q-sub">Cuando tu posición llegue a 0 podrás hacer el pago.</p>
+      <p class="q-sub" id="q-sub">Cuando tu posición llegue a 0 podrás comprar tus boletas.</p>
       <div class="q-label">Tu posición en la fila</div>
       <div class="q-pos" id="q-pos">—</div>
       <div class="q-bar" id="q-bar" role="progressbar" aria-label="Avance de la fila" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="q-fill" id="q-fill"></div></div>
       <div class="q-pct" id="q-pct">0%</div>
       <div class="q-summary" id="q-summary"></div>
       <button type="button" id="go-btn" class="pay-btn" disabled>Espera tu turno…</button>
-      <div id="msg" class="msg"></div>
       <p class="q-hint">No cierres ni recargues esta página: si lo haces, vuelves a empezar la fila.</p>
     </div>
   </div>
@@ -393,21 +391,23 @@
 
 <script>
 (function () {
-  var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
   var DURATION = 30000;              // la fila dura 30 segundos
   var MIN_START = 15, MAX_START = 30; // posición inicial al azar entre 15 y 30
   var $ = function (id) { return document.getElementById(id); };
 
-  // Lo que eligió en la página de compra
-  var job = null;
-  try { job = JSON.parse(sessionStorage.getItem("sky_queue_job") || "null"); } catch (e) { job = null; }
-  if (!job || !job.endpoint || !job.body || Date.now() - (job.at || 0) > 30 * 60000) { window.location.replace("comprar.html"); return; }
+  // A dónde ir cuando llegue el turno: siempre una página de compra del mismo sitio (nunca un enlace externo).
+  var raw = new URLSearchParams(window.location.search).get("ir") || "comprar.html";
+  var target = /^comprar\.html(\?[A-Za-z0-9_=&%.\-]*)?$/.test(raw) ? raw : "comprar.html";
 
-  // ---------- Resumen ----------
+  // Qué va a comprar (solo para mostrarlo)
+  var tp = new URLSearchParams(target.indexOf("?") >= 0 ? target.slice(target.indexOf("?")) : "");
+  var producto = tp.get("producto"), tipo = tp.get("tipo");
+  var label = producto === "vice" ? "Vice Experience"
+    : producto === "vip" ? (tipo === "1-dia" ? "VIP 1 día" : tipo === "2-dias" ? "VIP 2 días" : "VIP")
+    : (tipo === "1-dia" ? "Acceso 1 día" : tipo === "2-dias" ? "Acceso 2 días" : "Boletas");
   var sum = $("q-summary");
-  sum.appendChild(document.createTextNode("Tu compra: "));
-  var b1 = document.createElement("b"); b1.textContent = job.label || "Boletas"; sum.appendChild(b1);
-  if (job.total) { sum.appendChild(document.createTextNode(" · Total a pagar: ")); var b2 = document.createElement("b"); b2.textContent = job.total; sum.appendChild(b2); }
+  sum.appendChild(document.createTextNode("Vas a comprar: "));
+  var b1 = document.createElement("b"); b1.textContent = label; sum.appendChild(b1);
 
   // ---------- La fila: sale de un número al azar (15–30) y baja hasta 0 en 30 segundos ----------
   var start = MIN_START + Math.floor(Math.random() * (MAX_START - MIN_START + 1));
@@ -415,8 +415,9 @@
   for (var i = 0; i < start - 1; i++) times.push(500 + Math.random() * (DURATION - 500));   // ninguno baja antes de 0,5 s
   times.push(DURATION);                                   // el último puesto baja justo a los 30 s
   times.sort(function (a, b) { return a - b; });
-  var t0 = Date.now(), ready = false, busy = false;
+  var t0 = Date.now(), ready = false;
   var pos = $("q-pos"), fill = $("q-fill"), pct = $("q-pct"), bar = $("q-bar"), btn = $("go-btn");
+  btn.setAttribute("data-target", target);
 
   function positionAt(elapsed) { var gone = 0; while (gone < times.length && times[gone] <= elapsed) gone++; return start - gone; }
   function tick() {
@@ -427,80 +428,24 @@
     bar.setAttribute("aria-valuenow", String(perc));
     if (p <= 0 && !ready) finish();
   }
+  // El "pase": la página de compra solo abre si se pasó por la fila en los últimos 30 minutos (en esta pestaña).
+  function grantPass() { try { sessionStorage.setItem("sky_queue_pass", String(Date.now())); } catch (e) {} }
   function finish() {
-    ready = true; clearInterval(timer);
+    ready = true; clearInterval(timer); grantPass();
     pos.textContent = "0"; pos.className = "q-pos go"; fill.style.width = "100%"; fill.className = "q-fill done"; pct.textContent = "100%"; bar.setAttribute("aria-valuenow", "100");
-    $("q-head").textContent = "¡Es tu turno!"; $("q-sub").textContent = "Ya puedes hacer el pago.";
-    btn.disabled = false; btn.textContent = "Pagar ahora"; try { btn.focus(); } catch (e) {}
+    $("q-head").textContent = "¡Es tu turno!"; $("q-sub").textContent = "Ya puedes comprar tus boletas.";
+    btn.disabled = false; btn.textContent = "Ir a comprar mis boletas"; try { btn.focus(); } catch (e) {}
   }
   var timer = setInterval(tick, 100);
   tick();
 
-  // ---------- Pago (igual que antes, pero ahora al llegar al turno) ----------
-  var msg = $("msg");
-  function showMsg(text, type) { msg.textContent = text; msg.className = "msg " + (type || "error"); }
-  function clearMsg() { msg.className = "msg"; msg.textContent = ""; }
-  function addLink(text, href) {
-    var a = document.createElement("a"); a.href = href; a.textContent = text; a.style.textDecoration = "underline"; a.style.fontWeight = "700"; a.style.color = "inherit";
-    msg.appendChild(document.createTextNode(" ")); msg.appendChild(a);
-  }
-  function boldReady() {
-    return new Promise(function (resolve, reject) {
-      if (window.BoldCheckout) { resolve(); return; }
-      var tries = 0, t = setInterval(function () { tries++; if (window.BoldCheckout) { clearInterval(t); resolve(); } else if (tries > 50) { clearInterval(t); reject(new Error("bold_not_loaded")); } }, 100);
-    });
-  }
-  function rememberOrder(orderId) {
-    try {
-      var list = JSON.parse(localStorage.getItem("sky_orders") || "[]").filter(function (o) { return o.id !== orderId; });
-      list.unshift({ id: orderId, at: Date.now(), label: job.label, name: job.buyer && job.buyer.full_name });
-      localStorage.setItem("sky_orders", JSON.stringify(list.slice(0, 10)));
-    } catch (e) {}
-  }
-  function release() { busy = false; btn.disabled = false; btn.textContent = "Pagar ahora"; }
-
   btn.addEventListener("click", function () {
-    if (!ready || busy) return;
-    busy = true; btn.disabled = true; btn.textContent = "Preparando tu pago…"; clearMsg();
-    fetch(FUNCTIONS_BASE + job.endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(job.body) })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (data) { return { ok: r.ok, data: data }; }); })
-      .then(function (res) {
-        // Su pago anterior ya estaba aprobado: se le llevan sus boletas en vez de cobrarle de nuevo.
-        if (res.data && res.data.already_paid) {
-          showMsg("¡Tu pago anterior ya estaba aprobado! Te llevamos a tus boletas…", "loading");
-          window.location.href = "confirmacion.html?bold-order-id=" + encodeURIComponent(res.data.order_id);
-          return new Promise(function () {});
-        }
-        // Su pago anterior sigue en proceso con el banco: que no pague otra vez.
-        if (!res.ok && res.data && res.data.processing) {
-          showMsg(res.data.error + " ", "loading"); addLink("Ver el estado de mi pago", "confirmacion.html?bold-order-id=" + encodeURIComponent(res.data.order_id));
-          release(); return new Promise(function () {});
-        }
-        if (!res.ok) throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
-        return boldReady().then(function () { return res.data; }, function () {
-          throw new Error("No se pudo cargar la pasarela de Bold. Revisa tu conexión o desactiva el bloqueador de anuncios e intenta de nuevo.");
-        });
-      })
-      .then(function (d) {
-        rememberOrder(d.order_id);
-        var buyer = job.buyer || {};
-        var checkout = new window.BoldCheckout({
-          orderId: d.order_id, currency: d.currency, amount: String(d.amount), apiKey: d.api_key, integritySignature: d.integrity_signature,
-          description: d.description, redirectionUrl: d.redirection_url,
-          customerData: JSON.stringify({ email: buyer.email, fullName: buyer.full_name, phone: String(buyer.phone || "").replace(/\D/g, ""), dialCode: "+57", documentNumber: String(buyer.document_id || "").replace(/\D/g, ""), documentType: "CC" })
-        });
-        showMsg("Abriendo la pasarela de Bold…", "loading");
-        checkout.open();
-        setTimeout(function () { release(); clearMsg(); }, 4000);
-      })
-      .catch(function (err) {
-        release();
-        showMsg(err && err.message && err.message !== "Failed to fetch" ? err.message : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
-        addLink("Volver a mi compra", "comprar.html");
-      });
+    if (!ready) return;
+    grantPass();
+    btn.disabled = true; btn.textContent = "Abriendo la compra…";
+    window.location.href = target;
   });
 })();
 </script>
 </body>
 </html>
-
