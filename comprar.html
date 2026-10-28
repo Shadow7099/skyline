@@ -446,13 +446,14 @@
         </label>
       </div>
 
-      <button type="button" id="pay-btn" class="pay-btn">Pagar con Bold</button>
+      <button type="button" id="pay-btn" class="pay-btn">Continuar al pago</button>
       <div id="msg" class="msg"></div>
     </div>
   </div>
 
   <p class="footnote">
-    Tu compra se confirma automáticamente en cuanto Bold apruebe el pago.
+    Al continuar entrarás a una fila virtual de unos 30 segundos antes de pagar.
+    <br>Tu compra se confirma automáticamente en cuanto Bold apruebe el pago.
     <br>Al finalizar, escríbenos por WhatsApp y te enviamos tu boleta.
   </p>
 </div>
@@ -462,8 +463,8 @@
   var FUNCTIONS_BASE = "https://kyaegqllwjihaoudazoh.supabase.co/functions/v1";
 
   var PRICES = {
-    "2-dias": { label: "Acceso 2 días", price: 55000, stage: "Etapa 2" },
-    "1-dia":  { label: "Acceso 1 día",  price: 35000, stage: "Etapa 2" }
+    "2-dias": { label: "Acceso 2 días", price: 65000, stage: "Etapa 3" },
+    "1-dia":  { label: "Acceso 1 día",  price: 40000, stage: "Etapa 3" }
   };
 
   var params = new URLSearchParams(window.location.search);
@@ -537,31 +538,57 @@
     var tier = product === "vip" ? "vip" : product === "vice" ? "vice" : "general";
     return !!(PROMO && PROMO.active && PROMO.tiers && PROMO.tiers.indexOf(tier) >= 0);
   }
-  function promoFree() {
-    if (!promoApplies()) return 0;
-    var g = PROMO.group || 3, p = PROMO.paid || 2;
-    return Math.max(0, Math.min(Math.floor(qty / g) * (g - p), qty - 1));
+  // Promo de la NOCHE elegida (boletas de 1 día, generales o VIP): viene de promo.nights en el servidor.
+  function nightPromo() {
+    if (product === "vice" || accessSelect.value !== "1-dia") return null;
+    var np = PROMO && PROMO.nights && PROMO.nights[nightSel.value];
+    var tier = product === "vip" ? "vip" : "general";
+    return np && (!np.tiers || np.tiers.indexOf(tier) >= 0) ? np : null;
   }
-  function promoEnds() {   // "solo por hoy" si cierra hoy; si no, "hasta el miércoles, 28 de octubre"
+  // Mejor regla aplicable ahora: la del día de compra o la de la noche (si empatan, la de la noche)
+  function promoRule() {
+    var rules = [];
+    if (promoApplies()) rules.push({ g: PROMO.group || 3, p: PROMO.paid || 2, ends: PROMO.ends_at, kind: "dia" });
+    var np = nightPromo(); if (np) rules.push({ g: np.group || 3, p: np.paid || 2, ends: np.ends_at, kind: "noche" });
+    if (!rules.length) return null;
+    rules.sort(function (x, y) {
+      var fx = Math.floor(qty / x.g) * (x.g - x.p), fy = Math.floor(qty / y.g) * (y.g - y.p);
+      return fy !== fx ? fy - fx : (x.kind === "noche" ? -1 : 1);
+    });
+    return rules[0];
+  }
+  function promoFree() {
+    var r = promoRule(); if (!r) return 0;
+    return Math.max(0, Math.min(Math.floor(qty / r.g) * (r.g - r.p), qty - 1));
+  }
+  function promoEnds(iso) {   // "solo por hoy" si cierra hoy; si no, "hasta el viernes, 30 de octubre"
     try {
-      var o = { timeZone: "America/Bogota" }, end = new Date(PROMO.ends_at);
+      var o = { timeZone: "America/Bogota" }, end = new Date(iso);
       if (end.toLocaleDateString("es-CO", o) === new Date().toLocaleDateString("es-CO", o)) return "solo por hoy";
       return "hasta el " + end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" });
     } catch (e) { return ""; }
   }
+  function weekdayOf(night) {
+    try { return new Date(night + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return night; }
+  }
   function renderPromo(unit, free) {
     var row = document.getElementById("row-promo"), note = document.getElementById("promo-note");
     if (!row || !note) return;
-    var show = promoApplies(), g = (PROMO && PROMO.group) || 3, p = (PROMO && PROMO.paid) || 2, t = "";
-    row.classList.toggle("hidden", !(show && free > 0 && unit != null));
-    if (show && free > 0 && unit != null) {
-      document.getElementById("promo-label").textContent = "Promo " + g + "x" + p + " · " + free + (free === 1 ? " boleta gratis" : " boletas gratis");
-      document.getElementById("promo-amount").textContent = "−" + money(unit * free);
-    }
-    if (show) {
+    var rule = promoRule(), t = "";
+    row.classList.toggle("hidden", !(rule && free > 0 && unit != null));
+    if (rule) {
+      var g = rule.g, p = rule.p;
+      if (free > 0 && unit != null) {
+        document.getElementById("promo-label").textContent = "Promo " + g + "x" + p + " · " + free + (free === 1 ? " boleta gratis" : " boletas gratis");
+        document.getElementById("promo-amount").textContent = "−" + money(unit * free);
+      }
       t = free > 0 ? "🎉 ¡Promo " + g + "x" + p + " aplicada! " + free + (free === 1 ? " boleta gratis." : " boletas gratis.")
-                   : "🎉 Promo " + g + "x" + p + ": lleva " + g + " y paga " + p + (promoEnds() ? " · válida " + promoEnds() : "") + ".";
+                   : "🎉 Promo " + g + "x" + p + ": lleva " + g + " y paga " + p + (promoEnds(rule.ends) ? " · válida " + promoEnds(rule.ends) : "") + ".";
       if (qty % g === g - 1) t += " Agrega 1 boleta más y llévate otra gratis.";
+    } else if (PROMO && PROMO.nights && product !== "vice" && accessSelect.value === "1-dia" && !nightSel.value) {
+      // Hay promos por noche pero todavía no eligió la noche: se las mostramos
+      var list = Object.keys(PROMO.nights).sort().map(function (n) { return weekdayOf(n) + " " + PROMO.nights[n].group + "x" + PROMO.nights[n].paid; });
+      if (list.length) t = "🎉 Promos por noche: " + list.join(" · ") + ". Elige la noche para ver tu descuento.";
     }
     note.textContent = t; note.classList.toggle("hidden", !t);
   }
@@ -629,15 +656,19 @@
     var prev = nightSel.value || wantedNight;
     nightSel.innerHTML = "";
     var ph = document.createElement("option"); ph.value = ""; ph.textContent = "Elige la noche"; nightSel.appendChild(ph);
-    ((AV && AV.nights) || []).forEach(function (n) {
+    var NIGHTS_FALLBACK = [{ night: "2026-10-30", label: "Viernes 30 de octubre" }, { night: "2026-10-31", label: "Sábado 31 de octubre" }];
+    ((AV && AV.nights && AV.nights.length ? AV.nights : NIGHTS_FALLBACK)).forEach(function (n) {
       var o = document.createElement("option"), t = n.label;
+      var np = PROMO && PROMO.nights && PROMO.nights[n.night];
       if (product === "vice") {
         var rem = (AV.vice.remaining || {})[n.night] || 0;
         t += rem > 0 ? " · quedan " + rem : " · agotado"; o.disabled = rem <= 0;
-      } else {
+      } else if (product === "vip") {
         var v = vipOneDay(n.night);
-        if (v && v.ok) t += " · " + pesos(v.price) + " (" + v.stage + ") · quedan " + v.remaining;
+        if (v && v.ok) t += " · " + pesos(v.price) + " (" + v.stage + ") · quedan " + v.remaining + (np && (!np.tiers || np.tiers.indexOf("vip") >= 0) ? " · Promo " + np.group + "x" + np.paid : "");
         else { t += " · agotado"; o.disabled = true; }
+      } else if (np && (!np.tiers || np.tiers.indexOf("general") >= 0)) {
+        t += " · Promo " + np.group + "x" + np.paid;
       }
       o.value = n.night; o.textContent = t; nightSel.appendChild(o);
     });
@@ -669,11 +700,13 @@
   function renderProduct() {
     var vipMode = product === "vip" || product === "vice";
     accessWrap.classList.toggle("hidden", product === "vice");
-    nightWrap.classList.toggle("hidden", !(product === "vice" || (product === "vip" && accessSelect.value === "1-dia")));
     drinksWrap.classList.toggle("hidden", product !== "vice");
     prodNote.textContent = NOTES[product] || ""; prodNote.classList.toggle("hidden", !NOTES[product]);
     renderOptions();
-    if (vipMode && AV) renderNights();
+    // La noche se elige en las boletas de 1 día (generales y VIP) y en Vice Experience; las de 2 días valen las dos noches.
+    var needNight = product === "vice" || accessSelect.value === "1-dia";
+    nightWrap.classList.toggle("hidden", !needNight);
+    if (needNight && (!vipMode || AV)) renderNights();
     renderTotals();
   }
   function loadAvailability() {
@@ -792,7 +825,8 @@
       document_id: document.getElementById("document_id").value.trim(),
       email: document.getElementById("email").value.trim(),
       phone: document.getElementById("phone").value.trim(),
-      promo_code: promo ? promo.code : ""
+      promo_code: promo ? promo.code : "",
+      night: product === "general" && accessSelect.value === "1-dia" ? nightSel.value : ""
     };
   }
 
@@ -808,6 +842,7 @@
         for (var i = 0; i < qty; i++) if (!drinks[i]) { showMsg("Elige Red Bull o agua para la persona " + (i + 1) + "."); return false; }
       }
     }
+    if (product === "general" && accessSelect.value === "1-dia" && !nightSel.value) { showMsg("Elige la noche (viernes 30 o sábado 31)."); return false; }
     if (!buyer.full_name) { showMsg("Por favor ingresa tu nombre completo."); return false; }
     if (!buyer.document_id) { showMsg("Por favor ingresa tu número de documento."); return false; }
     if (!buyer.email) { showMsg("Por favor ingresa tu correo electrónico."); return false; }
@@ -832,7 +867,7 @@
   function setPaying(state) {
     paying = state;
     payBtn.disabled = state;
-    payBtn.textContent = state ? "Preparando tu pago…" : "Pagar con Bold";
+    payBtn.textContent = state ? "Entrando a la fila virtual…" : "Continuar al pago";
   }
 
   function boldReady() {
@@ -847,71 +882,25 @@
     });
   }
 
+  // Pagar: se guarda lo elegido y se pasa a la FILA VIRTUAL (fila.html). Allí se espera el turno y se hace el pago.
   payBtn.addEventListener("click", function () {
     if (paying) return;
     clearMsg();
     if (!validateForm()) return;
 
     var buyer = currentBuyer();
+    var job = {
+      endpoint: product === "general" ? "/create-order" : "/vip-order",
+      body: product === "general" ? buyer : vipBody(buyer),
+      buyer: buyer, product: product, label: productLabel(buyer) + " x" + buyer.quantity, total: totalPriceEl.textContent, at: Date.now()
+    };
+    try { sessionStorage.setItem("sky_queue_job", JSON.stringify(job)); }
+    catch (e) { showMsg("Tu navegador no permite continuar (el almacenamiento está bloqueado). Sal del modo privado e intenta de nuevo."); return; }
+    saveDraft();
     setPaying(true);
-
-    fetch(FUNCTIONS_BASE + (product === "general" ? "/create-order" : "/vip-order"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(product === "general" ? buyer : vipBody(buyer))
-    })
-      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-      .then(function (res) {
-        // Su pago anterior ya estaba aprobado: se le llevan sus boletas en vez de cobrarle de nuevo.
-        if (res.data && res.data.already_paid) {
-          showMsg("¡Tu pago anterior ya estaba aprobado! Te llevamos a tus boletas…", "loading");
-          window.location.href = "confirmacion.html?bold-order-id=" + encodeURIComponent(res.data.order_id);
-          return new Promise(function () {});
-        }
-        // Su pago anterior sigue en proceso con el banco: que no pague otra vez.
-        if (!res.ok && res.data && res.data.processing) {
-          showProcessing(res.data.error, res.data.order_id);
-          setPaying(false);
-          return new Promise(function () {});
-        }
-        if (!res.ok) {
-          throw new Error(res.data && res.data.error ? res.data.error : "No pudimos preparar tu pago. Revisa los datos e intenta de nuevo.");
-        }
-        return boldReady().then(function () { return res.data; }, function () {
-          throw new Error("No se pudo cargar la pasarela de Bold. Revisa tu conexión o desactiva el bloqueador de anuncios e intenta de nuevo.");
-        });
-      })
-      .then(function (d) {
-        rememberOrder(d.order_id, buyer);
-        var checkout = new window.BoldCheckout({
-          orderId: d.order_id,
-          currency: d.currency,
-          amount: String(d.amount),
-          apiKey: d.api_key,
-          integritySignature: d.integrity_signature,
-          description: d.description,
-          redirectionUrl: d.redirection_url,
-          customerData: JSON.stringify({
-            email: buyer.email,
-            fullName: buyer.full_name,
-            phone: buyer.phone.replace(/\D/g, ""),
-            dialCode: "+57",
-            documentNumber: buyer.document_id.replace(/\D/g, ""),
-            documentType: "CC"
-          })
-        });
-        showMsg("Abriendo la pasarela de Bold…", "loading");
-        checkout.open();
-        setTimeout(function () { setPaying(false); clearMsg(); }, 4000);
-      })
-      .catch(function (err) {
-        setPaying(false);
-        if (product !== "general") loadAvailability();   // por si se agotó mientras compraba
-        showMsg(err && err.message && err.message !== "Failed to fetch"
-          ? err.message
-          : "No pudimos conectar con el servidor de pagos. Intenta de nuevo.");
-      });
+    window.location.href = "fila.html";
   });
+  window.addEventListener("pageshow", function () { setPaying(false); });   // si vuelve atrás desde la fila
 
 
   // ---------- Memoria del proceso de compra (sobrevive a recargar la página) ----------
