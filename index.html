@@ -811,12 +811,12 @@ fbq('track', 'PageView');
             <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$45.000</div>
           </div>
-          <div class="price-row active">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Etapa activa ahora</span></div>
+          <div class="price-row sold-out">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$55.000</div>
           </div>
-          <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Próxima etapa</span></div>
+          <div class="price-row active">
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span></div>
             <div class="amount">$65.000</div>
           </div>
         </div>
@@ -836,12 +836,12 @@ fbq('track', 'PageView');
             <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$30.000</div>
           </div>
-          <div class="price-row active">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Etapa activa ahora</span></div>
+          <div class="price-row sold-out">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag">Agotada</span></div>
             <div class="amount">$35.000</div>
           </div>
-          <div class="price-row">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Próxima etapa</span></div>
+          <div class="price-row active">
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span></div>
             <div class="amount">$40.000</div>
           </div>
         </div>
@@ -868,12 +868,12 @@ fbq('track', 'PageView');
             <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Agotada</span></div>
             <div class="amount" data-amount>$80.000</div>
           </div>
-          <div class="price-row active" data-stage="Etapa 2">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+          <div class="price-row sold-out" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Agotada</span></div>
             <div class="amount" data-amount>$90.000</div>
           </div>
-          <div class="price-row" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+          <div class="price-row active" data-stage="Etapa 3">
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
             <div class="amount" data-amount>$100.000</div>
           </div>
         </div>
@@ -891,12 +891,12 @@ fbq('track', 'PageView');
             <div class="stage"><span class="stage-name">Etapa 1</span><span class="stage-tag" data-tag>Agotada</span></div>
             <div class="amount" data-amount>$50.000</div>
           </div>
-          <div class="price-row active" data-stage="Etapa 2">
-            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+          <div class="price-row sold-out" data-stage="Etapa 2">
+            <div class="stage"><span class="stage-name">Etapa 2</span><span class="stage-tag" data-tag>Agotada</span></div>
             <div class="amount" data-amount>$60.000</div>
           </div>
-          <div class="price-row" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Próxima etapa</span></div>
+          <div class="price-row active" data-stage="Etapa 3">
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
             <div class="amount" data-amount>$70.000</div>
           </div>
         </div>
@@ -1147,36 +1147,52 @@ fbq('track', 'PageView');
 </script>
 
 <script>
-// Promo 3x2: el cartel, la franja de boletas y las etiquetas solo aparecen mientras el servidor diga que la promo está vigente.
+// Promos: el cartel, la franja de boletas y las etiquetas solo aparecen mientras el servidor diga que hay una promo vigente.
+//  - Promo del día de compra (ej. 3x2 en todas las boletas excepto Vice).
+//  - Promos por NOCHE (ej. viernes 3x2): aplican a las boletas de 1 día de esa noche; se elige la noche al comprar.
 (function () {
   fetch("https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/vip-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" }) })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function (d) {
-      var p = d && d.promo; if (!p || !p.active) return;
-      var g = p.group || 3, paid = p.paid || 2, label = "", today = false;
-      try {
-        var opts = { timeZone: "America/Bogota" }, end = new Date(p.ends_at);
-        today = end.toLocaleDateString("es-CO", opts) === new Date().toLocaleDateString("es-CO", opts);
-        label = end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" });
-      } catch (e) {}
-      var when = today ? "Solo por hoy" : (label ? "Válida hasta el " + label : "Por tiempo limitado");
-      var title = "🎉 Promo " + g + "x" + paid + " · Lleva " + g + " y paga " + paid;
-      var banner = document.getElementById("promo3x2");
+      var p = d && d.promo; if (!p) return;
+      var nights = p.nights || {}, nk = Object.keys(nights).sort();
+      if (!p.active && !nk.length) return;
+      var opts = { timeZone: "America/Bogota" };
+      function dayName(n) { try { return new Date(n + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return n; } }
+      var nightTxt = nk.map(function (n) { return dayName(n) + " " + nights[n].group + "x" + nights[n].paid; }).join(" · ");
+      var banner = document.getElementById("promo3x2"), strip = document.getElementById("promoStrip");
+      var title, when, sub, stripTxt, stripSub;
+      if (p.active) {
+        var g = p.group || 3, paid = p.paid || 2, label = "", today = false;
+        try { var end = new Date(p.ends_at); today = end.toLocaleDateString("es-CO", opts) === new Date().toLocaleDateString("es-CO", opts); label = end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
+        when = today ? "Solo por hoy" : (label ? "Válida hasta el " + label : "Por tiempo limitado");
+        title = "🎉 Promo " + g + "x" + paid + " · Lleva " + g + " y paga " + paid;
+        sub = "En todas las boletas (generales y VIP, de 1 y 2 días) · no aplica a Vice Experience";
+        stripTxt = g + "x" + paid + " en todas las etapas · " + when.toLowerCase();
+        stripSub = "Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience." + (nightTxt ? " Además, por noche: " + nightTxt + "." : "");
+      } else {
+        title = "🎉 Promos por noche · " + nightTxt;
+        when = "Elige la noche al comprar";
+        sub = "Boletas de 1 día (generales y VIP) · cada promo aplica a la noche que elijas · no aplica a Vice Experience";
+        stripTxt = "Promos por noche · " + nightTxt;
+        stripSub = "Elige la noche al comprar tu boleta de 1 día (general o VIP) y la promo de esa noche se aplica sola. No aplica a Vice Experience.";
+      }
       banner.querySelector(".p3-title").textContent = title;
+      banner.querySelector(".p3-sub").textContent = sub;
       document.getElementById("promo3x2End").textContent = when;
       banner.classList.remove("hidden");
-      var strip = document.getElementById("promoStrip");
       if (strip) {
         strip.innerHTML = "";
-        var b = document.createElement("b"); b.textContent = g + "x" + paid + " en todas las etapas · " + when.toLowerCase();
-        strip.appendChild(b);
-        strip.appendChild(document.createElement("br"));
-        strip.appendChild(document.createTextNode("Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience."));
+        var b = document.createElement("b"); b.textContent = stripTxt; strip.appendChild(b);
+        strip.appendChild(document.createElement("br")); strip.appendChild(document.createTextNode(stripSub));
         strip.classList.remove("hidden");
       }
-      document.querySelectorAll("#boletas .price-panel:not(.vice-card) .price-panel-head").forEach(function (h) {
-        var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = g + "x" + paid; h.appendChild(s);
-      });
+      if (p.active) {
+        var tag = (p.group || 3) + "x" + (p.paid || 2);
+        document.querySelectorAll("#boletas .price-panel:not(.vice-card) .price-panel-head").forEach(function (h) {
+          var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = tag; h.appendChild(s);
+        });
+      }
     }).catch(function () {});
 })();
 </script>
