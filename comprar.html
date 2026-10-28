@@ -339,6 +339,9 @@
   .drink-row{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
   .drink-row span{ min-width:92px; font-size:0.9rem; color:var(--gold-pale); font-weight:600; }
   .drink-row select{ flex:1; }
+
+  /* Promo 3x2 */
+  .promo-note{ margin-top:12px; padding:10px 12px; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--ink); background:var(--gold); border:2px solid var(--line); }
 </style>
 <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 </head>
@@ -390,6 +393,7 @@
         <span class="qty-val" id="qty-val">1</span>
         <button type="button" class="qty-btn" id="qty-plus" aria-label="Sumar">+</button>
       </div>
+      <div class="promo-note hidden" id="promo-note" role="status"></div>
       <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
@@ -409,6 +413,7 @@
         <div class="summary-row hidden" id="row-disc"><span>Descuento promotor</span><span class="amount-sm" id="disc-price">—</span></div>
         <div class="summary-row"><span>Precio unitario</span><span class="amount-sm" id="unit-price">—</span></div>
         <div class="summary-row"><span>Boletas</span><span class="amount-sm" id="qty-echo">1</span></div>
+        <div class="summary-row hidden" id="row-promo"><span id="promo-label">Promo 3x2</span><span class="amount-sm" id="promo-amount">—</span></div>
         <div class="summary-row total"><span class="label">Total a pagar</span><span class="amount" id="total-price">—</span></div>
       </div>
 
@@ -465,7 +470,7 @@
   var initialTipo = params.get("tipo") === "1-dia" ? "1-dia" : "2-dias";
   var initialProduct = ["vip", "vice"].indexOf(params.get("producto")) >= 0 ? params.get("producto") : "general";
   // VIP y Vice Experience: la disponibilidad (precios, etapas y cupos por noche) la manda el servidor.
-  var product = initialProduct, AV = null, wantedNight = params.get("noche") || "", drinks = [], preferredAccess = initialTipo;
+  var PROMO = null, product = initialProduct, AV = null, wantedNight = params.get("noche") || "", drinks = [], preferredAccess = initialTipo;
 
   // Promotor: el servidor confirma el código y el descuento; aquí solo se muestra.
   var promo = null;      // { code, name, discounts: { "1-dia": n, "2-dias": n } }
@@ -511,8 +516,10 @@
     document.getElementById("row-disc").classList.toggle("hidden", !showDisc);
     document.getElementById("list-price").textContent = list == null ? "—" : money(list);
     document.getElementById("disc-price").textContent = "−" + money(disc);
+    var free = unit == null ? 0 : promoFree();
     unitPriceEl.textContent = unit == null ? "—" : money(unit);
-    totalPriceEl.textContent = unit == null ? "—" : money(unit * qty);
+    totalPriceEl.textContent = unit == null ? "—" : money(unit * (qty - free));   // promo 3x2: las boletas gratis no se cobran
+    renderPromo(unit, free);
     renderStock(cur);
     renderDrinks();
   }
@@ -525,7 +532,41 @@
       body: JSON.stringify({ action: "prices", promo_code: code || "" })
     }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); });
   }
+  // ---------- Promo 3x2 (la calcula y la cobra el servidor; aquí solo se muestra) ----------
+  function promoApplies() {
+    var tier = product === "vip" ? "vip" : product === "vice" ? "vice" : "general";
+    return !!(PROMO && PROMO.active && PROMO.tiers && PROMO.tiers.indexOf(tier) >= 0);
+  }
+  function promoFree() {
+    if (!promoApplies()) return 0;
+    var g = PROMO.group || 3, p = PROMO.paid || 2;
+    return Math.max(0, Math.min(Math.floor(qty / g) * (g - p), qty - 1));
+  }
+  function promoEnds() {   // "solo por hoy" si cierra hoy; si no, "hasta el miércoles, 28 de octubre"
+    try {
+      var o = { timeZone: "America/Bogota" }, end = new Date(PROMO.ends_at);
+      if (end.toLocaleDateString("es-CO", o) === new Date().toLocaleDateString("es-CO", o)) return "solo por hoy";
+      return "hasta el " + end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" });
+    } catch (e) { return ""; }
+  }
+  function renderPromo(unit, free) {
+    var row = document.getElementById("row-promo"), note = document.getElementById("promo-note");
+    if (!row || !note) return;
+    var show = promoApplies(), g = (PROMO && PROMO.group) || 3, p = (PROMO && PROMO.paid) || 2, t = "";
+    row.classList.toggle("hidden", !(show && free > 0 && unit != null));
+    if (show && free > 0 && unit != null) {
+      document.getElementById("promo-label").textContent = "Promo " + g + "x" + p + " · " + free + (free === 1 ? " boleta gratis" : " boletas gratis");
+      document.getElementById("promo-amount").textContent = "−" + money(unit * free);
+    }
+    if (show) {
+      t = free > 0 ? "🎉 ¡Promo " + g + "x" + p + " aplicada! " + free + (free === 1 ? " boleta gratis." : " boletas gratis.")
+                   : "🎉 Promo " + g + "x" + p + ": lleva " + g + " y paga " + p + (promoEnds() ? " · válida " + promoEnds() : "") + ".";
+      if (qty % g === g - 1) t += " Agrega 1 boleta más y llévate otra gratis.";
+    }
+    note.textContent = t; note.classList.toggle("hidden", !t);
+  }
   function applyServerPrices(d) {
+    if (d && d.promo) PROMO = d.promo;
     Object.keys(d.prices || {}).forEach(function (k) {
       if (PRICES[k]) { PRICES[k].price = d.prices[k].price; PRICES[k].stage = d.prices[k].stage; }
     });
@@ -639,7 +680,7 @@
     return fetch(FUNCTIONS_BASE + "/vip-order", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" })
     }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
-      .then(function (d) { if (d && d.nights && d.vip && d.vice) { AV = d; renderProduct(); } })
+      .then(function (d) { if (d && d.nights && d.vip && d.vice) { AV = d; if (d.promo) PROMO = d.promo; renderProduct(); } })
       .catch(function () { /* sin disponibilidad: el VIP queda en espera, la compra general no se afecta */ });
   }
   // Datos que recibe el servidor para VIP / Vice (el precio y los cupos los decide el servidor, nunca el navegador).
