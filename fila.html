@@ -349,10 +349,6 @@
   .q-label{ font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold-pale); font-weight:700; }
   .q-pos{ font-family:'Eurostile Extended','Michroma',sans-serif; font-weight:700; font-size:clamp(4.5rem,24vw,8rem); line-height:1; color:var(--gold); text-shadow:4px 4px 0 var(--line); margin:6px 0 18px; font-variant-numeric:tabular-nums; }
   .q-pos.go{ color:#5fbf8f; }
-  .q-bar{ height:22px; border:3px solid var(--line); border-radius:999px; background:var(--purple-deep); overflow:hidden; box-shadow:var(--shadow-hard-sm); }
-  .q-fill{ height:100%; width:0%; background:repeating-linear-gradient(-45deg, var(--gold), var(--gold) 14px, var(--gold-deep) 14px, var(--gold-deep) 28px); transition:width 0.12s linear; }
-  .q-fill.done{ background:#5fbf8f; }
-  .q-pct{ margin-top:8px; font-weight:700; color:var(--bone); font-size:0.9rem; }
   .q-summary{ margin:20px 0 6px; padding:12px 14px; border:2px dashed rgba(244,236,219,0.3); border-radius:12px; color:var(--bone); font-size:0.92rem; }
   .q-summary b{ color:var(--gold); }
   .q-hint{ margin-top:14px; font-size:0.82rem; color:rgba(244,236,219,0.6); }
@@ -379,8 +375,6 @@
       <p class="q-sub" id="q-sub">Cuando tu posición llegue a 0 podrás comprar tus boletas.</p>
       <div class="q-label">Tu posición en la fila</div>
       <div class="q-pos" id="q-pos">—</div>
-      <div class="q-bar" id="q-bar" role="progressbar" aria-label="Avance de la fila" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="q-fill" id="q-fill"></div></div>
-      <div class="q-pct" id="q-pct">0%</div>
       <div class="q-summary" id="q-summary"></div>
       <button type="button" id="go-btn" class="pay-btn" disabled>Espera tu turno…</button>
       <p class="q-hint">No cierres ni recargues esta página: si lo haces, vuelves a empezar la fila.</p>
@@ -391,7 +385,7 @@
 
 <script>
 (function () {
-  var DURATION = 30000;              // la fila dura 30 segundos
+  var DURATION = 60000;              // la fila dura 1 minuto (mínimo)
   var MIN_START = 15, MAX_START = 30; // posición inicial al azar entre 15 y 30
   var $ = function (id) { return document.getElementById(id); };
 
@@ -409,30 +403,27 @@
   sum.appendChild(document.createTextNode("Vas a comprar: "));
   var b1 = document.createElement("b"); b1.textContent = label; sum.appendChild(b1);
 
-  // ---------- La fila: sale de un número al azar (15–30) y baja hasta 0 en 30 segundos ----------
+  // ---------- La fila: sale de un número al azar (15–30) y baja hasta 0 en 1 minuto ----------
   var start = MIN_START + Math.floor(Math.random() * (MAX_START - MIN_START + 1));
   var times = [];                                         // cuándo baja cada puesto (en ms desde que entró)
   for (var i = 0; i < start - 1; i++) times.push(500 + Math.random() * (DURATION - 500));   // ninguno baja antes de 0,5 s
-  times.push(DURATION);                                   // el último puesto baja justo a los 30 s
+  times.push(DURATION);                                   // el último puesto baja justo al minuto
   times.sort(function (a, b) { return a - b; });
   var t0 = Date.now(), ready = false;
-  var pos = $("q-pos"), fill = $("q-fill"), pct = $("q-pct"), bar = $("q-bar"), btn = $("go-btn");
+  var pos = $("q-pos"), btn = $("go-btn");
   btn.setAttribute("data-target", target);
 
   function positionAt(elapsed) { var gone = 0; while (gone < times.length && times[gone] <= elapsed) gone++; return start - gone; }
   function tick() {
-    var elapsed = Math.min(DURATION, Date.now() - t0), p = positionAt(elapsed), perc = Math.floor((elapsed / DURATION) * 100);
+    var elapsed = Math.min(DURATION, Date.now() - t0), p = positionAt(elapsed);
     pos.textContent = String(p);
-    fill.style.width = (elapsed / DURATION * 100).toFixed(1) + "%";
-    pct.textContent = perc + "%";
-    bar.setAttribute("aria-valuenow", String(perc));
     if (p <= 0 && !ready) finish();
   }
   // El "pase": la página de compra solo abre si se pasó por la fila en los últimos 30 minutos (en esta pestaña).
   function grantPass() { try { sessionStorage.setItem("sky_queue_pass", String(Date.now())); } catch (e) {} }
   function finish() {
     ready = true; clearInterval(timer); grantPass();
-    pos.textContent = "0"; pos.className = "q-pos go"; fill.style.width = "100%"; fill.className = "q-fill done"; pct.textContent = "100%"; bar.setAttribute("aria-valuenow", "100");
+    pos.textContent = "0"; pos.className = "q-pos go";
     $("q-head").textContent = "¡Es tu turno!"; $("q-sub").textContent = "Ya puedes comprar tus boletas.";
     btn.disabled = false; btn.textContent = "Ir a comprar mis boletas"; try { btn.focus(); } catch (e) {}
   }
