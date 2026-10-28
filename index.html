@@ -1167,9 +1167,12 @@ fbq('track', 'PageView');
         try { var end = new Date(p.ends_at); today = end.toLocaleDateString("es-CO", opts) === new Date().toLocaleDateString("es-CO", opts); label = end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
         when = today ? "Solo por hoy" : (label ? "Válida hasta el " + label : "Por tiempo limitado");
         title = "🎉 Promo " + g + "x" + paid + " · Lleva " + g + " y paga " + paid;
-        sub = "En todas las boletas (generales y VIP, de 1 y 2 días) · no aplica a Vice Experience";
+        // Las noches con promo propia (ej. sábado 5x4) llevan solo esa promo, no el 3x2 del día de compra.
+        var otras = nk.filter(function (n) { return (nights[n].group || 3) !== g || (nights[n].paid || 2) !== paid; })
+          .map(function (n) { return dayName(n) + " " + nights[n].group + "x" + nights[n].paid; });
+        sub = "En todas las boletas (generales y VIP, de 1 y 2 días)" + (otras.length ? ", excepto las de " + otras.join(" y ") + ", que llevan su propia promo" : "") + " · no aplica a Vice Experience";
         stripTxt = g + "x" + paid + " en todas las etapas · " + when.toLowerCase();
-        stripSub = "Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience." + (nightTxt ? " Además, por noche: " + nightTxt + "." : "");
+        stripSub = "Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience." + (nightTxt ? " Promos por noche (reemplazan a esta en las boletas de esa noche): " + nightTxt + "." : "");
       } else {
         title = "🎉 Promos por noche · " + nightTxt;
         when = "Elige la noche al comprar";
