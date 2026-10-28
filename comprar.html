@@ -562,17 +562,13 @@
     var tier = product === "vip" ? "vip" : "general";
     return np && (!np.tiers || np.tiers.indexOf(tier) >= 0) ? np : null;
   }
-  // Mejor regla aplicable ahora: la del día de compra o la de la noche (si empatan, la de la noche)
+  // Regla que aplica ahora: si la noche elegida tiene su propia promo (ej. sábado 5x4), esa manda SOLA y no se mezcla
+  // con la del día de compra (3x2). Sin promo propia de la noche, aplica la del día de compra.
   function promoRule() {
-    var rules = [];
-    if (promoApplies()) rules.push({ g: PROMO.group || 3, p: PROMO.paid || 2, ends: PROMO.ends_at, kind: "dia" });
-    var np = nightPromo(); if (np) rules.push({ g: np.group || 3, p: np.paid || 2, ends: np.ends_at, kind: "noche" });
-    if (!rules.length) return null;
-    rules.sort(function (x, y) {
-      var fx = Math.floor(qty / x.g) * (x.g - x.p), fy = Math.floor(qty / y.g) * (y.g - y.p);
-      return fy !== fx ? fy - fx : (x.kind === "noche" ? -1 : 1);
-    });
-    return rules[0];
+    var np = nightPromo();
+    if (np) return { g: np.group || 3, p: np.paid || 2, ends: np.ends_at, kind: "noche" };
+    if (promoApplies()) return { g: PROMO.group || 3, p: PROMO.paid || 2, ends: PROMO.ends_at, kind: "dia" };
+    return null;
   }
   function promoFree() {
     var r = promoRule(); if (!r) return 0;
