@@ -342,6 +342,10 @@
 
   /* Promo 3x2 */
   .promo-note{ margin-top:12px; padding:10px 12px; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--ink); background:var(--gold); border:2px solid var(--line); }
+  .promo-offer{ margin-top:10px; padding:12px; border-radius:10px; background:var(--purple-deep); border:2px dashed var(--gold); color:var(--bone); font-size:0.92rem; }
+  .promo-offer b{ color:var(--gold); }
+  .promo-offer button{ display:block; width:100%; margin-top:10px; padding:12px; border-radius:8px; border:3px solid var(--line); background:var(--gold); color:var(--ink); font-family:inherit; font-weight:700; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.4px; cursor:pointer; box-shadow:var(--shadow-hard-sm); }
+  .promo-offer button:disabled{ opacity:0.5; cursor:not-allowed; }
 </style>
 <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
 </head>
@@ -394,6 +398,7 @@
         <button type="button" class="qty-btn" id="qty-plus" aria-label="Sumar">+</button>
       </div>
       <div class="promo-note hidden" id="promo-note" role="status"></div>
+      <div class="promo-offer hidden" id="promo-offer"></div>
       <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
@@ -521,6 +526,7 @@
     unitPriceEl.textContent = unit == null ? "—" : money(unit);
     totalPriceEl.textContent = unit == null ? "—" : money(unit * (qty - free));   // promo 3x2: las boletas gratis no se cobran
     renderPromo(unit, free);
+    renderOffer();
     renderStock(cur);
     renderDrinks();
   }
@@ -567,6 +573,34 @@
       if (end.toLocaleDateString("es-CO", o) === new Date().toLocaleDateString("es-CO", o)) return "solo por hoy";
       return "hasta el " + end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" });
     } catch (e) { return ""; }
+  }
+  // Oferta de un clic: cuando falta UNA boleta para llegar a una promo por noche (ej. 4 boletas y el sábado es 5x4),
+  // se ofrece ya la opción, con un botón que agrega la que falta (y elige esa noche si hace falta).
+  function renderOffer() {
+    var box = document.getElementById("promo-offer"); if (!box) return;
+    box.innerHTML = ""; box.classList.add("hidden");
+    if (product === "vice" || accessSelect.value !== "1-dia" || !PROMO || !PROMO.nights) return;
+    var tier = product === "vip" ? "vip" : "general", pick = null;
+    Object.keys(PROMO.nights).sort().forEach(function (n) {
+      var np = PROMO.nights[n];
+      if (!pick && (!np.tiers || np.tiers.indexOf(tier) >= 0) && qty === (np.group || 3) - 1) pick = { night: n, g: np.group || 3, p: np.paid || 2 };
+    });
+    if (!pick) return;
+    var day = weekdayOf(pick.night), same = nightSel.value === pick.night, label = pick.g + "x" + pick.p;
+    var t = document.createElement("div");
+    var strong = document.createElement("b"); strong.textContent = "🎁 Promo " + label + (same ? "" : " el " + day);
+    t.appendChild(strong);
+    t.appendChild(document.createTextNode(same ? ": con 1 boleta más llevas " + pick.g + " y pagas solo " + pick.p + "." : ": llevas " + pick.g + " y pagas solo " + pick.p + ". Ya tienes " + qty + ": te falta 1."));
+    var btn = document.createElement("button"); btn.type = "button";
+    btn.textContent = same ? "Agregar 1 boleta" : "Elegir " + day + " y agregar 1";
+    btn.disabled = qty >= effectiveMax();
+    btn.addEventListener("click", function () {
+      if (nightSel.value !== pick.night) nightSel.value = pick.night;
+      if (qty < effectiveMax()) qty++;
+      renderTotals(); saveDraft();
+    });
+    box.appendChild(t); box.appendChild(btn);
+    box.classList.remove("hidden");
   }
   function weekdayOf(night) {
     try { return new Date(night + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return night; }
