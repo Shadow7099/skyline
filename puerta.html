@@ -415,7 +415,7 @@
     var night = currentNight();
     // VIP 1 día y Vice Experience: solo valen la noche para la que se compraron.
     if (t && t.night && !isTestMode() && t.night !== night) {
-      return { ok: false, reason: (t.tier === "vice" ? "Vice Experience" : "Boleta VIP") + " válida solo la noche del " + fmtNight(t.night) + "." };
+      return { ok: false, reason: (t.tier === "vice" ? "Vice Experience" : t.tier === "vip" ? "Boleta VIP" : "Boleta de 1 día") + " válida solo la noche del " + fmtNight(t.night) + "." };
     }
     var used = checkinsFor(token);
     if (type === "2") {
@@ -473,7 +473,7 @@
           return { ok: false, reason: evaluate(token, byToken[token] ? byToken[token].type : "2").reason || "Esta boleta ya fue usada" + byDevice(d.first) + "." };
         }
         if (d.code === "revoked") return { ok: false, reason: "Esta boleta fue anulada." };
-        if (d.code === "wrong_night") return { ok: false, reason: (d.ticket && d.ticket.tier === "vice" ? "Vice Experience" : "Boleta VIP") + " válida solo la noche del " + fmtNight(d.valid_night) + "." };
+        if (d.code === "wrong_night") return { ok: false, reason: (d.ticket && d.ticket.tier === "vice" ? "Vice Experience" : d.ticket && d.ticket.tier === "vip" ? "Boleta VIP" : "Boleta de 1 día") + " válida solo la noche del " + fmtNight(d.valid_night) + "." };
         return { ok: false, reason: "Esta boleta no está registrada en el sistema." };
       })
       .catch(function () {
