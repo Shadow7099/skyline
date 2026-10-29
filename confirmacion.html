@@ -115,6 +115,9 @@
   .other-orders{ margin-top:26px; }
   .other-title{ font-family:'Eurostile Extended', 'Michroma', sans-serif; text-transform:uppercase; color:var(--bone); font-size:0.95rem; margin:0 0 4px; }
   .other-orders .btn{ font-size:0.72rem; }
+  .gift{ margin-top:16px; padding:16px 16px 18px; border-radius:14px; background:rgba(240,169,59,0.14); border:3px dashed var(--gold); text-align:center; }
+  .gift-title{ font-family:'Eurostile Extended','Michroma',sans-serif; text-transform:uppercase; letter-spacing:0.4px; color:var(--gold); font-size:1.02rem; margin-bottom:6px; }
+  .gift p{ margin:0 0 12px; font-size:0.9rem; color:var(--bone); line-height:1.45; }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -132,7 +135,7 @@ fbq('track', 'PageView');
 <div class="wrap">
   <div class="card"><div class="card-body" id="card"><div class="spinner" aria-hidden="true"></div><div class="loading">Verificando tu pago…</div></div></div>
   <div id="tickets-area"></div>
-  <p class="help">¿Tienes algún problema? <a href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></p>
+  <p class="help">¿Tienes algún problema? <a id="help-wa" href="https://wa.me/573133308294" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></p>
 </div>
 
 <script>/* qrcode-generator 1.4.4 · MIT · Kazuhiko Arase */
@@ -245,6 +248,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
     card.appendChild(d);
   }
+  // ---------- WhatsApp: mensaje ya escrito con los datos del comprador ----------
+  var WA_NUMBER = "573133308294";
+  function waMessage(o) {
+    var lines = [
+      o.transport_gift ? "Hola 👋 Ya pagué mi boleta de 1 día en Skyline Halloween Fest y quiero reclamar mi transporte de regalo 🚐." : "Hola 👋 Ya pagué en Skyline Halloween Fest.",
+      "Estos son mis datos:",
+      "Nombre: " + (o.full_name || "")
+    ];
+    if (o.document_id) lines.push("Cédula: " + o.document_id);
+    lines.push("Boleta: " + productLabel(o) + " x" + o.quantity + (o.night ? " (" + nightLong(o.night) + ")" : ""));
+    lines.push("# de reserva: " + o.id);
+    return lines.join("\n");
+  }
+  function waUrl(o) { return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(waMessage(o)); }
   function note(cls, html) { var n = el("div", "note " + cls); n.innerHTML = html; card.appendChild(n); }
 
   // ---------- Estados ----------
@@ -279,6 +296,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var many = o.tickets.length > 1;
     note("ok", "Estas son tus boletas. <strong>Descárgalas o tómales captura</strong> y preséntalas en la entrada. " +
       (many ? "Cada código QR es para <strong>una persona</strong>: si vas con amigos, compárteles la suya." : "El código QR es personal: no lo publiques."));
+
+    // El botón de ayuda de abajo ahora abre WhatsApp con "ya pagué y estos son mis datos" ya escrito.
+    var helpWa = document.getElementById("help-wa"); if (helpWa) helpWa.href = waUrl(o);
+    // Boleta general de 1 día nueva: el transporte va de regalo.
+    if (o.transport_gift) {
+      var g = el("div", "gift");
+      g.appendChild(el("div", "gift-title", "🚐 ¡Tu transporte va de regalo!"));
+      g.appendChild(el("p", "", "Por comprar " + (o.quantity > 1 ? "tus boletas" : "tu boleta") + " de 1 día, el transporte es gratis. Toca el botón: se abre WhatsApp con el mensaje ya escrito (tu nombre y tu cédula). Solo tienes que enviarlo."));
+      var wa = el("a", "btn wa block", "Reclamar mi transporte por WhatsApp"); wa.id = "gift-wa"; wa.href = waUrl(o); wa.target = "_blank"; wa.rel = "noopener";
+      g.appendChild(wa); card.appendChild(g);
+    }
 
     area.innerHTML = "";
     if (!o.tickets.length) {
