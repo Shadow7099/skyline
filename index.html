@@ -644,6 +644,10 @@
   .promo-3x2 .p3-sub{ margin-top:6px; font-weight:700; font-size:0.95rem; }
   .promo-3x2 .p3-end{ display:inline-block; margin-top:8px; background:var(--ink); color:var(--gold); padding:4px 14px; border-radius:6px; font-size:0.82rem; letter-spacing:0.5px; text-transform:uppercase; font-weight:700; }
   .promo-3x2 .btn{ margin-top:12px; background:var(--ink); color:var(--gold); }
+  .gift-strip{ margin:14px 22px 0; padding:9px 12px; border-radius:10px; background:rgba(240,169,59,0.14); border:2px dashed var(--gold); color:var(--bone); font-size:0.86rem; font-weight:600; text-align:center; line-height:1.35; }
+  .gift-strip b{ color:var(--gold); }
+  .gift-banner{ max-width:980px; margin:0 auto 26px; padding:14px 18px; border-radius:16px; background:rgba(240,169,59,0.14); border:3px dashed var(--gold); color:var(--bone); text-align:center; font-size:0.98rem; line-height:1.5; }
+  .gift-banner b{ color:var(--gold); }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -782,7 +786,7 @@ fbq('track', 'PageView');
       <div class="feature-card">
         <span class="feature-emoji">🚌</span>
         <h3>Transporte oficial by Wagon</h3>
-        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a></p>
+        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a><br><strong style="color:var(--gold)">🎁 De regalo con las boletas de 1 día nuevas.</strong></p>
       </div>
 
     </div>
@@ -827,6 +831,7 @@ fbq('track', 'PageView');
 
       <div class="price-panel one-day">
         <div class="price-panel-head">Acceso 1 día</div>
+        <div class="gift-strip" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día <span style="opacity:.8">(compras nuevas)</span></div>
         <div class="price-rows">
           <div class="price-row sold-out">
             <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
@@ -952,6 +957,7 @@ fbq('track', 'PageView');
       <h2 style="color:var(--bone)">Transporte oficial</h2>
       <p>Transporte oficial by Wagon, ida y vuelta, hasta PLOT Bogotá.</p>
     </div>
+    <div class="gift-banner" id="giftBanner"><b>🎁 Boletas de 1 día nuevas: el transporte va de regalo.</b><br>Compra tu boleta de 1 día y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
     <div class="wagon-grid" id="wagonGrid">
       <a class="wagon-poster" href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" aria-label="Reservar el transporte oficial en Wagon">
         <img id="wagonImg" alt="Transporte oficial by Wagon para Skyline Halloween Fest: precios ida y vuelta por grupo" loading="lazy" decoding="async">
