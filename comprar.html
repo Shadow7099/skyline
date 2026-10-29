@@ -346,6 +346,8 @@
   .promo-offer b{ color:var(--gold); }
   .promo-offer button{ display:block; width:100%; margin-top:10px; padding:12px; border-radius:8px; border:3px solid var(--line); background:var(--gold); color:var(--ink); font-family:inherit; font-weight:700; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.4px; cursor:pointer; box-shadow:var(--shadow-hard-sm); }
   .promo-offer button:disabled{ opacity:0.5; cursor:not-allowed; }
+  .gift-note{ margin-top:10px; padding:10px 12px; border-radius:10px; background:rgba(240,169,59,0.14); border:2px dashed var(--gold); color:var(--bone); font-size:0.88rem; line-height:1.4; }
+  .gift-note b{ color:var(--gold); }
 </style>
 <script>
 // Fila virtual: para comprar hay que pasar primero por la fila (fila.html). El pase dura 30 minutos en esta pestaña.
@@ -410,6 +412,7 @@
       </div>
       <div class="promo-note hidden" id="promo-note" role="status"></div>
       <div class="promo-offer hidden" id="promo-offer"></div>
+      <div class="gift-note hidden" id="gift-note">🚐 <b>Transporte de regalo:</b> tu boleta de 1 día lo incluye. Al pagar te aparecerá un botón de WhatsApp con tus datos ya escritos para reclamarlo.</div>
       <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
@@ -523,12 +526,14 @@
     var cur = vipMode ? vipCurrent() : null;
     var info = vipMode ? null : PRICES[accessSelect.value];
     var disc = !vipMode && promo ? (promo.discounts[accessSelect.value] || 0) : 0;
+    // VIP con código de un promotor que tiene el descuento activado: el comprador paga menos (el servidor decide y cobra).
+    if (product === "vip" && promo && promo.discount && cur.ready && !cur.soldOut) disc = Number(cur.commission) || 0;
     var list = vipMode ? (cur.ready && !cur.soldOut ? cur.price : null) : info.price;
     var unit = list == null ? null : list - disc;
     if (vipMode) { var mx = effectiveMax(); if (qty > mx) qty = mx; }
     qtyVal.textContent = qty;
     qtyEcho.textContent = qty;
-    var showDisc = !vipMode && promo && disc > 0;
+    var showDisc = !!(promo && disc > 0 && (!vipMode || product === "vip"));
     document.getElementById("row-list").classList.toggle("hidden", !showDisc);
     document.getElementById("row-disc").classList.toggle("hidden", !showDisc);
     document.getElementById("list-price").textContent = list == null ? "—" : money(list);
@@ -538,6 +543,7 @@
     totalPriceEl.textContent = unit == null ? "—" : money(unit * (qty - free));   // promo 3x2: las boletas gratis no se cobran
     renderPromo(unit, free);
     renderOffer();
+    document.getElementById("gift-note").classList.toggle("hidden", !(product === "general" && accessSelect.value === "1-dia"));
     renderStock(cur);
     renderDrinks();
   }
@@ -649,7 +655,7 @@
   var drinksWrap = document.getElementById("drinks-wrap"), drinksList = document.getElementById("drinks-list");
   var stockNote = document.getElementById("stock-note"), prodNote = document.getElementById("prod-note");
   var NOTES = {
-    vip: "VIP incluye acceso al Stage VIP y Fast Pass. Cupos limitados por noche. Los VIP se venden a precio completo.",
+    vip: "VIP incluye acceso al Stage VIP y Fast Pass. Cupos limitados por noche. Los VIP se venden a precio completo, salvo con el código de un promotor que tenga descuento.",
     vice: "Vice Experience incluye la entrada al festival para una sola noche, Fast Pass, una media de Antioqueño por persona y un Red Bull o agua a tu elección. Cupos limitados por noche."
   };
   function pesos(n) { return "$" + Number(n).toLocaleString("es-CO"); }
@@ -667,7 +673,7 @@
     else { if (!nightSel.value) return { ready: false }; v = vipOneDay(nightSel.value); }
     if (!v) return { ready: false };
     if (!v.ok) return { ready: true, soldOut: true, remaining: 0 };
-    return { ready: true, soldOut: false, price: v.price, stage: v.stage, remaining: v.remaining };
+    return { ready: true, soldOut: false, price: v.price, stage: v.stage, remaining: v.remaining, commission: Number(v.commission) || 0 };
   }
   // Máximo de boletas que se pueden pedir ahora (10 por compra y nunca más que los cupos que quedan)
   function effectiveMax() {
@@ -812,7 +818,7 @@
         return;
       }
       applyServerPrices(res.d);
-      promo = { code: res.d.promoter.code, name: res.d.promoter.name, discounts: {} };
+      promo = { code: res.d.promoter.code, name: res.d.promoter.name, discount: !!res.d.promoter.discount, discounts: {} };
       Object.keys(res.d.prices).forEach(function (k) { promo.discounts[k] = res.d.prices[k].discount; });
       maxQty = res.d.max_quantity || 10;
       input.value = promo.code;
