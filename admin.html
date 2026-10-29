@@ -239,6 +239,12 @@
   .drink-item span{ font-size:0.8rem; color:var(--gold-pale); min-width:62px; }
   .drink-item select{ flex:1; }
   .stage-info{ margin-top:12px; padding:10px 12px; border-radius:10px; background:var(--gold-pale); color:var(--ink); font-weight:700; font-size:0.9rem; border:2px solid var(--line); }
+  .hrow{ display:grid; grid-template-columns:78px 1fr 56px; gap:10px; align-items:center; font-size:0.86rem; margin:5px 0; }
+  .hrow .hb{ height:14px; background:rgba(255,255,255,0.08); border-radius:7px; overflow:hidden; }
+  .hrow .hb i{ display:block; height:100%; background:var(--gold); border-radius:7px; min-width:2px; }
+  .hrow .hn{ text-align:right; font-variant-numeric:tabular-nums; font-weight:700; }
+  .hnight{ font-family:var(--display); color:var(--gold); margin:14px 0 4px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.4px; }
+  .dr-note{ font-size:0.8rem; color:var(--gold-pale); margin:6px 0 0; }
 </style>
 </head>
 <body>
@@ -266,6 +272,7 @@
         <button class="tab" role="tab" id="tab-sales" aria-selected="true">Ventas</button>
         <button class="tab" role="tab" id="tab-create" aria-selected="false">Cortesías y ventas</button>
         <button class="tab" role="tab" id="tab-list" aria-selected="false">Todas las boletas</button>
+        <button class="tab" role="tab" id="tab-doors" aria-selected="false">Puertas</button>
         <button class="tab" role="tab" id="tab-orders" aria-selected="false">Compras</button>
         <button class="tab" role="tab" id="tab-parking" aria-selected="false">Parqueadero</button>
         <button class="tab" role="tab" id="tab-promo" aria-selected="false">Promotores</button>
@@ -535,6 +542,24 @@
       </div>
     </div>
 
+    <div id="view-doors" class="hidden">
+      <div class="panel">
+        <div class="panel-head">Ingresos por puerta</div>
+        <div class="panel-body">
+          <div class="stats" id="dr-stats"></div>
+          <p class="tnote">Cada escáner se cuenta con el nombre que le pusieron en la puerta (Puerta 1, Puerta 2…). Se actualiza solo cada 30 segundos mientras estés en esta pestaña.</p>
+          <div class="pcount"><span id="dr-info"></span><button class="btn ghost sm" id="dr-refresh" type="button">Actualizar ahora</button></div>
+          <div class="msg" id="dr-msg" role="status"></div>
+          <div class="table-wrap"><table class="ptable sales-table" id="dr-table"></table></div>
+          <p class="dr-note" id="dr-note"></p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Ingresos por hora</div>
+        <div class="panel-body" id="dr-hours"></div>
+      </div>
+    </div>
+
     <div id="view-parking" class="hidden">
       <div class="panel">
         <div class="panel-head">Parqueadero (pagos en línea)</div>
@@ -646,6 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // ---------- Sesión ----------
   function logout() {
+    stopDoors();
     pin = "";
     try { sessionStorage.removeItem("sky_admin_pin"); localStorage.removeItem("sky_admin_pin"); } catch (e) {}
     $("app").classList.add("hidden"); $("login").classList.remove("hidden");
@@ -674,10 +700,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // ---------- Pestañas ----------
   function tab(which) {
-    ["sales", "create", "list", "orders", "parking", "promo"].forEach(function (k) {
+    ["sales", "create", "list", "doors", "orders", "parking", "promo"].forEach(function (k) {
       $("tab-" + k).setAttribute("aria-selected", k === which);
       $("view-" + k).classList.toggle("hidden", k !== which);
     });
+    if (which !== "doors") stopDoors();
+    if (which === "doors") startDoors();
     if (which === "list") refresh();
     if (which === "orders") loadOrders();
     if (which === "parking") loadParking();
@@ -687,9 +715,79 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   $("tab-sales").addEventListener("click", function () { tab("sales"); });
   $("tab-create").addEventListener("click", function () { tab("create"); });
   $("tab-list").addEventListener("click", function () { tab("list"); });
+  $("tab-doors").addEventListener("click", function () { tab("doors"); });
   $("tab-orders").addEventListener("click", function () { tab("orders"); });
   $("tab-parking").addEventListener("click", function () { tab("parking"); });
   $("tab-promo").addEventListener("click", function () { tab("promo"); });
+
+
+  // ---------- Puertas: cuántas personas entraron por cada entrada (escáner) ----------
+  var DOORS = null, doorTimer = null, doorBusy = false;
+  function doorMsg(t, type) { var m = $("dr-msg"); m.textContent = t; m.className = "msg" + (type ? " " + type : ""); }
+  function nightShort(n) { var p = String(n || "").split("-"); if (p.length !== 3) return String(n); var w = DAYS_ES[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()]; return w.charAt(0).toUpperCase() + w.slice(1) + " " + (+p[2]); }
+  function hourLabel(h) { var n = +h, suf = n < 12 ? "a. m." : "p. m.", x = n % 12 === 0 ? 12 : n % 12; return x + ":00 " + suf; }
+  function timeBogota(iso) { try { return new Date(iso).toLocaleTimeString("es-CO", { timeZone: "America/Bogota", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } }
+  function pctOf(n, total) { return total ? Math.round((n * 100) / total) + "%" : "—"; }
+  function renderDoors() {
+    var d = DOORS; if (!d) return;
+    var nights = (d.nights || []).filter(function (n) { return (d.by_night || {})[n] || n === "2026-10-30" || n === "2026-10-31"; });
+    // Resumen
+    var st = $("dr-stats"); st.innerHTML = "";
+    function stat(label, val) { var s = el("div", "stat"); s.appendChild(el("b", "", String(val))); s.appendChild(el("span", "", label)); st.appendChild(s); }
+    stat("Entradas registradas", d.total_entries);
+    nights.slice(0, 2).forEach(function (n) { stat(nightShort(n), (d.by_night || {})[n] || 0); });
+    if (nights.length < 2) stat("Personas distintas", d.people_in);
+    stat("Últimos 15 minutos", d.last_15);
+    var devs = (d.devices || []).filter(function (x) { return x.total > 0; }).length;
+    $("dr-info").textContent = d.people_in + " personas distintas de " + d.tickets_total + " boletas · " + devs + (devs === 1 ? " puerta" : " puertas") + " con entradas" + (d.last_entry_at ? " · última entrada " + timeBogota(d.last_entry_at) : "");
+    // Tabla por puerta
+    var tbl = $("dr-table"); tbl.innerHTML = "";
+    if (!d.total_entries && !(d.devices || []).length) {
+      var t0 = el("tr", "muted"); t0.appendChild(el("td", "", "Aún no hay entradas registradas. Aparecerán aquí apenas los escáneres de la puerta empiecen a leer boletas.")); tbl.appendChild(t0);
+      $("dr-note").textContent = ""; renderHours(); return;
+    }
+    var head = el("tr"); ["Puerta"].concat(nights.map(nightShort), ["Total", "% del total", "Últ. 15 min", "General", "VIP", "Vice", "Última entrada"]).forEach(function (x) { head.appendChild(el("th", "", x)); }); tbl.appendChild(head);
+    var sum = { total: 0, last_15: 0, general: 0, vip: 0, vice: 0, byn: {} };
+    (d.devices || []).forEach(function (x) {
+      var tr = el("tr", x.total ? "" : "muted"); tr.appendChild(el("td", "", x.device));
+      nights.forEach(function (n) { var c = (x.by_night || {})[n] || 0; sum.byn[n] = (sum.byn[n] || 0) + c; tr.appendChild(el("td", "num", String(c))); });
+      tr.appendChild(el("td", "num pay", String(x.total))); tr.appendChild(el("td", "num", pctOf(x.total, d.total_entries)));
+      tr.appendChild(el("td", "num", String(x.last_15))); tr.appendChild(el("td", "num", String(x.by_tier.general))); tr.appendChild(el("td", "num", String(x.by_tier.vip))); tr.appendChild(el("td", "num", String(x.by_tier.vice)));
+      tr.appendChild(el("td", "num", x.last_at ? timeBogota(x.last_at) : "—")); tbl.appendChild(tr);
+      sum.total += x.total; sum.last_15 += x.last_15; sum.general += x.by_tier.general; sum.vip += x.by_tier.vip; sum.vice += x.by_tier.vice;
+    });
+    var tot = el("tr", "total-row"); tot.appendChild(el("td", "", "Total"));
+    nights.forEach(function (n) { tot.appendChild(el("td", "num", String(sum.byn[n] || 0))); });
+    tot.appendChild(el("td", "num pay", String(sum.total))); tot.appendChild(el("td", "num", sum.total ? "100%" : "—")); tot.appendChild(el("td", "num", String(sum.last_15)));
+    tot.appendChild(el("td", "num", String(sum.general))); tot.appendChild(el("td", "num", String(sum.vip))); tot.appendChild(el("td", "num", String(sum.vice))); tot.appendChild(el("td", "num", d.last_entry_at ? timeBogota(d.last_entry_at) : "—")); tbl.appendChild(tot);
+    $("dr-note").textContent = "Una persona con boleta de 2 días cuenta una vez por cada noche que entra." + (d.conflicts_total ? " Dobles usos detectados: " + d.conflicts_total + " (boletas que otro escáner ya había dejado entrar; revísalos en «Todas las boletas»)." : "");
+    renderHours();
+  }
+  function renderHours() {
+    var box = $("dr-hours"); box.innerHTML = ""; var d = DOORS || {};
+    var any = false;
+    ((d.nights) || []).forEach(function (n) {
+      var rows = (d.hourly || {})[n]; if (!rows || !rows.length) return; any = true;
+      box.appendChild(el("div", "hnight", nightShort(n) + " · " + ((d.by_night || {})[n] || 0) + " entradas"));
+      var max = Math.max.apply(null, rows.map(function (r) { return r.count; }));
+      rows.forEach(function (r) {
+        var row = el("div", "hrow"); row.appendChild(el("span", "", hourLabel(r.hour)));
+        var hb = el("div", "hb"), bar = document.createElement("i"); bar.style.width = (max ? Math.max(2, Math.round((r.count * 100) / max)) : 0) + "%"; hb.appendChild(bar); row.appendChild(hb);
+        row.appendChild(el("span", "hn", String(r.count))); box.appendChild(row);
+      });
+    });
+    if (!any) box.appendChild(el("p", "tnote", "Todavía no hay entradas por hora."));
+  }
+  function loadDoors(silent) {
+    if (doorBusy) return Promise.resolve();
+    doorBusy = true; if (!silent) doorMsg("Cargando ingresos…", "");
+    return api("door_stats").then(function (d) { DOORS = d; doorMsg("Actualizado a las " + timeBogota(new Date().toISOString()) + ".", ""); renderDoors(); })
+      .catch(function (e) { doorMsg(e.message, "error"); })
+      .finally(function () { doorBusy = false; });
+  }
+  function startDoors() { loadDoors(); if (doorTimer) clearInterval(doorTimer); doorTimer = setInterval(function () { loadDoors(true); }, 30000); }
+  function stopDoors() { if (doorTimer) { clearInterval(doorTimer); doorTimer = null; } }
+  $("dr-refresh").addEventListener("click", function () { loadDoors(); });
 
   // ---------- Compras (todas, también las pendientes) ----------
   var ORDERS = [], OV = { page: 100, shown: 100 };
@@ -1268,7 +1366,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var tot = el("div", "total-earned");
       tot.appendChild(document.createTextNode("Total ganado (boletas + bono): ")); tot.appendChild(el("b", "", money(earnedOf(p))));
       row.appendChild(tot);
-      if (p.vip_sold || p.vice_sold) row.appendChild(el("div", "total-earned", "VIP vendidos: " + (p.vip_sold || 0) + " · Vice Experience: " + (p.vice_sold || 0) + " · comisión VIP " + money(p.vip_commission || 0) + " (no suma a metas ni bonos)"));
+      if (p.vip_sold || p.vice_sold) row.appendChild(el("div", "total-earned", "VIP vendidos: " + (p.vip_sold || 0) + " · Vice Experience: " + (p.vice_sold || 0) + " · comisión VIP " + money(p.vip_commission || 0) + (p.vip_discount ? " · descuento VIP entregado " + money(p.vip_discount) : "") + " (no suma a metas ni bonos)"));
       var goal = el("div", "goal");
       if (p.bonus.next) {
         goal.textContent = "Le faltan " + p.bonus.missing + " boletas para la meta +" + p.bonus.next.at + " (" + money(p.bonus.next.bonus) + ")";
