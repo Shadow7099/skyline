@@ -953,10 +953,7 @@ fbq('track', 'PageView');
       <p>Transporte oficial by Wagon, ida y vuelta, hasta Secret Location.</p>
     </div>
     <div class="gift-banner gift-promo" id="giftBanner"><b>🎁 Boletas de 1 día del viernes 30 de octubre: el transporte va de regalo (solo compras hasta las 12:00 m. del viernes 30).</b><br>Compra tu boleta de 1 día para el viernes y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
-    <div class="wagon-grid" id="wagonGrid">
-      <a class="wagon-poster" href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" aria-label="Reservar el transporte oficial en Wagon">
-        <img id="wagonImg" alt="Transporte oficial by Wagon para Skyline Halloween Fest: precios ida y vuelta por grupo" loading="lazy" decoding="async">
-      </a>
+    <div class="wagon-grid no-poster" id="wagonGrid">
       <div class="wagon-info">
         <div class="wagon-info-head">Precios (ida y vuelta)</div>
         <div class="wagon-rows">
@@ -1135,17 +1132,6 @@ fbq('track', 'PageView');
 (function () {
   if (Date.now() < Date.parse("2026-10-30T23:00:00Z")) return;
   Array.prototype.forEach.call(document.querySelectorAll("[data-e3]"), function (el) { el.textContent = "Viernes 30 cerrado en línea: compra en taquilla"; });
-})();
-</script>
-
-<script>
-// Póster del transporte oficial (Wagon). Si la imagen no carga, la sección se muestra igual con los precios en texto.
-(function () {
-  var WAGON_IMG = "https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/wagon-transporte.webp";
-  var grid = document.getElementById("wagonGrid"), img = document.getElementById("wagonImg");
-  if (!grid || !img) return;
-  img.addEventListener("error", function () { grid.classList.add("no-poster"); });
-  if (WAGON_IMG) img.src = WAGON_IMG; else grid.classList.add("no-poster");
 })();
 </script>
 
