@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Skyline Halloween Fest · 30-31 de octubre · PLOT Bogotá</title>
-<meta name="description" content="Skyline Halloween Fest, dos noches y dos escenarios en PLOT Bogotá. 30 y 31 de octubre. Compra tu boleta antes de que suba de precio.">
+<title>Skyline Halloween Fest · 30-31 de octubre · Secret Location</title>
+<meta name="description" content="Skyline Halloween Fest, dos noches y dos escenarios en Secret Location. 30 y 31 de octubre. Compra tu boleta antes de que suba de precio.">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
   @font-face{
@@ -672,7 +672,6 @@ fbq('track', 'PageView');
     <ul class="nav-links" id="navLinks">
       <li><a href="#fiesta">La fiesta</a></li>
       <li><a href="#boletas">Boletas</a></li>
-      <li><a href="#mapa">El lugar</a></li>
       <li><a href="#transporte">Transporte</a></li>
       <li><a href="#parqueadero">Parqueadero</a></li>
       <li><a href="#info">Info</a></li>
@@ -698,18 +697,17 @@ fbq('track', 'PageView');
   <div class="container hero-inner">
     <p class="presenta"><strong>SKYLINE</strong> PRESENTA</p>
     <!-- Título: imagen subida por Sergio -->
-    <img class="title-image" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png" alt="Skyline Halloween Fest, 30 y 31 de octubre, PLOT Bogotá">
+    <img class="title-image" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png" alt="Skyline Halloween Fest, 30 y 31 de octubre, Secret Location">
     <p class="tagline">Este Halloween, Bogotá se transforma.<br>Dos noches, dos escenarios y una experiencia creada para vivir Halloween sobre la ciudad.</p>
 
     <div class="meta-strip">
       <span class="meta-pill"><span class="dot">◆</span> 30–31 de octubre</span>
-      <span class="meta-pill"><span class="dot">◆</span> PLOT Bogotá</span>
+      <span class="meta-pill"><span class="dot">◆</span> Secret Location</span>
       <span class="meta-pill"><span class="dot">◆</span> Open doors 6PM</span>
     </div>
 
     <div class="hero-ctas">
       <a href="#boletas" class="btn btn-primary">Comprar boletas</a>
-      <a href="#mapa" class="btn btn-outline">Ver el lugar</a>
     </div>
   </div>
 
@@ -774,8 +772,8 @@ fbq('track', 'PageView');
       </div>
 
       <div class="feature-card">
-        <h3>Terraza con vista a Bogotá</h3>
-        <p>Una terraza en las alturas de La Calera con una vista exclusiva de Bogotá. El spot perfecto para tomarte una foto con tu disfraz.</p>
+        <h3>Terraza en las alturas</h3>
+        <p>Una terraza en las alturas con una vista exclusiva. El spot perfecto para tomarte una foto con tu disfraz.</p>
       </div>
 
       <div class="feature-card">
@@ -786,7 +784,7 @@ fbq('track', 'PageView');
       <div class="feature-card">
         <span class="feature-emoji">🚌</span>
         <h3>Transporte oficial by Wagon</h3>
-        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a><br><strong style="color:var(--gold)">🎁 De regalo con las boletas de 1 día del viernes 30.</strong></p>
+        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a><strong class="gift-promo" style="color:var(--gold)"><br>🎁 De regalo con las boletas de 1 día del viernes 30 compradas hasta las 12:00 m. de hoy.</strong></p>
       </div>
 
     </div>
@@ -831,7 +829,7 @@ fbq('track', 'PageView');
 
       <div class="price-panel one-day">
         <div class="price-panel-head">Acceso 1 día</div>
-        <div class="gift-strip" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día del <b>viernes 30</b> <span style="opacity:.8">(compras nuevas)</span></div>
+        <div class="gift-strip gift-promo" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día del <b>viernes 30</b> <span style="opacity:.8">(solo compras hasta las 12:00 m. de hoy)</span></div>
         <div class="price-rows">
           <div class="price-row sold-out">
             <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
@@ -846,8 +844,12 @@ fbq('track', 'PageView');
             <div class="amount">$35.000</div>
           </div>
           <div class="price-row active">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
             <div class="amount">$40.000</div>
+          </div>
+          <div class="price-row">
+            <div class="stage"><span class="stage-name">Etapa Taquilla</span><span class="stage-tag">Precio en taquilla</span></div>
+            <div class="amount">$50.000</div>
           </div>
         </div>
         <div class="price-panel-foot">
@@ -901,8 +903,12 @@ fbq('track', 'PageView');
             <div class="amount" data-amount>$60.000</div>
           </div>
           <div class="price-row active" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
             <div class="amount" data-amount>$70.000</div>
+          </div>
+          <div class="price-row" data-fixed>
+            <div class="stage"><span class="stage-name">Etapa Taquilla</span><span class="stage-tag">Precio en taquilla</span></div>
+            <div class="amount">$80.000</div>
           </div>
         </div>
         <div class="price-panel-foot">
@@ -940,24 +946,13 @@ fbq('track', 'PageView');
   <div class="hazard-stripe"><span>Todo es hasta agotar existencias</span></div>
 </section>
 
-<section class="section map-section" id="mapa">
-  <div class="container">
-    <div class="section-head">
-      <h2 style="color:var(--bone)">Plot Bogotá</h2>
-      <p>Así se ve PLOT Bogotá, el spot de las 2 noches de Skyline - Halloween Fest.</p>
-    </div>
-    <img src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/3-MAPA-CUADRADO.webp" alt="Mapa de PLOT Bogotá" loading="lazy" decoding="async" style="display:block; width:100%; max-width:720px; height:auto; margin:0 auto; border:3px solid var(--line); border-radius:var(--radius-panel); box-shadow:var(--shadow-hard); background:var(--purple-deep);">
-  </div>
-</section>
-
-
 <section class="section transport" id="transporte">
   <div class="container">
     <div class="section-head">
       <h2 style="color:var(--bone)">Transporte oficial</h2>
-      <p>Transporte oficial by Wagon, ida y vuelta, hasta PLOT Bogotá.</p>
+      <p>Transporte oficial by Wagon, ida y vuelta, hasta Secret Location.</p>
     </div>
-    <div class="gift-banner" id="giftBanner"><b>🎁 Boletas de 1 día del viernes 30 de octubre: el transporte va de regalo.</b><br>Compra tu boleta de 1 día para el viernes y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
+    <div class="gift-banner gift-promo" id="giftBanner"><b>🎁 Boletas de 1 día del viernes 30 de octubre: el transporte va de regalo (solo compras hasta las 12:00 m. del viernes 30).</b><br>Compra tu boleta de 1 día para el viernes y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
     <div class="wagon-grid" id="wagonGrid">
       <a class="wagon-poster" href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" aria-label="Reservar el transporte oficial en Wagon">
         <img id="wagonImg" alt="Transporte oficial by Wagon para Skyline Halloween Fest: precios ida y vuelta por grupo" loading="lazy" decoding="async">
@@ -1016,7 +1011,7 @@ fbq('track', 'PageView');
     <div class="footer-row">
       <div>
         <div class="footer-brand">SKYLINE <span>Halloween Fest</span></div>
-        <p style="max-width:280px; color:rgba(244,236,219,0.65); font-size:0.9rem; margin-top:10px;">30 y 31 de octubre · PLOT Bogotá, Km 4.5 vía La Calera.</p>
+        <p style="max-width:280px; color:rgba(244,236,219,0.65); font-size:0.9rem; margin-top:10px;">30 y 31 de octubre · Secret Location.</p>
       </div>
       <div class="footer-contact">
         <strong style="color:var(--bone)">Información y contacto</strong>
@@ -1088,7 +1083,7 @@ fbq('track', 'PageView');
   function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
   function mark(panel, currentOrders, stageNames) {
     var minCur = Math.min.apply(null, currentOrders.map(function (o) { return o == null ? 99 : o; }));
-    Array.prototype.forEach.call(panel.querySelectorAll(".price-row"), function (row, i) {
+    Array.prototype.forEach.call(panel.querySelectorAll(".price-row:not([data-fixed])"), function (row, i) {
       var order = i + 1, tag = row.querySelector("[data-tag]"), stageTag = tag;
       var isCurrent = currentOrders.indexOf(order) >= 0, isClosed = order < minCur;
       row.classList.toggle("active", isCurrent); row.classList.toggle("sold-out", isClosed);
@@ -1124,6 +1119,22 @@ fbq('track', 'PageView');
         }).join(" · ");
       }
     }).catch(function () {});
+})();
+</script>
+
+<script>
+// Transporte de regalo: solo compras hasta el viernes 30 a las 12:00 m. (Bogotá). Después se ocultan los avisos.
+(function () {
+  if (Date.now() < Date.parse("2026-10-30T17:00:00Z")) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".gift-promo"), function (el) { el.style.display = "none"; });
+})();
+</script>
+
+<script>
+// Etapa 3 de 1 día: la venta en línea para el viernes 30 cierra a las 6:00 p. m. (Bogotá); después, solo taquilla.
+(function () {
+  if (Date.now() < Date.parse("2026-10-30T23:00:00Z")) return;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-e3]"), function (el) { el.textContent = "Viernes 30 cerrado en línea: compra en taquilla"; });
 })();
 </script>
 
