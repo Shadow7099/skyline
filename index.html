@@ -833,7 +833,7 @@ fbq('track', 'PageView');
             <div class="amount">$35.000</div>
           </div>
           <div class="price-row active">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 9:00 p. m.</span></div>
             <div class="amount">$40.000</div>
           </div>
           <div class="price-row">
@@ -892,7 +892,7 @@ fbq('track', 'PageView');
             <div class="amount" data-amount>$60.000</div>
           </div>
           <div class="price-row active" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 9:00 p. m.</span></div>
             <div class="amount" data-amount>$70.000</div>
           </div>
           <div class="price-row" data-fixed>
@@ -1082,9 +1082,9 @@ fbq('track', 'PageView');
 </script>
 
 <script>
-// Etapa 3 de 1 día: la venta en línea para el viernes 30 cierra a las 6:00 p. m. (Bogotá); después, solo taquilla.
+// Etapa 3 de 1 día: la venta en línea para el viernes 30 cierra a las 9:00 p. m. (Bogotá); después, solo taquilla.
 (function () {
-  if (Date.now() < Date.parse("2026-10-30T23:00:00Z")) return;
+  if (Date.now() < Date.parse("2026-10-31T02:00:00Z")) return;
   Array.prototype.forEach.call(document.querySelectorAll("[data-e3]"), function (el) { el.textContent = "Viernes 30 cerrado en línea: compra en taquilla"; });
 })();
 </script>
