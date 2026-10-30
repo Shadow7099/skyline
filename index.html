@@ -798,7 +798,6 @@ fbq('track', 'PageView');
 
       <div class="price-panel one-day">
         <div class="price-panel-head">Acceso 1 día</div>
-        <div class="gift-strip gift-promo" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día del <b>viernes 30</b> <span style="opacity:.8">(solo compras hasta las 12:00 m. de hoy)</span></div>
         <div class="price-rows">
           <div class="price-row sold-out">
             <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
@@ -1058,14 +1057,6 @@ fbq('track', 'PageView');
         }).join(" · ");
       }
     }).catch(function () {});
-})();
-</script>
-
-<script>
-// Transporte de regalo: solo compras hasta el viernes 30 a las 12:00 m. (Bogotá). Después se ocultan los avisos.
-(function () {
-  if (Date.now() < Date.parse("2026-10-30T17:00:00Z")) return;
-  Array.prototype.forEach.call(document.querySelectorAll(".gift-promo"), function (el) { el.style.display = "none"; });
 })();
 </script>
 
