@@ -1153,6 +1153,14 @@ fbq('track', 'PageView');
           var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = tag; h.appendChild(s);
         });
       }
+      else if (nk.length) {
+        // Sin promo del día: las promos por noche (ej. vie 3x2 · sáb 5x4) se marcan en los paneles de 1 día (general y VIP).
+        var short = nk.map(function (n) { return dayName(n).slice(0, 3) + " " + nights[n].group + "x" + nights[n].paid; }).join(" · ");
+        document.querySelectorAll("#boletas .price-panel.one-day .price-panel-head, #boletas [data-vip='1-dia']").forEach(function (el) {
+          var h = el.classList.contains("price-panel-head") ? el : el.parentNode.querySelector(".price-panel-head");
+          var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = short; h.appendChild(s);
+        });
+      }
     }).catch(function () {});
 })();
 </script>
