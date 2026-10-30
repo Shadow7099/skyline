@@ -786,7 +786,7 @@ fbq('track', 'PageView');
       <div class="feature-card">
         <span class="feature-emoji">🚌</span>
         <h3>Transporte oficial by Wagon</h3>
-        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a><br><strong style="color:var(--gold)">🎁 De regalo con las boletas de 1 día del viernes 30.</strong></p>
+        <p>Llega y regresa en el transporte oficial. Descarga la app Wagon y busca Skyline Halloween Fest. <a href="#transporte" style="color:var(--gold)">Ver precios</a><strong class="gift-promo" style="color:var(--gold)"><br>🎁 De regalo con las boletas de 1 día del viernes 30 compradas hasta las 12:00 m. de hoy.</strong></p>
       </div>
 
     </div>
@@ -831,7 +831,7 @@ fbq('track', 'PageView');
 
       <div class="price-panel one-day">
         <div class="price-panel-head">Acceso 1 día</div>
-        <div class="gift-strip" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día del <b>viernes 30</b> <span style="opacity:.8">(compras nuevas)</span></div>
+        <div class="gift-strip gift-promo" id="giftStrip">🚐 <b>Transporte de regalo</b> con tu boleta de 1 día del <b>viernes 30</b> <span style="opacity:.8">(solo compras hasta las 12:00 m. de hoy)</span></div>
         <div class="price-rows">
           <div class="price-row sold-out">
             <div class="stage"><span class="stage-name">Lanzamiento</span><span class="stage-tag">Agotada</span></div>
@@ -957,7 +957,7 @@ fbq('track', 'PageView');
       <h2 style="color:var(--bone)">Transporte oficial</h2>
       <p>Transporte oficial by Wagon, ida y vuelta, hasta PLOT Bogotá.</p>
     </div>
-    <div class="gift-banner" id="giftBanner"><b>🎁 Boletas de 1 día del viernes 30 de octubre: el transporte va de regalo.</b><br>Compra tu boleta de 1 día para el viernes y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
+    <div class="gift-banner gift-promo" id="giftBanner"><b>🎁 Boletas de 1 día del viernes 30 de octubre: el transporte va de regalo (solo compras hasta las 12:00 m. del viernes 30).</b><br>Compra tu boleta de 1 día para el viernes y, al pagar, toca el botón de WhatsApp: el mensaje sale escrito con tu nombre y tu cédula, solo tienes que enviarlo.</div>
     <div class="wagon-grid" id="wagonGrid">
       <a class="wagon-poster" href="https://link-my.app/wagonxskyline" target="_blank" rel="noopener" aria-label="Reservar el transporte oficial en Wagon">
         <img id="wagonImg" alt="Transporte oficial by Wagon para Skyline Halloween Fest: precios ida y vuelta por grupo" loading="lazy" decoding="async">
@@ -1124,6 +1124,14 @@ fbq('track', 'PageView');
         }).join(" · ");
       }
     }).catch(function () {});
+})();
+</script>
+
+<script>
+// Transporte de regalo: solo compras hasta el viernes 30 a las 12:00 m. (Bogotá). Después se ocultan los avisos.
+(function () {
+  if (Date.now() < Date.parse("2026-10-30T17:00:00Z")) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".gift-promo"), function (el) { el.style.display = "none"; });
 })();
 </script>
 

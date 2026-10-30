@@ -615,10 +615,17 @@
     box.appendChild(t); box.appendChild(btn);
     box.classList.remove("hidden");
   }
-  // Transporte de regalo: SOLO para la boleta general de 1 día del viernes 30.
+  // Transporte de regalo: SOLO para la boleta general de 1 día del viernes 30, comprada hasta el 30 a las 12:00 m. (Bogotá).
+  var GIFT_UNTIL = Date.parse("2026-10-30T17:00:00Z");
+  function giftOn() { return Date.now() < GIFT_UNTIL; }
+  // Cierre de la venta en línea por noche (el servidor también lo hace cumplir).
+  var NIGHT_CLOSES = { "2026-10-30": Date.parse("2026-10-31T00:00:00Z") };   // viernes 30, 7:00 p. m. Bogotá
+  function nightClosed(n) {
+    return !!((AV && AV.closed_nights && AV.closed_nights.indexOf(n) >= 0) || (NIGHT_CLOSES[n] && Date.now() >= NIGHT_CLOSES[n]));
+  }
   function renderGift() {
     var box = document.getElementById("gift-note"), n = nightSel.value, t = "";
-    if (product === "general" && accessSelect.value === "1-dia") {
+    if (product === "general" && accessSelect.value === "1-dia" && giftOn()) {
       if (n === "2026-10-30") t = "🚐 Transporte de regalo: tu boleta de 1 día del viernes lo incluye. Al pagar te aparecerá un botón de WhatsApp con tus datos ya escritos para reclamarlo.";
       else if (!n) t = "🚐 Transporte de regalo con la boleta de 1 día del viernes 30. Elige la noche.";
     }
@@ -726,7 +733,9 @@
       } else if (np && (!np.tiers || np.tiers.indexOf("general") >= 0)) {
         t += " · Promo " + np.group + "x" + np.paid;
       }
-      if (product === "general" && n.night === "2026-10-30") t += " · 🚐 Transporte de regalo";
+      if (product === "general" && n.night === "2026-10-30" && giftOn()) t += " · 🚐 Transporte de regalo";
+      if (nightClosed(n.night)) { t = n.label + " · venta en línea cerrada"; o.disabled = true; }
+      else if (NIGHT_CLOSES[n.night]) t += " · venta hasta las 7:00 p. m.";
       o.value = n.night; o.textContent = t; nightSel.appendChild(o);
     });
     var ok = Array.prototype.some.call(nightSel.options, function (o) { return o.value === prev && !o.disabled; });
