@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Comprar boleta · Skyline Halloween Fest</title>
-<meta name="description" content="Reserva tu boleta para Skyline Halloween Fest, 30 y 31 de octubre en PLOT Bogotá." />
+<meta name="description" content="Reserva tu boleta para Skyline Halloween Fest, 30 y 31 de octubre en Secret Location." />
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
   @font-face{
@@ -373,7 +373,7 @@
 <div class="container">
   <div class="page-head">
     <h1>Reserva tu boleta</h1>
-    <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · PLOT Bogotá</p>
+    <p class="sub">Skyline Halloween Fest · 30 y 31 de octubre · Secret Location</p>
   </div>
 
   <div class="resume hidden" id="resume" role="status"></div>
@@ -412,7 +412,6 @@
       </div>
       <div class="promo-note hidden" id="promo-note" role="status"></div>
       <div class="promo-offer hidden" id="promo-offer"></div>
-      <div class="gift-note hidden" id="gift-note" role="status"></div>
       <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
@@ -543,7 +542,6 @@
     totalPriceEl.textContent = unit == null ? "—" : money(unit * (qty - free));   // promo 3x2: las boletas gratis no se cobran
     renderPromo(unit, free);
     renderOffer();
-    renderGift();
     renderStock(cur);
     renderDrinks();
   }
@@ -615,21 +613,10 @@
     box.appendChild(t); box.appendChild(btn);
     box.classList.remove("hidden");
   }
-  // Transporte de regalo: SOLO para la boleta general de 1 día del viernes 30, comprada hasta el 30 a las 12:00 m. (Bogotá).
-  var GIFT_UNTIL = Date.parse("2026-10-30T17:00:00Z");
-  function giftOn() { return Date.now() < GIFT_UNTIL; }
   // Cierre de la venta en línea por noche (el servidor también lo hace cumplir).
   var NIGHT_CLOSES = { "2026-10-30": Date.parse("2026-10-30T23:00:00Z") };   // viernes 30, 6:00 p. m. Bogotá
   function nightClosed(n) {
     return !!((AV && AV.closed_nights && AV.closed_nights.indexOf(n) >= 0) || (NIGHT_CLOSES[n] && Date.now() >= NIGHT_CLOSES[n]));
-  }
-  function renderGift() {
-    var box = document.getElementById("gift-note"), n = nightSel.value, t = "";
-    if (product === "general" && accessSelect.value === "1-dia" && giftOn()) {
-      if (n === "2026-10-30") t = "🚐 Transporte de regalo: tu boleta de 1 día del viernes lo incluye. Al pagar te aparecerá un botón de WhatsApp con tus datos ya escritos para reclamarlo.";
-      else if (!n) t = "🚐 Transporte de regalo con la boleta de 1 día del viernes 30. Elige la noche.";
-    }
-    box.textContent = t; box.classList.toggle("hidden", !t);
   }
   function weekdayOf(night) {
     try { return new Date(night + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return night; }
@@ -733,7 +720,6 @@
       } else if (np && (!np.tiers || np.tiers.indexOf("general") >= 0)) {
         t += " · Promo " + np.group + "x" + np.paid;
       }
-      if (product === "general" && n.night === "2026-10-30" && giftOn()) t += " · 🚐 Transporte de regalo";
       if (nightClosed(n.night)) { t = n.label + " · venta en línea cerrada"; o.disabled = true; }
       else if (NIGHT_CLOSES[n.night]) t += " · venta hasta las 6:00 p. m.";
       o.value = n.night; o.textContent = t; nightSel.appendChild(o);
