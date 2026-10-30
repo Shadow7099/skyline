@@ -252,7 +252,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   var WA_NUMBER = "573133308294";
   function waMessage(o) {
     var lines = [
-      o.transport_gift ? "Hola 👋 Ya pagué mi boleta de 1 día en Skyline Halloween Fest y quiero reclamar mi transporte de regalo 🚐." : "Hola 👋 Ya pagué en Skyline Halloween Fest.",
+      o.transport_gift ? "Hola 👋 Ya pagué mi boleta de 1 día del viernes en Skyline Halloween Fest y quiero reclamar mi transporte de regalo 🚐." : "Hola 👋 Ya pagué en Skyline Halloween Fest.",
       "Estos son mis datos:",
       "Nombre: " + (o.full_name || "")
     ];
@@ -303,7 +303,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (o.transport_gift) {
       var g = el("div", "gift");
       g.appendChild(el("div", "gift-title", "🚐 ¡Tu transporte va de regalo!"));
-      g.appendChild(el("p", "", "Por comprar " + (o.quantity > 1 ? "tus boletas" : "tu boleta") + " de 1 día, el transporte es gratis. Toca el botón: se abre WhatsApp con el mensaje ya escrito (tu nombre y tu cédula). Solo tienes que enviarlo."));
+      g.appendChild(el("p", "", "Por comprar " + (o.quantity > 1 ? "tus boletas" : "tu boleta") + " de 1 día del viernes 30 de octubre, el transporte es gratis. Toca el botón: se abre WhatsApp con el mensaje ya escrito (tu nombre y tu cédula). Solo tienes que enviarlo."));
       var wa = el("a", "btn wa block", "Reclamar mi transporte por WhatsApp"); wa.id = "gift-wa"; wa.href = waUrl(o); wa.target = "_blank"; wa.rel = "noopener";
       g.appendChild(wa); card.appendChild(g);
     }
