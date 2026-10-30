@@ -846,8 +846,12 @@ fbq('track', 'PageView');
             <div class="amount">$35.000</div>
           </div>
           <div class="price-row active">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag">Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
             <div class="amount">$40.000</div>
+          </div>
+          <div class="price-row">
+            <div class="stage"><span class="stage-name">Etapa Taquilla</span><span class="stage-tag">Precio en taquilla</span></div>
+            <div class="amount">$50.000</div>
           </div>
         </div>
         <div class="price-panel-foot">
@@ -901,8 +905,12 @@ fbq('track', 'PageView');
             <div class="amount" data-amount>$60.000</div>
           </div>
           <div class="price-row active" data-stage="Etapa 3">
-            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span></div>
+            <div class="stage"><span class="stage-name">Etapa 3</span><span class="stage-tag" data-tag>Etapa activa ahora</span><span class="stage-tag" data-e3>Cierra hoy a las 6:00 p. m.</span></div>
             <div class="amount" data-amount>$70.000</div>
+          </div>
+          <div class="price-row" data-fixed>
+            <div class="stage"><span class="stage-name">Etapa Taquilla</span><span class="stage-tag">Precio en taquilla</span></div>
+            <div class="amount">$80.000</div>
           </div>
         </div>
         <div class="price-panel-foot">
@@ -1088,7 +1096,7 @@ fbq('track', 'PageView');
   function money(n) { return "$" + Number(n).toLocaleString("es-CO"); }
   function mark(panel, currentOrders, stageNames) {
     var minCur = Math.min.apply(null, currentOrders.map(function (o) { return o == null ? 99 : o; }));
-    Array.prototype.forEach.call(panel.querySelectorAll(".price-row"), function (row, i) {
+    Array.prototype.forEach.call(panel.querySelectorAll(".price-row:not([data-fixed])"), function (row, i) {
       var order = i + 1, tag = row.querySelector("[data-tag]"), stageTag = tag;
       var isCurrent = currentOrders.indexOf(order) >= 0, isClosed = order < minCur;
       row.classList.toggle("active", isCurrent); row.classList.toggle("sold-out", isClosed);
@@ -1132,6 +1140,14 @@ fbq('track', 'PageView');
 (function () {
   if (Date.now() < Date.parse("2026-10-30T17:00:00Z")) return;
   Array.prototype.forEach.call(document.querySelectorAll(".gift-promo"), function (el) { el.style.display = "none"; });
+})();
+</script>
+
+<script>
+// Etapa 3 de 1 día: la venta en línea para el viernes 30 cierra a las 6:00 p. m. (Bogotá); después, solo taquilla.
+(function () {
+  if (Date.now() < Date.parse("2026-10-30T23:00:00Z")) return;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-e3]"), function (el) { el.textContent = "Viernes 30 cerrado en línea: compra en taquilla"; });
 })();
 </script>
 
