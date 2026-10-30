@@ -273,7 +273,6 @@
     </div>
     <div class="count" aria-live="polite"><b id="count-in">0</b><span id="count-sub">entradas</span></div>
   </div>
-  <div class="test-bar hidden" id="test-bar"><span>Modo prueba: las lecturas no gastan boletas reales</span></div>
 
   <div class="cam">
     <video id="video" playsinline muted></video>
@@ -703,7 +702,6 @@
     var night = currentNight();
     var test = isTestMode();
     $("night-label").textContent = test ? "Modo prueba" : EVENT_NIGHTS[night];
-    $("test-bar").classList.toggle("hidden", !test);
     var tonight = allCheckins().filter(function (c) { return c.night === night; });
     var seen = {};
     tonight = tonight.filter(function (c) { if (seen[c.token]) return false; seen[c.token] = 1; return true; });
