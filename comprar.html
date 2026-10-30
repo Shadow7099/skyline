@@ -638,7 +638,7 @@
     note.textContent = t; note.classList.toggle("hidden", !t);
   }
   function applyServerPrices(d) {
-    // Promos 3x2 / 5x4 desactivadas en la página: no se muestran.
+    if (d && d.promo) PROMO = d.promo;
     Object.keys(d.prices || {}).forEach(function (k) {
       if (PRICES[k]) { PRICES[k].price = d.prices[k].price; PRICES[k].stage = d.prices[k].stage; }
     });
@@ -758,7 +758,7 @@
     return fetch(FUNCTIONS_BASE + "/vip-order", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" })
     }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
-      .then(function (d) { if (d && d.nights && d.vip && d.vice) { AV = d; renderProduct(); } })
+      .then(function (d) { if (d && d.nights && d.vip && d.vice) { AV = d; if (d.promo) PROMO = d.promo; renderProduct(); } })
       .catch(function () { /* sin disponibilidad: el VIP queda en espera, la compra general no se afecta */ });
   }
   // Datos que recibe el servidor para VIP / Vice (el precio y los cupos los decide el servidor, nunca el navegador).
