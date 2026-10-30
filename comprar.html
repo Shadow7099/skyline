@@ -412,7 +412,6 @@
       </div>
       <div class="promo-note hidden" id="promo-note" role="status"></div>
       <div class="promo-offer hidden" id="promo-offer"></div>
-      <div class="gift-note hidden" id="gift-note" role="status"></div>
       <div class="stock-note hidden" id="stock-note" role="status"></div>
 
       <div class="promo">
@@ -543,7 +542,6 @@
     totalPriceEl.textContent = unit == null ? "—" : money(unit * (qty - free));   // promo 3x2: las boletas gratis no se cobran
     renderPromo(unit, free);
     renderOffer();
-    renderGift();
     renderStock(cur);
     renderDrinks();
   }
@@ -614,15 +612,6 @@
     });
     box.appendChild(t); box.appendChild(btn);
     box.classList.remove("hidden");
-  }
-  // Transporte de regalo: SOLO para la boleta general de 1 día del viernes 30.
-  function renderGift() {
-    var box = document.getElementById("gift-note"), n = nightSel.value, t = "";
-    if (product === "general" && accessSelect.value === "1-dia") {
-      if (n === "2026-10-30") t = "🚐 Transporte de regalo: tu boleta de 1 día del viernes lo incluye. Al pagar te aparecerá un botón de WhatsApp con tus datos ya escritos para reclamarlo.";
-      else if (!n) t = "🚐 Transporte de regalo con la boleta de 1 día del viernes 30. Elige la noche.";
-    }
-    box.textContent = t; box.classList.toggle("hidden", !t);
   }
   function weekdayOf(night) {
     try { return new Date(night + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return night; }
@@ -726,7 +715,6 @@
       } else if (np && (!np.tiers || np.tiers.indexOf("general") >= 0)) {
         t += " · Promo " + np.group + "x" + np.paid;
       }
-      if (product === "general" && n.night === "2026-10-30") t += " · 🚐 Transporte de regalo";
       o.value = n.night; o.textContent = t; nightSel.appendChild(o);
     });
     var ok = Array.prototype.some.call(nightSel.options, function (o) { return o.value === prev && !o.disabled; });
