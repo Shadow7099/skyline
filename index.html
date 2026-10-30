@@ -712,6 +712,25 @@ fbq('track', 'PageView');
   <div class="city-wrap"><img class="city" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/3.webp" alt="" decoding="async"></div>
 </header>
 
+<div class="promo-3x2 hidden" id="promo3x2" role="region" aria-label="Promoción 3x2">
+  <div class="p3-title">🎉 Promo 3x2 · Lleva 3 y paga 2</div>
+  <div class="p3-sub">En todas las boletas (generales y VIP, de 1 y 2 días) · no aplica a Vice Experience</div>
+  <div class="p3-end" id="promo3x2End"></div><br>
+  <a href="#boletas" class="btn">Aprovechar la promo</a>
+</div>
+
+<div class="countdown-bar">
+  <div class="container countdown-row">
+    <span class="countdown-label">Skyline comienza en:</span>
+    <div class="countdown-units" id="countdown">
+      <div class="cu"><div class="num" id="cd-days">--</div><div class="lbl">días</div></div>
+      <div class="cu"><div class="num" id="cd-hours">--</div><div class="lbl">horas</div></div>
+      <div class="cu"><div class="num" id="cd-mins">--</div><div class="lbl">min</div></div>
+      <div class="cu"><div class="num" id="cd-secs">--</div><div class="lbl">seg</div></div>
+    </div>
+  </div>
+</div>
+
 <section class="section features on-dark" id="fiesta">
   <div class="container">
     <div class="section-head">
@@ -769,6 +788,8 @@ fbq('track', 'PageView');
       <h2 style="color:var(--bone)">Boletería</h2>
       <p>Los precios suben en cada etapa, compra antes y paga menos.</p>
     </div>
+
+    <div class="promo-strip hidden" id="promoStrip" role="status"></div>
     <div class="price-panels">
 
       <div class="price-panel two-day">
@@ -1082,5 +1103,58 @@ fbq('track', 'PageView');
 })();
 </script>
 
+<script>
+// Promos: el cartel, la franja de boletas y las etiquetas solo aparecen mientras el servidor diga que hay una promo vigente.
+//  - Promo del día de compra (ej. 3x2 en todas las boletas excepto Vice).
+//  - Promos por NOCHE (ej. viernes 3x2): aplican a las boletas de 1 día de esa noche; se elige la noche al comprar.
+(function () {
+  fetch("https://kyaegqllwjihaoudazoh.supabase.co/functions/v1/vip-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "availability" }) })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (d) {
+      var p = d && d.promo; if (!p) return;
+      var nights = p.nights || {}, nk = Object.keys(nights).sort();
+      if (!p.active && !nk.length) return;
+      var opts = { timeZone: "America/Bogota" };
+      function dayName(n) { try { return new Date(n + "T12:00:00-05:00").toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long" }); } catch (e) { return n; } }
+      var nightTxt = nk.map(function (n) { return dayName(n) + " " + nights[n].group + "x" + nights[n].paid; }).join(" · ");
+      var banner = document.getElementById("promo3x2"), strip = document.getElementById("promoStrip");
+      var title, when, sub, stripTxt, stripSub;
+      if (p.active) {
+        var g = p.group || 3, paid = p.paid || 2, label = "", today = false;
+        try { var end = new Date(p.ends_at); today = end.toLocaleDateString("es-CO", opts) === new Date().toLocaleDateString("es-CO", opts); label = end.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
+        when = today ? "Solo por hoy" : (label ? "Válida hasta el " + label : "Por tiempo limitado");
+        title = "🎉 Promo " + g + "x" + paid + " · Lleva " + g + " y paga " + paid;
+        // Las noches con promo propia (ej. sábado 5x4) llevan solo esa promo, no el 3x2 del día de compra.
+        var otras = nk.filter(function (n) { return (nights[n].group || 3) !== g || (nights[n].paid || 2) !== paid; })
+          .map(function (n) { return dayName(n) + " " + nights[n].group + "x" + nights[n].paid; });
+        sub = "En todas las boletas (generales y VIP, de 1 y 2 días)" + (otras.length ? ", excepto las de " + otras.join(" y ") + ", que llevan su propia promo" : "") + " · no aplica a Vice Experience";
+        stripTxt = g + "x" + paid + " en todas las etapas · " + when.toLowerCase();
+        stripSub = "Lleva " + g + " boletas y paga " + paid + ". Aplica a boletas generales y VIP (1 y 2 días). No aplica a Vice Experience." + (nightTxt ? " Promos por noche (reemplazan a esta en las boletas de esa noche): " + nightTxt + "." : "");
+      } else {
+        title = "🎉 Promos por noche · " + nightTxt;
+        when = "Elige la noche al comprar";
+        sub = "Boletas de 1 día (generales y VIP) · cada promo aplica a la noche que elijas · no aplica a Vice Experience";
+        stripTxt = "Promos por noche · " + nightTxt;
+        stripSub = "Elige la noche al comprar tu boleta de 1 día (general o VIP) y la promo de esa noche se aplica sola. No aplica a Vice Experience.";
+      }
+      banner.querySelector(".p3-title").textContent = title;
+      banner.querySelector(".p3-sub").textContent = sub;
+      document.getElementById("promo3x2End").textContent = when;
+      banner.classList.remove("hidden");
+      if (strip) {
+        strip.innerHTML = "";
+        var b = document.createElement("b"); b.textContent = stripTxt; strip.appendChild(b);
+        strip.appendChild(document.createElement("br")); strip.appendChild(document.createTextNode(stripSub));
+        strip.classList.remove("hidden");
+      }
+      if (p.active) {
+        var tag = (p.group || 3) + "x" + (p.paid || 2);
+        document.querySelectorAll("#boletas .price-panel:not(.vice-card) .price-panel-head").forEach(function (h) {
+          var s = document.createElement("span"); s.className = "badge-3x2"; s.textContent = tag; h.appendChild(s);
+        });
+      }
+    }).catch(function () {});
+})();
+</script>
 </body>
 </html>
