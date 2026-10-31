@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Skyline Halloween Fest · 30-31 de octubre · Secret Location</title>
-<meta name="description" content="Skyline Halloween Fest, dos noches y dos escenarios en Secret Location. 30 y 31 de octubre. Compra tu boleta antes de que suba de precio.">
+<title>Skyline Halloween Fest · 30-31 de octubre · El Desmadre</title>
+<meta name="description" content="Skyline Halloween Fest, dos noches y dos escenarios en El Desmadre. 30 y 31 de octubre. Compra tu boleta antes de que suba de precio.">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
   @font-face{
@@ -492,6 +492,12 @@
   }
   @media (max-width:720px){ .sticker-badge{ display:none; } }
 
+  /* ---------- Nueva ubicación ---------- */
+  .ubicacion{ background:var(--fondo) center center / cover no-repeat; }
+  .ubicacion .loc-badge{ display:inline-block; background:var(--gold); color:var(--ink); border:3px solid var(--line); border-radius:999px; padding:6px 16px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; font-size:0.85rem; box-shadow:var(--shadow-hard-sm); }
+  .ubicacion .section-head h2{ color:var(--bone); margin-top:14px; }
+  .loc-image{ display:block; width:100%; max-width:760px; height:auto; margin:0 auto; border:3px solid var(--line); border-radius:var(--radius-panel); box-shadow:var(--shadow-hard); background:var(--purple-deep); }
+
   /* ---------- Map ---------- */
   .map-section{ background:linear-gradient(rgba(29,14,51,0.35), rgba(29,14,51,0.35)), var(--fondo) center center / cover no-repeat; }
   .plot-map{
@@ -670,6 +676,7 @@ fbq('track', 'PageView');
       <svg width="22" height="16" viewBox="0 0 22 16" fill="none"><rect width="22" height="2.4" fill="currentColor"/><rect y="6.8" width="22" height="2.4" fill="currentColor"/><rect y="13.6" width="22" height="2.4" fill="currentColor"/></svg>
     </button>
     <ul class="nav-links" id="navLinks">
+      <li><a href="#ubicacion">Ubicación</a></li>
       <li><a href="#fiesta">La fiesta</a></li>
       <li><a href="#boletas">Boletas</a></li>
       <li><a href="#parqueadero">Parqueadero</a></li>
@@ -696,12 +703,12 @@ fbq('track', 'PageView');
   <div class="container hero-inner">
     <p class="presenta"><strong>SKYLINE</strong> PRESENTA</p>
     <!-- Título: imagen subida por Sergio -->
-    <img class="title-image" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png" alt="Skyline Halloween Fest, 30 y 31 de octubre, Secret Location">
+    <img class="title-image" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/LOGO.png" alt="Skyline Halloween Fest, 30 y 31 de octubre, El Desmadre">
     <p class="tagline">Este Halloween, Bogotá se transforma.<br>Dos noches, dos escenarios y una experiencia creada para vivir Halloween sobre la ciudad.</p>
 
     <div class="meta-strip">
       <span class="meta-pill"><span class="dot">◆</span> 30–31 de octubre</span>
-      <span class="meta-pill"><span class="dot">◆</span> Secret Location</span>
+      <span class="meta-pill"><span class="dot">◆</span> <a href="#ubicacion" style="color:inherit;text-decoration:none">El Desmadre</a></span>
     </div>
 
     <div class="hero-ctas">
@@ -730,6 +737,17 @@ fbq('track', 'PageView');
     </div>
   </div>
 </div>
+
+<section class="section ubicacion" id="ubicacion">
+  <div class="container">
+    <div class="section-head">
+      <span class="loc-badge">📍 Nueva ubicación</span>
+      <h2>El Desmadre</h2>
+      <p>Skyline Halloween Fest cambia de lugar: nos vemos en El Desmadre.</p>
+    </div>
+    <img class="loc-image" src="https://kyaegqllwjihaoudazoh.supabase.co/storage/v1/object/public/skyline-media/WhatsApp%20Image%202026-10-31%20at%2003.53.25.webp" alt="Nueva ubicación de Skyline Halloween Fest: El Desmadre" loading="lazy" decoding="async">
+  </div>
+</section>
 
 <section class="section features on-dark" id="fiesta">
   <div class="container">
@@ -970,7 +988,7 @@ fbq('track', 'PageView');
     <div class="footer-row">
       <div>
         <div class="footer-brand">SKYLINE <span>Halloween Fest</span></div>
-        <p style="max-width:280px; color:rgba(244,236,219,0.65); font-size:0.9rem; margin-top:10px;">30 y 31 de octubre · Secret Location.</p>
+        <p style="max-width:280px; color:rgba(244,236,219,0.65); font-size:0.9rem; margin-top:10px;">30 y 31 de octubre · El Desmadre.</p>
       </div>
       <div class="footer-contact">
         <strong style="color:var(--bone)">Información y contacto</strong>
