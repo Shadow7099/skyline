@@ -273,6 +273,7 @@
     </div>
     <div class="count" aria-live="polite"><b id="count-in">0</b><span id="count-sub">entradas</span></div>
   </div>
+  <div class="test-bar hidden" id="test-bar"><span>Modo prueba: las lecturas no gastan boletas reales</span><button class="test-clear" id="test-clear">Borrar pruebas</button></div>
 
   <div class="cam">
     <video id="video" playsinline muted></video>
@@ -408,12 +409,19 @@
   // ---------- Reglas de entrada ----------
   function byDevice(c) { return c && c.device ? " por " + c.device : ""; }
 
+  // Las boletas con noche solo valen en esa noche, con una excepción: las del VIERNES 30 también valen el SÁBADO 31
+  // (una sola entrada en total). Mismo criterio que el servidor (door-sync).
+  var FRIDAY = "2026-10-30", SATURDAY = "2026-10-31", FRIDAY_ALSO_SATURDAY = true;
+  function nightAllowed(t, night) {
+    if (!t || !t.night || t.night === night) return true;
+    return FRIDAY_ALSO_SATURDAY && t.night === FRIDAY && night === SATURDAY;
+  }
   function evaluate(token, type) {
     var t = byToken[token];
     if (t && t.revoked) return { ok: false, reason: "Esta boleta fue anulada." };
     var night = currentNight();
-    // VIP 1 día y Vice Experience: solo valen la noche para la que se compraron.
-    if (t && t.night && !isTestMode() && t.night !== night) {
+    // Boletas con noche (VIP 1 día, Vice, generales con fecha): solo valen la noche para la que se compraron.
+    if (t && !isTestMode() && !nightAllowed(t, night)) {
       return { ok: false, reason: (t.tier === "vice" ? "Vice Experience" : t.tier === "vip" ? "Boleta VIP" : "Boleta de 1 día") + " válida solo la noche del " + fmtNight(t.night) + "." };
     }
     var used = checkinsFor(token);
@@ -426,6 +434,7 @@
       var u = used[0];
       return { ok: false, reason: "Boleta de 1 día ya usada el " + fmtNight(u.night) + " a las " + fmtTime(u.scanned_at) + byDevice(u) };
     }
+    if (t && t.night && t.night !== night) return { ok: true, reason: "Boleta del " + fmtNight(t.night) + ": también vale esta noche." };
     return { ok: true, reason: "" };
   }
 
@@ -495,7 +504,7 @@
     var kind = type === "1" ? "Acceso 1 día" : "Acceso 2 días";
     if (!t) return kind;
     var lvl = t.tier === "vice" ? "VICE EXPERIENCE · " : t.tier === "vip" ? "VIP · " : "";
-    return (t.cat ? t.cat + " · " : "") + lvl + kind + (t.night ? " (solo " + fmtNight(t.night) + ")" : "") + " · boleta " + t.n + " de " + t.total;
+    return (t.cat ? t.cat + " · " : "") + lvl + kind + (t.night ? (FRIDAY_ALSO_SATURDAY && t.night === FRIDAY ? " (" + fmtNight(t.night) + " · también " + fmtNight(SATURDAY) + ")" : " (solo " + fmtNight(t.night) + ")") : "") + " · boleta " + t.n + " de " + t.total;
   }
 
   // ---------- Resultado en pantalla ----------
@@ -702,6 +711,7 @@
     var night = currentNight();
     var test = isTestMode();
     $("night-label").textContent = test ? "Modo prueba" : EVENT_NIGHTS[night];
+    $("test-bar").classList.toggle("hidden", !test);
     var tonight = allCheckins().filter(function (c) { return c.night === night; });
     var seen = {};
     tonight = tonight.filter(function (c) { if (seen[c.token]) return false; seen[c.token] = 1; return true; });
@@ -813,7 +823,12 @@
   if (state.device) $("device").value = state.device;
 
   $("cam-btn").addEventListener("click", startCamera);
-  // Botón "Borrar pruebas" desactivado: oculto y sin acción.
+  $("test-clear").addEventListener("click", function () {
+    if (!state.testCheckins.length) return;
+    if (!confirm("¿Borrar las " + state.testCheckins.length + " lecturas de prueba?")) return;
+    state.testCheckins = []; save("sky_test_checkins", []);
+    lastCode = ""; renderTop();
+  });
 
   // Pide al navegador que no borre los datos de la puerta para liberar espacio.
   if (navigator.storage && navigator.storage.persist) {
